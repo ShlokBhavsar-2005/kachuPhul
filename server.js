@@ -99,11 +99,13 @@ io.on('connection', (socket) => {
   // CREATE ROOM
   socket.on('createRoom', ({ playerName }) => {
     const roomId = generateRoomId();
+    const playerToken = require('crypto').randomBytes(16).toString('hex');
     const player = {
       id: socket.id,
       name: playerName.trim(),
       ready: false,
-      connected: true
+      connected: true,
+      token: playerToken
     };
     rooms[roomId] = {
       id: roomId,
@@ -128,7 +130,7 @@ io.on('connection', (socket) => {
     socket.data.roomId = roomId;
     socket.data.playerIndex = 0;
     io.to(roomId).emit('roomUpdate', sanitizeRoom(rooms[roomId], socket.id));
-    socket.emit('joinedRoom', { roomId, playerIndex: 0 });
+    socket.emit('joinedRoom', { roomId, playerIndex: 0, playerToken, playerName: player.name });
     console.log(`Room ${roomId} created by ${playerName}`);
   });
 
@@ -140,18 +142,20 @@ io.on('connection', (socket) => {
     if (room.players.length >= 7) { socket.emit('error', 'Room is full (max 7)'); return; }
 
     const playerIndex = room.players.length;
+    const playerToken = require('crypto').randomBytes(16).toString('hex');
     const player = {
       id: socket.id,
       name: playerName.trim(),
       ready: false,
-      connected: true
+      connected: true,
+      token: playerToken
     };
     room.players.push(player);
     socket.join(roomId);
     socket.data.roomId = roomId;
     socket.data.playerIndex = playerIndex;
     room.players.forEach(p => { io.to(p.id).emit('roomUpdate', sanitizeRoom(room, p.id)); });
-    socket.emit('joinedRoom', { roomId, playerIndex });
+    socket.emit('joinedRoom', { roomId, playerIndex, playerToken, playerName: player.name });
     console.log(`${playerName} joined room ${roomId}`);
   });
 
@@ -256,6 +260,44 @@ io.on('connection', (socket) => {
     if (room.currentTrick.length === room.players.length) {
       setTimeout(() => resolveTrick(room), 1500);
     }
+  });
+
+  // REJOIN ROOM (player returning after disconnect)
+  socket.on('rejoinRoom', ({ roomId, playerToken }) => {
+    const room = rooms[roomId];
+    if (!room) { socket.emit('rejoinFailed', 'Room no longer exists'); return; }
+
+    // Find the player by token
+    const playerIndex = room.players.findIndex(p => p.token === playerToken);
+    if (playerIndex === -1) { socket.emit('rejoinFailed', 'Session not found'); return; }
+
+    const player = room.players[playerIndex];
+
+    // Update socket ID — old socket is gone
+    const wasHost = room.hostId === player.id;
+    player.id = socket.id;
+    player.connected = true;
+    if (wasHost) room.hostId = socket.id;
+
+    socket.join(roomId);
+    socket.data.roomId = roomId;
+    socket.data.playerIndex = playerIndex;
+
+    // Tell this socket it's back in
+    socket.emit('joinedRoom', { roomId, playerIndex, playerToken, playerName: player.name, isRejoin: true });
+
+    // If game is in lobby, send roomUpdate to everyone
+    if (room.state === 'lobby') {
+      room.players.forEach(p => { if (p.connected) io.to(p.id).emit('roomUpdate', sanitizeRoom(room, p.id)); });
+    } else {
+      // Game already running — send full game state back to rejoining player
+      const state = buildPlayerState(room, playerIndex);
+      socket.emit('gameState', state);
+      // Tell others this player is back
+      io.to(roomId).emit('playerRejoined', { playerIndex, name: player.name });
+    }
+
+    console.log(`${player.name} rejoined room ${roomId} (was host: ${wasHost})`);
   });
 
   // DISCONNECT

@@ -462,7 +462,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <h1>🏆 Game Over!</h1>
     <div class="winner-name" id="winner-name"></div>
     <div class="podium-list" id="podium-list"></div>
-    <button class="btn btn-gold mt-2" onclick="location.reload()">Play Again</button>
+    <button class="btn btn-gold mt-2" onclick="clearSession();location.reload()">Play Again</button>
   </div>
 </div>
 
@@ -529,33 +529,78 @@ function showCreateJoin() {
   showScreen('lobby-screen');
 }
 
+// ── SESSION PERSISTENCE ──────────────────────────────────────────────────
+const SESSION_KEY = 'kachuphul_session';
+
+function saveSession(roomId, playerIndex, playerToken, playerName) {
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ roomId, playerIndex, playerToken, playerName })); } catch(e) {}
+}
+function loadSession() {
+  try { const s = localStorage.getItem(SESSION_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+}
+
 function connectSocket() {
   if (socket && socket.connected) return;
   socket = io();
-  socket.on('connect', () => console.log('Socket connected'));
+
+  socket.on('connect', () => {
+    console.log('Socket connected:', socket.id);
+    // On every (re)connect, try to rejoin if we have a saved session
+    const session = loadSession();
+    if (session) {
+      console.log('Attempting rejoin for', session.playerName, 'in room', session.roomId);
+      socket.emit('rejoinRoom', { roomId: session.roomId, playerToken: session.playerToken });
+    }
+  });
+
   socket.on('error', msg => notify(msg, 'err'));
-  socket.on('joinedRoom', ({ roomId, playerIndex }) => {
+
+  // Fired for both fresh join AND successful rejoin
+  socket.on('joinedRoom', ({ roomId, playerIndex, playerToken, playerName, isRejoin }) => {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
+    myName = playerName;
+    saveSession(roomId, playerIndex, playerToken, playerName);
     document.getElementById('display-room-code').textContent = roomId;
-    showScreen('waiting-screen');
+    if (!isRejoin) {
+      showScreen('waiting-screen');
+    }
   });
-  socket.on('roomUpdate', room => renderWaitingRoom(room));
+
+  socket.on('rejoinFailed', reason => {
+    console.log('Rejoin failed:', reason);
+    clearSession();
+    showScreen('home-screen');
+    notify('Session expired — please rejoin', 'err');
+  });
+
+  socket.on('roomUpdate', room => {
+    showScreen('waiting-screen');
+    renderWaitingRoom(room);
+  });
+
   socket.on('gameState', state => {
     // Sync custom order with actual hand (add new cards, remove played ones)
     syncCustomOrder(state.myHand);
     currentGameState = state;
     renderGameState(state);
   });
+
   socket.on('trickWon', ({ winnerName }) => showTrickWonBanner(winnerName));
+
   socket.on('roundEnd', ({ roundIndex, results }) => {
     if (roundIndex !== lastRoundEndShown) {
       lastRoundEndShown = roundIndex;
       showRoundEnd(roundIndex, results);
     }
   });
+
   socket.on('gameOver', ({ finalScores }) => setTimeout(() => showGameOver(finalScores), 500));
   socket.on('playerDisconnected', ({ name }) => notify(`${name} disconnected`, 'err'));
+  socket.on('playerRejoined', ({ name }) => notify(`${name} reconnected`, 'win'));
 }
 
 function createRoom() { connectSocket(); socket.emit('createRoom', { playerName: myName }); }
@@ -1207,6 +1252,16 @@ function showGameOver(finalScores) {
 // ════════════════════════════════════════════
 //  INPUT EVENTS
 // ════════════════════════════════════════════
+// ── AUTO REJOIN ON PAGE LOAD ────────────────────────────────────────────
+(function initOnLoad() {
+  const session = loadSession();
+  if (session) {
+    myName = session.playerName;
+    connectSocket();
+    showScreen('home-screen');
+  }
+})();
+
 document.getElementById('player-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') showCreateJoin();
 });
