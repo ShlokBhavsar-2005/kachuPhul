@@ -34,6 +34,14 @@ body::before {
 .screen { display:none; }
 .screen.active { display:block; }
 
+/* ── LEAVE GAME CONFIRM ── */
+.leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:500; padding:1rem; backdrop-filter:blur(6px); }
+.leave-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.8); }
+.leave-panel h3 { font-size:1.3rem; font-weight:800; margin-bottom:.5rem; }
+.leave-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; line-height:1.5; }
+.leave-btns { display:flex; gap:.7rem; }
+.leave-btns .btn { flex:1; }
+
 /* ── LOBBY ── */
 .lobby-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
 .lobby-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2.5rem 2rem; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
@@ -363,6 +371,9 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 
       <!-- NON-HOST: wait message -->
       <div id="wait-msg" class="mt-2" style="text-align:center;color:var(--text2);font-size:.9rem;">Waiting for host to start…</div>
+      <div class="mt-2">
+        <button class="btn btn-outline" onclick="confirmLeave()" style="border-color:rgba(224,80,80,.4);color:var(--red);font-size:.85rem;padding:.6rem;">🚪 Leave Room</button>
+      </div>
     </div>
   </div>
 </div>
@@ -380,6 +391,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
       <div class="cards-badge"><span id="top-cards">—</span> cards</div>
     </div>
     <button class="btn btn-outline btn-sm" onclick="showScoreboard()">📊 Scores</button>
+    <button class="btn btn-sm" onclick="confirmLeave()" style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">🚪 Leave</button>
   </div>
 
   <div class="seats-container" id="seats-container"></div>
@@ -453,6 +465,18 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <h2>📊 Full Scoreboard</h2>
     <div id="score-table-wrap" style="overflow-x:auto;"></div>
     <button class="btn btn-outline mt-2" onclick="hideScoreboard()">Close</button>
+  </div>
+</div>
+
+<!-- OVERLAY: LEAVE CONFIRM -->
+<div class="leave-overlay hidden" id="leave-overlay">
+  <div class="leave-panel">
+    <h3>🚪 Leave Game?</h3>
+    <p>You'll be removed from the room.<br>You won't be able to rejoin this game.</p>
+    <div class="leave-btns">
+      <button class="btn btn-outline" onclick="cancelLeave()">Stay</button>
+      <button class="btn" onclick="doLeave()" style="background:linear-gradient(135deg,var(--red),#b03030);color:#fff;">Leave</button>
+    </div>
   </div>
 </div>
 
@@ -531,7 +555,6 @@ function showCreateJoin() {
 
 // ── SESSION PERSISTENCE ──────────────────────────────────────────────────
 const SESSION_KEY = 'kachuphul_session';
-
 function saveSession(roomId, playerIndex, playerToken, playerName) {
   try { localStorage.setItem(SESSION_KEY, JSON.stringify({ roomId, playerIndex, playerToken, playerName })); } catch(e) {}
 }
@@ -548,7 +571,6 @@ function connectSocket() {
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
-    // On every (re)connect, try to rejoin if we have a saved session
     const session = loadSession();
     if (session) {
       console.log('Attempting rejoin for', session.playerName, 'in room', session.roomId);
@@ -558,16 +580,13 @@ function connectSocket() {
 
   socket.on('error', msg => notify(msg, 'err'));
 
-  // Fired for both fresh join AND successful rejoin
   socket.on('joinedRoom', ({ roomId, playerIndex, playerToken, playerName, isRejoin }) => {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
     myName = playerName;
     saveSession(roomId, playerIndex, playerToken, playerName);
     document.getElementById('display-room-code').textContent = roomId;
-    if (!isRejoin) {
-      showScreen('waiting-screen');
-    }
+    if (!isRejoin) showScreen('waiting-screen');
   });
 
   socket.on('rejoinFailed', reason => {
@@ -1252,12 +1271,34 @@ function showGameOver(finalScores) {
 // ════════════════════════════════════════════
 //  INPUT EVENTS
 // ════════════════════════════════════════════
-// ── AUTO REJOIN ON PAGE LOAD ────────────────────────────────────────────
+// ── LEAVE GAME ───────────────────────────────────────────────────────────
+function confirmLeave() {
+  document.getElementById('leave-overlay').classList.remove('hidden');
+}
+function cancelLeave() {
+  document.getElementById('leave-overlay').classList.add('hidden');
+}
+function doLeave() {
+  clearSession();
+  if (socket) { socket.disconnect(); socket = null; }
+  document.getElementById('leave-overlay').classList.add('hidden');
+  // Hide all overlays cleanly
+  ['arrange-banner','bid-overlay','confirm-banner','round-end-overlay','score-overlay','game-over-overlay']
+    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  currentGameState = null;
+  myPlayerIndex = null;
+  myRoomId = null;
+  lastRoundEndShown = -1;
+  showScreen('home-screen');
+}
+
+// ── AUTO REJOIN ON PAGE LOAD ─────────────────────────────────────────────
 (function initOnLoad() {
   const session = loadSession();
   if (session) {
     myName = session.playerName;
     connectSocket();
+    // Stay on home screen while reconnecting silently
     showScreen('home-screen');
   }
 })();
