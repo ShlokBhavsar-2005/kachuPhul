@@ -486,7 +486,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <h1>🏆 Game Over!</h1>
     <div class="winner-name" id="winner-name"></div>
     <div class="podium-list" id="podium-list"></div>
-    <button class="btn btn-gold mt-2" onclick="clearSession();location.reload()">Play Again</button>
+    <button class="btn btn-gold mt-2" onclick="clearSession();if(socket){socket.off();socket.disconnect();socket=null;}location.reload()">Play Again</button>
   </div>
 </div>
 
@@ -566,11 +566,26 @@ function clearSession() {
 }
 
 function connectSocket() {
+  // If socket already exists and is connected, do nothing
   if (socket && socket.connected) return;
-  socket = io();
+
+  // If socket exists but is disconnected, destroy it fully before making a new one
+  // This prevents duplicate event listeners from stacking up across reconnects
+  if (socket) {
+    socket.off();       // remove ALL listeners
+    socket.disconnect();
+    socket = null;
+  }
+
+  // reconnection:false — we handle reconnect manually via initOnLoad/session
+  // Without this, socket.io auto-reconnects and fires 'connect' again,
+  // which triggers another rejoinRoom, which triggers another joinedRoom...
+  // causing the same player to appear multiple times
+  socket = io({ reconnection: false });
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
+    // Attempt rejoin if we have a saved session
     const session = loadSession();
     if (session) {
       console.log('Attempting rejoin for', session.playerName, 'in room', session.roomId);
@@ -578,8 +593,18 @@ function connectSocket() {
     }
   });
 
+  socket.on('connect_error', () => {
+    // Server unreachable — clear bad session so user isn't stuck
+    if (loadSession()) {
+      clearSession();
+      notify('Could not connect to server', 'err');
+      showScreen('home-screen');
+    }
+  });
+
   socket.on('error', msg => notify(msg, 'err'));
 
+  // Fired for both fresh join AND successful rejoin
   socket.on('joinedRoom', ({ roomId, playerIndex, playerToken, playerName, isRejoin }) => {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
@@ -1280,9 +1305,9 @@ function cancelLeave() {
 }
 function doLeave() {
   clearSession();
-  if (socket) { socket.disconnect(); socket = null; }
+  // Fully destroy socket so it can't auto-rejoin anything
+  if (socket) { socket.off(); socket.disconnect(); socket = null; }
   document.getElementById('leave-overlay').classList.add('hidden');
-  // Hide all overlays cleanly
   ['arrange-banner','bid-overlay','confirm-banner','round-end-overlay','score-overlay','game-over-overlay']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
   currentGameState = null;
@@ -1293,12 +1318,14 @@ function doLeave() {
 }
 
 // ── AUTO REJOIN ON PAGE LOAD ─────────────────────────────────────────────
+// Runs once on load. If a session exists we silently try to rejoin.
+// With reconnection:false on the socket, this only runs ONCE per page load,
+// not on every socket reconnect — preventing the duplicate player bug.
 (function initOnLoad() {
   const session = loadSession();
   if (session) {
     myName = session.playerName;
-    connectSocket();
-    // Stay on home screen while reconnecting silently
+    connectSocket(); // connect event will fire rejoinRoom
     showScreen('home-screen');
   }
 })();
