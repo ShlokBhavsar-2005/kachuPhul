@@ -34,8 +34,46 @@ body::before {
 .screen { display:none; }
 .screen.active { display:block; }
 
+/* ── LOADING SCREEN ── */
+#loading-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:1rem; }
+.loading-spinner { width:40px; height:40px; border:4px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+#loading-screen.hidden { display:none !important; }
+
+/* ── YOUR TURN FLASH ── */
+.your-turn-flash {
+  position:fixed; inset:0; z-index:500;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+  animation: turn-flash-in .2s ease-out, turn-flash-out .3s ease-in .9s forwards;
+}
+.your-turn-flash-inner {
+  background:rgba(63,185,80,.92); border-radius:20px;
+  padding:1rem 2.5rem; text-align:center;
+  box-shadow:0 0 60px rgba(63,185,80,.6);
+}
+.your-turn-flash-inner span { font-size:1.8rem; font-weight:800; color:#fff; display:block; }
+.your-turn-flash-inner small { font-size:1rem; color:rgba(255,255,255,.85); }
+@keyframes turn-flash-in  { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
+@keyframes turn-flash-out { to{opacity:0;transform:scale(1.1)} }
+
+/* ── TURN INDICATOR (below table) ── */
+.turn-indicator {
+  text-align:center; padding:.5rem 1rem;
+  font-size:1.05rem; font-weight:700; min-height:2.2rem;
+}
+.turn-indicator.my-turn {
+  color:var(--green);
+  animation:turn-glow 1s ease-in-out infinite;
+}
+.turn-indicator.other-turn { color:var(--text2); }
+@keyframes turn-glow {
+  0%,100% { text-shadow:0 0 8px rgba(63,185,80,.4); }
+  50%      { text-shadow:0 0 22px rgba(63,185,80,.9); }
+}
+
 /* ── LEAVE GAME CONFIRM ── */
-.leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:500; padding:1rem; backdrop-filter:blur(6px); }
+.leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(6px); }
 .leave-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.8); }
 .leave-panel h3 { font-size:1.3rem; font-weight:800; margin-bottom:.5rem; }
 .leave-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; line-height:1.5; }
@@ -399,12 +437,16 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   <div class="table-area">
     <div id="trick-status" style="font-size:.82rem;color:var(--text2);margin-bottom:.4rem;text-align:center;"></div>
     <div class="trick-cards" id="trick-cards"></div>
-    <div id="table-message" style="color:var(--text2);font-size:.88rem;text-align:center;margin-top:.4rem;"></div>
   </div>
+  <!-- Turn indicator — big, pulsing, below the table -->
+  <div class="turn-indicator" id="turn-indicator"></div>
 
   <div class="my-hand-section">
     <div class="hand-top-row">
-      <div class="hand-label" id="hand-label">Your Hand</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <div class="hand-label" id="hand-label">Your Hand</div>
+        <div id="hand-trump-badge" style="font-size:.8rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;">TRUMP</div>
+      </div>
       <div class="hand-sort-btns">
         <span style="font-size:.72rem;color:var(--text2);margin-right:.2rem;">Sort:</span>
         <button class="sort-btn active" id="sort-custom" onclick="setSortMode('custom')">Custom</button>
@@ -468,6 +510,22 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   </div>
 </div>
 
+<!-- OVERLAY: GAME OVER -->
+<div class="game-over-overlay hidden" id="game-over-overlay">
+  <div class="game-over-panel">
+    <h1>🏆 Game Over!</h1>
+    <div class="winner-name" id="winner-name"></div>
+    <div class="podium-list" id="podium-list"></div>
+    <button class="btn btn-gold mt-2" onclick="clearSession();if(socket){socket.off();socket.disconnect();socket=null;}location.reload()">Play Again</button>
+  </div>
+</div>
+
+<!-- LOADING SCREEN — shown during reconnect, hidden once destination known -->
+<div id="loading-screen">
+  <div class="loading-spinner"></div>
+  <div style="color:var(--text2);font-size:.9rem;">Connecting…</div>
+</div>
+
 <!-- OVERLAY: LEAVE CONFIRM -->
 <div class="leave-overlay hidden" id="leave-overlay">
   <div class="leave-panel">
@@ -477,16 +535,6 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
       <button class="btn btn-outline" onclick="cancelLeave()">Stay</button>
       <button class="btn" onclick="doLeave()" style="background:linear-gradient(135deg,var(--red),#b03030);color:#fff;">Leave</button>
     </div>
-  </div>
-</div>
-
-<!-- OVERLAY: GAME OVER -->
-<div class="game-over-overlay hidden" id="game-over-overlay">
-  <div class="game-over-panel">
-    <h1>🏆 Game Over!</h1>
-    <div class="winner-name" id="winner-name"></div>
-    <div class="podium-list" id="podium-list"></div>
-    <button class="btn btn-gold mt-2" onclick="clearSession();if(socket){socket.off();socket.disconnect();socket=null;}location.reload()">Play Again</button>
   </div>
 </div>
 
@@ -564,73 +612,72 @@ function loadSession() {
 function clearSession() {
   try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
 }
+function hideLoading() {
+  document.getElementById('loading-screen').classList.add('hidden');
+}
 
 function connectSocket() {
-  // If socket already exists and is connected, do nothing
-  if (socket && socket.connected) return;
+  // Destroy any existing socket fully — prevents duplicate event listeners
+  if (socket) { socket.off(); socket.disconnect(); socket = null; }
 
-  // If socket exists but is disconnected, destroy it fully before making a new one
-  // This prevents duplicate event listeners from stacking up across reconnects
-  if (socket) {
-    socket.off();       // remove ALL listeners
-    socket.disconnect();
-    socket = null;
-  }
-
-  // reconnection:false — we handle reconnect manually via initOnLoad/session
-  // Without this, socket.io auto-reconnects and fires 'connect' again,
-  // which triggers another rejoinRoom, which triggers another joinedRoom...
-  // causing the same player to appear multiple times
+  // reconnection:false — we control reconnect manually via session/initOnLoad
+  // Without this socket.io auto-reconnects, fires 'connect' again, triggers
+  // rejoinRoom again → duplicate player bug
   socket = io({ reconnection: false });
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
-    // Attempt rejoin if we have a saved session
     const session = loadSession();
     if (session) {
-      console.log('Attempting rejoin for', session.playerName, 'in room', session.roomId);
       socket.emit('rejoinRoom', { roomId: session.roomId, playerToken: session.playerToken });
+    } else {
+      hideLoading();
     }
   });
 
   socket.on('connect_error', () => {
-    // Server unreachable — clear bad session so user isn't stuck
-    if (loadSession()) {
-      clearSession();
-      notify('Could not connect to server', 'err');
-      showScreen('home-screen');
-    }
+    clearSession();
+    hideLoading();
+    notify('Could not connect to server', 'err');
+    showScreen('home-screen');
   });
 
   socket.on('error', msg => notify(msg, 'err'));
 
-  // Fired for both fresh join AND successful rejoin
   socket.on('joinedRoom', ({ roomId, playerIndex, playerToken, playerName, isRejoin }) => {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
     myName = playerName;
     saveSession(roomId, playerIndex, playerToken, playerName);
     document.getElementById('display-room-code').textContent = roomId;
+    hideLoading();
     if (!isRejoin) showScreen('waiting-screen');
   });
 
   socket.on('rejoinFailed', reason => {
     console.log('Rejoin failed:', reason);
     clearSession();
+    hideLoading();
     showScreen('home-screen');
     notify('Session expired — please rejoin', 'err');
   });
 
   socket.on('roomUpdate', room => {
+    hideLoading();
     showScreen('waiting-screen');
     renderWaitingRoom(room);
   });
 
   socket.on('gameState', state => {
-    // Sync custom order with actual hand (add new cards, remove played ones)
+    hideLoading();
     syncCustomOrder(state.myHand);
+    const prevTurn = currentGameState?.currentTurnIndex;
     currentGameState = state;
     renderGameState(state);
+    // Flash "Your turn!" if turn just became ours
+    if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex) {
+      showYourTurnFlash();
+    }
   });
 
   socket.on('trickWon', ({ winnerName }) => showTrickWonBanner(winnerName));
@@ -647,7 +694,11 @@ function connectSocket() {
   socket.on('playerRejoined', ({ name }) => notify(`${name} reconnected`, 'win'));
 }
 
-function createRoom() { connectSocket(); socket.emit('createRoom', { playerName: myName }); }
+function createRoom() {
+  hideLoading(); // already on home, don't show spinner
+  connectSocket();
+  socket.emit('createRoom', { playerName: myName });
+}
 function joinRoom() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (!code || code.length < 4) { showErr('lobby-error', 'Enter a valid room code'); return; }
@@ -877,22 +928,26 @@ function renderGameState(state) {
   // Sync bottom-padding for hand section based on which banners are visible
   syncBannerPadding();
 
-  // Table message
-  const tmsg = document.getElementById('table-message');
-  if (state.state === 'bidding') {
-    const waiting = state.players.filter(p => !p.bidReady).length;
-    tmsg.textContent = waiting > 0
-      ? `Waiting for ${waiting} player${waiting > 1 ? 's' : ''} to bid…`
-      : 'All bids in — round starting!';
-  } else if (state.state === 'playing') {
+  // Turn indicator — big pulsing text below the table
+  const ti = document.getElementById('turn-indicator');
+  if (state.state === 'playing') {
     if (state.currentTurnIndex === state.myIndex) {
-      tmsg.innerHTML = `<span style="color:var(--green);font-weight:700;">Your turn — tap a card to play!</span>`;
+      ti.className = 'turn-indicator my-turn';
+      ti.textContent = '🟢 YOUR TURN — Tap a card!';
     } else {
       const name = state.players[state.currentTurnIndex]?.name || '';
-      tmsg.textContent = `${name}'s turn…`;
+      ti.className = 'turn-indicator other-turn';
+      ti.textContent = `${name}'s turn…`;
     }
+  } else if (state.state === 'bidding') {
+    const waiting = state.players.filter(p => !p.bidReady).length;
+    ti.className = 'turn-indicator other-turn';
+    ti.textContent = waiting > 0
+      ? `Waiting for ${waiting} player${waiting > 1 ? 's' : ''} to bid…`
+      : 'All bids in — round starting!';
   } else {
-    tmsg.textContent = '';
+    ti.className = 'turn-indicator';
+    ti.textContent = '';
   }
 }
 
@@ -949,16 +1004,18 @@ function renderTrick(state) {
     ts.textContent = '';
     return;
   }
-  // Show in seat order so it's easy to follow
-  const ordered = [...state.currentTrick].sort((a, b) => {
-    return state.playerOrder.indexOf(a.playerIndex) - state.playerOrder.indexOf(b.playerIndex);
-  });
-  tc.innerHTML = ordered.map(t => {
+  // Cards in play order: first played = leftmost, last played = rightmost
+  // currentTrick array is already in play order (server appends as played)
+  // Also show the lead suit badge on first card
+  tc.innerHTML = state.currentTrick.map((t, idx) => {
     const pName = state.players[t.playerIndex]?.name || '';
     const isMe = t.playerIndex === state.myIndex;
+    const isFirst = idx === 0;
+    const isTrump = t.card.suit === state.trumpSuit;
     return `<div class="trick-card-slot">
+      ${isFirst ? `<div style="font-size:.65rem;color:var(--blue);font-weight:700;margin-bottom:.1rem;">LEAD</div>` : '<div style="height:.85rem;"></div>'}
       <div class="trick-player-name" style="${isMe ? 'color:var(--gold)' : ''}">${pName}</div>
-      ${renderCardHTML(t.card, 'md', false, t.card.suit === state.trumpSuit)}
+      ${renderCardHTML(t.card, 'md', false, isTrump)}
     </div>`;
   }).join('');
   ts.textContent = `${state.currentTrick.length} / ${state.players.length} cards played`;
@@ -970,6 +1027,17 @@ function renderTrick(state) {
 function renderHand(state) {
   const handEl = document.getElementById('my-hand');
   const label  = document.getElementById('hand-label');
+
+  // Update trump badge in hand section
+  const trumpBadge = document.getElementById('hand-trump-badge');
+  if (trumpBadge && state.trumpSuit) {
+    const sym = SUIT_SYM[state.trumpSuit];
+    const color = (state.trumpSuit === 'diamonds' || state.trumpSuit === 'hearts') ? '#e05050' : 'var(--text)';
+    trumpBadge.innerHTML = `<span style="color:${color}">${sym}</span> TRUMP`;
+    trumpBadge.style.display = 'inline-flex';
+    trumpBadge.style.alignItems = 'center';
+    trumpBadge.style.gap = '.25rem';
+  }
 
   if (!state.myHand || state.myHand.length === 0) {
     handEl.innerHTML = '<span style="color:var(--text2);">No cards in hand</span>';
@@ -1161,7 +1229,7 @@ function showTrickWonBanner(name) {
   document.querySelectorAll('.trick-won-banner').forEach(b => b.remove());
   const el = document.createElement('div');
   el.className = 'trick-won-banner';
-  el.textContent = name === myName ? '🎉 You won the trick!' : `${name} won the trick!`;
+  el.textContent = name === myName ? '🎉 You won the hand!' : `${name} won the hand!`;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1600);
 }
@@ -1197,70 +1265,59 @@ function showScoreboard() {
   const players = state.players;
   const roundsPlayed = state.roundScores.length;
   const totalRounds = state.totalRounds;
-  const n = players.length;
 
-  // Header row: Player | R1(trump) | R2 | ... | Total
-  let thead = '<tr><th class="name-col">Player</th>';
+  // ── Rotated layout: rows = rounds, cols = players ──
+  // Header: Round info | Player1 | Player2 | ...
+  let thead = '<tr><th class="name-col" style="text-align:left">Round</th>';
+  players.forEach((p, pi) => {
+    const isMe = pi === myPlayerIndex;
+    thead += `<th style="text-align:center">${p.name}${isMe ? '<br><span style="color:var(--gold);font-size:.65rem">(You)</span>' : ''}</th>`;
+  });
+  thead += '</tr>';
+
+  // Body: one row per round
+  let tbody = '';
   for (let r = 0; r < totalRounds; r++) {
     const trumpSuit = TRUMP_SEQ[r % 4];
     const trumpSym = SUIT_SYM[trumpSuit];
+    const trumpColor = trumpSuit === 'diamonds' || trumpSuit === 'hearts' ? '#e05050' : 'var(--text)';
+    const cardsInRound = totalRounds - r;
     const played = r < roundsPlayed;
-    const cardsInRound = state.totalRounds - r;
-    thead += `<th style="${!played ? 'opacity:.4' : ''}">
-      <div class="score-round-header">R${r+1}</div>
-      <div class="score-trump-sym" style="color:${trumpSuit==='diamonds'||trumpSuit==='hearts'?'#e05050':'var(--text)'}">${trumpSym}</div>
+    let row = `<td class="name-cell" style="opacity:${played ? 1 : 0.4}">
+      <div style="font-weight:700">R${r+1}</div>
+      <div style="color:${trumpColor};font-size:.9rem">${trumpSym}</div>
       <div style="font-size:.65rem;color:var(--text2)">${cardsInRound}c</div>
-    </th>`;
-  }
-  thead += '<th>Total</th></tr>';
-
-  // Body rows: one per player
-  let tbody = '';
-  players.forEach((p, pi) => {
-    let row = `<td class="name-cell">${p.name}${pi === myPlayerIndex ? ' <span style="color:var(--gold);font-size:.7rem">(You)</span>' : ''}</td>`;
-    let total = 0;
-    for (let r = 0; r < totalRounds; r++) {
-      if (r < roundsPlayed) {
+    </td>`;
+    players.forEach((p, pi) => {
+      if (played) {
         const res = state.roundScores[r]?.find(x => x.playerIndex === pi);
         if (res) {
-          total += res.points;
           const hit = res.bid === res.actual;
           const isZero = res.bid === 0 && res.actual === 0;
           const cellClass = isZero ? 'pts-cell zero-bid' : hit ? 'pts-cell hit' : 'pts-cell miss';
-          // Show bid/actual/pts in compact form
           row += `<td class="${cellClass}" title="Bid ${res.bid}, Got ${res.actual}, +${res.points}pts">
-            <div style="font-size:.8rem;font-weight:700">+${res.points}</div>
-            <div style="font-size:.65rem;color:var(--text2)">${res.bid}→${res.actual}</div>
+            <div style="font-size:.85rem;font-weight:700">+${res.points}</div>
+            <div style="font-size:.62rem;color:var(--text2)">${res.bid}→${res.actual}</div>
           </td>`;
         } else {
           row += '<td>—</td>';
         }
       } else {
-        // Future round — show empty
-        row += '<td style="opacity:.25">·</td>';
+        row += '<td style="opacity:.2">·</td>';
       }
-    }
-    row += `<td class="total-score" style="font-weight:800;color:var(--gold);font-size:.95rem">${total}</td>`;
+    });
     tbody += `<tr>${row}</tr>`;
-  });
-
-  // Total row at bottom
-  let totalRow = '<td class="name-cell" style="font-weight:800">🏆 Total</td>';
-  for (let r = 0; r < totalRounds; r++) {
-    if (r < roundsPlayed) {
-      const roundSum = state.roundScores[r]?.reduce((s, x) => s + x.points, 0) ?? 0;
-      totalRow += `<td style="color:var(--text2);font-size:.75rem">${roundSum}</td>`;
-    } else {
-      totalRow += '<td style="opacity:.25">·</td>';
-    }
   }
-  const grandTotal = players.reduce((s, _, pi) => {
-    return s + (state.roundScores.reduce((rs, rnd) => {
-      const r = rnd?.find(x => x.playerIndex === pi);
-      return rs + (r ? r.points : 0);
-    }, 0));
-  }, 0);
-  totalRow += `<td style="color:var(--text2);font-size:.75rem">${grandTotal}</td>`;
+
+  // Total row — just each player's total, no round-sum column
+  let totalRow = '<td class="name-cell" style="font-weight:800">🏆 Total</td>';
+  players.forEach((p, pi) => {
+    const total = state.roundScores.reduce((sum, rnd) => {
+      const res = rnd?.find(x => x.playerIndex === pi);
+      return sum + (res ? res.points : 0);
+    }, 0);
+    totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${total}</td>`;
+  });
 
   document.getElementById('score-table-wrap').innerHTML = `
     <table class="score-table">
@@ -1268,7 +1325,7 @@ function showScoreboard() {
       <tbody>${tbody}<tr class="total-row">${totalRow}</tr></tbody>
     </table>
     <p style="text-align:center;color:var(--text2);font-size:.75rem;margin-top:.7rem;">
-      Green = hit bid · Red = missed · Gold = 0 bid + 0 won = 1pt
+      Green = hit bid · Red = missed · Gold = 0 bid 0 won = 1pt
     </p>`;
 }
 
@@ -1296,6 +1353,16 @@ function showGameOver(finalScores) {
 // ════════════════════════════════════════════
 //  INPUT EVENTS
 // ════════════════════════════════════════════
+// ── YOUR TURN FLASH ──────────────────────────────────────────────────────
+function showYourTurnFlash() {
+  document.querySelectorAll('.your-turn-flash').forEach(e => e.remove());
+  const el = document.createElement('div');
+  el.className = 'your-turn-flash';
+  el.innerHTML = '<div class="your-turn-flash-inner"><span>YOUR TURN!</span><small>Tap a card to play</small></div>';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1400);
+}
+
 // ── LEAVE GAME ───────────────────────────────────────────────────────────
 function confirmLeave() {
   document.getElementById('leave-overlay').classList.remove('hidden');
@@ -1305,7 +1372,6 @@ function cancelLeave() {
 }
 function doLeave() {
   clearSession();
-  // Fully destroy socket so it can't auto-rejoin anything
   if (socket) { socket.off(); socket.disconnect(); socket = null; }
   document.getElementById('leave-overlay').classList.add('hidden');
   ['arrange-banner','bid-overlay','confirm-banner','round-end-overlay','score-overlay','game-over-overlay']
@@ -1318,14 +1384,15 @@ function doLeave() {
 }
 
 // ── AUTO REJOIN ON PAGE LOAD ─────────────────────────────────────────────
-// Runs once on load. If a session exists we silently try to rejoin.
-// With reconnection:false on the socket, this only runs ONCE per page load,
-// not on every socket reconnect — preventing the duplicate player bug.
+// Loading screen stays visible until we know where to send the user.
+// reconnection:false ensures connect fires only once — no duplicate players.
 (function initOnLoad() {
   const session = loadSession();
   if (session) {
     myName = session.playerName;
-    connectSocket(); // connect event will fire rejoinRoom
+    connectSocket(); // connect event handles rejoin → hideLoading called there
+  } else {
+    hideLoading(); // no session, show home immediately
     showScreen('home-screen');
   }
 })();
