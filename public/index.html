@@ -38,47 +38,32 @@ body::before {
 #loading-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:1rem; }
 .loading-spinner { width:40px; height:40px; border:4px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
-#loading-screen.hidden { display:none !important; }
 
 /* ── YOUR TURN FLASH ── */
-.your-turn-flash {
-  position:fixed; inset:0; z-index:500;
-  display:flex; align-items:center; justify-content:center;
-  pointer-events:none;
-  animation: turn-flash-in .2s ease-out, turn-flash-out .3s ease-in .9s forwards;
-}
-.your-turn-flash-inner {
-  background:rgba(63,185,80,.92); border-radius:20px;
-  padding:1rem 2.5rem; text-align:center;
-  box-shadow:0 0 60px rgba(63,185,80,.6);
-}
+.your-turn-flash { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; pointer-events:none; animation:turn-flash-in .2s ease-out, turn-flash-out .3s ease-in .9s forwards; }
+.your-turn-flash-inner { background:rgba(63,185,80,.92); border-radius:20px; padding:1rem 2.5rem; text-align:center; box-shadow:0 0 60px rgba(63,185,80,.6); }
 .your-turn-flash-inner span { font-size:1.8rem; font-weight:800; color:#fff; display:block; }
 .your-turn-flash-inner small { font-size:1rem; color:rgba(255,255,255,.85); }
 @keyframes turn-flash-in  { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
 @keyframes turn-flash-out { to{opacity:0;transform:scale(1.1)} }
 
-/* ── TURN INDICATOR (below table) ── */
-.turn-indicator {
-  text-align:center; padding:.5rem 1rem;
-  font-size:1.05rem; font-weight:700; min-height:2.2rem;
-}
-.turn-indicator.my-turn {
-  color:var(--green);
-  animation:turn-glow 1s ease-in-out infinite;
-}
+/* ── TURN INDICATOR ── */
+.turn-indicator { text-align:center; padding:.5rem 1rem; font-size:1.05rem; font-weight:700; min-height:2.2rem; }
+.turn-indicator.my-turn { color:var(--green); animation:turn-glow 1s ease-in-out infinite; }
 .turn-indicator.other-turn { color:var(--text2); }
-@keyframes turn-glow {
-  0%,100% { text-shadow:0 0 8px rgba(63,185,80,.4); }
-  50%      { text-shadow:0 0 22px rgba(63,185,80,.9); }
-}
+@keyframes turn-glow { 0%,100%{text-shadow:0 0 8px rgba(63,185,80,.4)} 50%{text-shadow:0 0 22px rgba(63,185,80,.9)} }
 
-/* ── LEAVE GAME CONFIRM ── */
+/* ── LEAVE / CONFIRM OVERLAYS ── */
 .leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(6px); }
 .leave-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.8); }
 .leave-panel h3 { font-size:1.3rem; font-weight:800; margin-bottom:.5rem; }
 .leave-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; line-height:1.5; }
 .leave-btns { display:flex; gap:.7rem; }
 .leave-btns .btn { flex:1; }
+
+/* ── PLAY AGAIN VOTES ── */
+.play-again-votes { margin-top:.8rem; font-size:.85rem; color:var(--text2); text-align:center; }
+.play-again-votes strong { color:var(--green); }
 
 /* ── LOBBY ── */
 .lobby-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
@@ -438,14 +423,13 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <div id="trick-status" style="font-size:.82rem;color:var(--text2);margin-bottom:.4rem;text-align:center;"></div>
     <div class="trick-cards" id="trick-cards"></div>
   </div>
-  <!-- Turn indicator — big, pulsing, below the table -->
   <div class="turn-indicator" id="turn-indicator"></div>
 
   <div class="my-hand-section">
     <div class="hand-top-row">
       <div style="display:flex;align-items:center;gap:.5rem;">
         <div class="hand-label" id="hand-label">Your Hand</div>
-        <div id="hand-trump-badge" style="font-size:.8rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;">TRUMP</div>
+        <div id="hand-trump-badge" style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;">TRUMP</div>
       </div>
       <div class="hand-sort-btns">
         <span style="font-size:.72rem;color:var(--text2);margin-right:.2rem;">Sort:</span>
@@ -516,11 +500,15 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <h1>🏆 Game Over!</h1>
     <div class="winner-name" id="winner-name"></div>
     <div class="podium-list" id="podium-list"></div>
-    <button class="btn btn-gold mt-2" onclick="clearSession();if(socket){socket.off();socket.disconnect();socket=null;}location.reload()">Play Again</button>
+    <div id="play-again-votes" class="play-again-votes"></div>
+    <div style="display:flex;gap:.6rem;margin-top:.8rem;">
+      <button class="btn btn-gold" style="flex:1" onclick="votePlayAgain()">🔄 Play Again</button>
+      <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">🏠 End Game</button>
+    </div>
   </div>
 </div>
 
-<!-- LOADING SCREEN — shown during reconnect, hidden once destination known -->
+<!-- LOADING SCREEN -->
 <div id="loading-screen">
   <div class="loading-spinner"></div>
   <div style="color:var(--text2);font-size:.9rem;">Connecting…</div>
@@ -601,43 +589,33 @@ function showCreateJoin() {
   showScreen('lobby-screen');
 }
 
-// ── SESSION PERSISTENCE ──────────────────────────────────────────────────
+// ── SESSION ───────────────────────────────────────────────────────────────
 const SESSION_KEY = 'kachuphul_session';
-function saveSession(roomId, playerIndex, playerToken, playerName) {
-  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ roomId, playerIndex, playerToken, playerName })); } catch(e) {}
-}
-function loadSession() {
-  try { const s = localStorage.getItem(SESSION_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
-}
-function clearSession() {
-  try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
-}
-function hideLoading() {
-  document.getElementById('loading-screen').classList.add('hidden');
-}
+function saveSession(d) { try { localStorage.setItem(SESSION_KEY, JSON.stringify(d)); } catch(e) {} }
+function loadSession()  { try { const s=localStorage.getItem(SESSION_KEY); return s?JSON.parse(s):null; } catch(e){return null;} }
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch(e) {} }
+function hideLoading()  { document.getElementById('loading-screen').classList.add('hidden'); }
 
 function connectSocket() {
-  // Destroy any existing socket fully — prevents duplicate event listeners
+  // Fully destroy old socket first — prevents duplicate listeners / ghost players
   if (socket) { socket.off(); socket.disconnect(); socket = null; }
 
-  // reconnection:false — we control reconnect manually via session/initOnLoad
-  // Without this socket.io auto-reconnects, fires 'connect' again, triggers
-  // rejoinRoom again → duplicate player bug
+  // reconnection:false — we control reconnect via session/initOnLoad.
+  // Auto-reconnect causes connect to fire multiple times → duplicate players.
   socket = io({ reconnection: false });
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id);
-    const session = loadSession();
-    if (session) {
-      socket.emit('rejoinRoom', { roomId: session.roomId, playerToken: session.playerToken });
+    console.log('socket connected', socket.id);
+    const s = loadSession();
+    if (s) {
+      socket.emit('rejoinRoom', { roomId: s.roomId, playerToken: s.playerToken });
     } else {
       hideLoading();
     }
   });
 
   socket.on('connect_error', () => {
-    clearSession();
-    hideLoading();
+    clearSession(); hideLoading();
     notify('Could not connect to server', 'err');
     showScreen('home-screen');
   });
@@ -648,18 +626,31 @@ function connectSocket() {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
     myName = playerName;
-    saveSession(roomId, playerIndex, playerToken, playerName);
+    saveSession({ roomId, playerIndex, playerToken, playerName });
     document.getElementById('display-room-code').textContent = roomId;
     hideLoading();
     if (!isRejoin) showScreen('waiting-screen');
   });
 
+  // Server tells us our updated index (after kick/reorder)
+  socket.on('yourIndex', idx => {
+    myPlayerIndex = idx;
+    const s = loadSession();
+    if (s) { s.playerIndex = idx; saveSession(s); }
+  });
+
   socket.on('rejoinFailed', reason => {
-    console.log('Rejoin failed:', reason);
-    clearSession();
-    hideLoading();
+    console.log('rejoin failed:', reason);
+    clearSession(); hideLoading();
     showScreen('home-screen');
     notify('Session expired — please rejoin', 'err');
+  });
+
+  socket.on('kicked', msg => {
+    clearSession(); hideLoading();
+    if (socket) { socket.off(); socket.disconnect(); socket = null; }
+    showScreen('home-screen');
+    notify(msg || 'You were removed from the room', 'err');
   });
 
   socket.on('roomUpdate', room => {
@@ -674,7 +665,6 @@ function connectSocket() {
     const prevTurn = currentGameState?.currentTurnIndex;
     currentGameState = state;
     renderGameState(state);
-    // Flash "Your turn!" if turn just became ours
     if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex) {
       showYourTurnFlash();
     }
@@ -683,19 +673,34 @@ function connectSocket() {
   socket.on('trickWon', ({ winnerName }) => showTrickWonBanner(winnerName));
 
   socket.on('roundEnd', ({ roundIndex, results }) => {
-    if (roundIndex !== lastRoundEndShown) {
-      lastRoundEndShown = roundIndex;
-      showRoundEnd(roundIndex, results);
-    }
+    if (roundIndex !== lastRoundEndShown) { lastRoundEndShown = roundIndex; showRoundEnd(roundIndex, results); }
   });
 
   socket.on('gameOver', ({ finalScores }) => setTimeout(() => showGameOver(finalScores), 500));
+
   socket.on('playerDisconnected', ({ name }) => notify(`${name} disconnected`, 'err'));
-  socket.on('playerRejoined', ({ name }) => notify(`${name} reconnected`, 'win'));
+  socket.on('playerRejoined',    ({ name }) => notify(`${name} reconnected`, 'win'));
+
+  // Play again: server created new lobby — move there
+  socket.on('newLobby', ({ roomId, playerIndex, playerToken, playerName }) => {
+    myRoomId = roomId;
+    myPlayerIndex = playerIndex;
+    myName = playerName;
+    saveSession({ roomId, playerIndex, playerToken, playerName });
+    document.getElementById('display-room-code').textContent = roomId;
+    // Hide game over overlay and go to waiting room
+    document.getElementById('game-over-overlay').classList.add('hidden');
+    showScreen('waiting-screen');
+  });
+
+  // Show who has voted play again
+  socket.on('playAgainUpdate', ({ votes, total }) => {
+    const el = document.getElementById('play-again-votes');
+    if (el) el.innerHTML = `<strong>${votes.length}/${total}</strong> want to play again: ${votes.join(', ')}`;
+  });
 }
 
 function createRoom() {
-  hideLoading(); // already on home, don't show spinner
   connectSocket();
   socket.emit('createRoom', { playerName: myName });
 }
@@ -726,6 +731,7 @@ function renderWaitingRoom(room) {
       <div class="player-item-name">${p.name}</div>
       ${p.isHost ? '<span class="badge">HOST</span>' : ''}
       ${!p.connected ? '<span class="badge" style="background:var(--red)">OFFLINE</span>' : ''}
+      ${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}
     </div>`).join('');
 
   const n = room.players.length;
@@ -928,26 +934,25 @@ function renderGameState(state) {
   // Sync bottom-padding for hand section based on which banners are visible
   syncBannerPadding();
 
-  // Turn indicator — big pulsing text below the table
+  // Turn indicator below table
   const ti = document.getElementById('turn-indicator');
-  if (state.state === 'playing') {
-    if (state.currentTurnIndex === state.myIndex) {
-      ti.className = 'turn-indicator my-turn';
-      ti.textContent = '🟢 YOUR TURN — Tap a card!';
-    } else {
-      const name = state.players[state.currentTurnIndex]?.name || '';
+  if (ti) {
+    if (state.state === 'playing') {
+      if (state.currentTurnIndex === state.myIndex) {
+        ti.className = 'turn-indicator my-turn';
+        ti.textContent = '🟢 YOUR TURN — Tap a card!';
+      } else {
+        const name = state.players[state.currentTurnIndex]?.name || '';
+        ti.className = 'turn-indicator other-turn';
+        ti.textContent = `${name}'s turn…`;
+      }
+    } else if (state.state === 'bidding') {
+      const waiting = state.players.filter(p => !p.bidReady).length;
       ti.className = 'turn-indicator other-turn';
-      ti.textContent = `${name}'s turn…`;
+      ti.textContent = waiting > 0 ? `Waiting for ${waiting} to bid…` : 'All bids in — round starting!';
+    } else {
+      ti.className = 'turn-indicator'; ti.textContent = '';
     }
-  } else if (state.state === 'bidding') {
-    const waiting = state.players.filter(p => !p.bidReady).length;
-    ti.className = 'turn-indicator other-turn';
-    ti.textContent = waiting > 0
-      ? `Waiting for ${waiting} player${waiting > 1 ? 's' : ''} to bid…`
-      : 'All bids in — round starting!';
-  } else {
-    ti.className = 'turn-indicator';
-    ti.textContent = '';
   }
 }
 
@@ -1004,18 +1009,15 @@ function renderTrick(state) {
     ts.textContent = '';
     return;
   }
-  // Cards in play order: first played = leftmost, last played = rightmost
-  // currentTrick array is already in play order (server appends as played)
-  // Also show the lead suit badge on first card
+  // Keep play order: first played = leftmost (currentTrick is already in play order)
   tc.innerHTML = state.currentTrick.map((t, idx) => {
     const pName = state.players[t.playerIndex]?.name || '';
     const isMe = t.playerIndex === state.myIndex;
     const isFirst = idx === 0;
-    const isTrump = t.card.suit === state.trumpSuit;
     return `<div class="trick-card-slot">
-      ${isFirst ? `<div style="font-size:.65rem;color:var(--blue);font-weight:700;margin-bottom:.1rem;">LEAD</div>` : '<div style="height:.85rem;"></div>'}
+      ${isFirst ? `<div style="font-size:.62rem;color:var(--blue);font-weight:700;margin-bottom:.1rem;">LEAD</div>` : '<div style="height:.9rem;"></div>'}
       <div class="trick-player-name" style="${isMe ? 'color:var(--gold)' : ''}">${pName}</div>
-      ${renderCardHTML(t.card, 'md', false, isTrump)}
+      ${renderCardHTML(t.card, 'md', false, t.card.suit === state.trumpSuit)}
     </div>`;
   }).join('');
   ts.textContent = `${state.currentTrick.length} / ${state.players.length} cards played`;
@@ -1028,15 +1030,13 @@ function renderHand(state) {
   const handEl = document.getElementById('my-hand');
   const label  = document.getElementById('hand-label');
 
-  // Update trump badge in hand section
-  const trumpBadge = document.getElementById('hand-trump-badge');
-  if (trumpBadge && state.trumpSuit) {
-    const sym = SUIT_SYM[state.trumpSuit];
-    const color = (state.trumpSuit === 'diamonds' || state.trumpSuit === 'hearts') ? '#e05050' : 'var(--text)';
-    trumpBadge.innerHTML = `<span style="color:${color}">${sym}</span> TRUMP`;
-    trumpBadge.style.display = 'inline-flex';
-    trumpBadge.style.alignItems = 'center';
-    trumpBadge.style.gap = '.25rem';
+  // Trump badge
+  const tb = document.getElementById('hand-trump-badge');
+  if (tb && state.trumpSuit) {
+    const sym = { spades:'♠', diamonds:'♦', clubs:'♣', hearts:'♥' }[state.trumpSuit];
+    const col = (state.trumpSuit==='diamonds'||state.trumpSuit==='hearts') ? '#e05050' : 'var(--text)';
+    tb.innerHTML = `<span style="color:${col}">${sym}</span> TRUMP`;
+    tb.style.display = 'inline-flex'; tb.style.alignItems = 'center'; tb.style.gap = '.25rem';
   }
 
   if (!state.myHand || state.myHand.length === 0) {
@@ -1266,55 +1266,46 @@ function showScoreboard() {
   const roundsPlayed = state.roundScores.length;
   const totalRounds = state.totalRounds;
 
-  // ── Rotated layout: rows = rounds, cols = players ──
-  // Header: Round info | Player1 | Player2 | ...
+  // Rows = rounds, Cols = players
   let thead = '<tr><th class="name-col" style="text-align:left">Round</th>';
   players.forEach((p, pi) => {
     const isMe = pi === myPlayerIndex;
-    thead += `<th style="text-align:center">${p.name}${isMe ? '<br><span style="color:var(--gold);font-size:.65rem">(You)</span>' : ''}</th>`;
+    thead += `<th style="text-align:center">${p.name}${isMe ? '<br><span style="color:var(--gold);font-size:.65rem">(You)</span>':''}</th>`;
   });
   thead += '</tr>';
 
-  // Body: one row per round
   let tbody = '';
   for (let r = 0; r < totalRounds; r++) {
     const trumpSuit = TRUMP_SEQ[r % 4];
     const trumpSym = SUIT_SYM[trumpSuit];
-    const trumpColor = trumpSuit === 'diamonds' || trumpSuit === 'hearts' ? '#e05050' : 'var(--text)';
-    const cardsInRound = totalRounds - r;
+    const col = (trumpSuit==='diamonds'||trumpSuit==='hearts') ? '#e05050' : 'var(--text)';
     const played = r < roundsPlayed;
-    let row = `<td class="name-cell" style="opacity:${played ? 1 : 0.4}">
+    let row = `<td class="name-cell" style="opacity:${played?1:.4}">
       <div style="font-weight:700">R${r+1}</div>
-      <div style="color:${trumpColor};font-size:.9rem">${trumpSym}</div>
-      <div style="font-size:.65rem;color:var(--text2)">${cardsInRound}c</div>
+      <div style="color:${col};font-size:.9rem">${trumpSym}</div>
+      <div style="font-size:.62rem;color:var(--text2)">${totalRounds-r}c</div>
     </td>`;
     players.forEach((p, pi) => {
-      if (played) {
-        const res = state.roundScores[r]?.find(x => x.playerIndex === pi);
-        if (res) {
-          const hit = res.bid === res.actual;
-          const isZero = res.bid === 0 && res.actual === 0;
-          const cellClass = isZero ? 'pts-cell zero-bid' : hit ? 'pts-cell hit' : 'pts-cell miss';
-          row += `<td class="${cellClass}" title="Bid ${res.bid}, Got ${res.actual}, +${res.points}pts">
-            <div style="font-size:.85rem;font-weight:700">+${res.points}</div>
-            <div style="font-size:.62rem;color:var(--text2)">${res.bid}→${res.actual}</div>
-          </td>`;
-        } else {
-          row += '<td>—</td>';
-        }
-      } else {
-        row += '<td style="opacity:.2">·</td>';
-      }
+      if (!played) { row += '<td style="opacity:.2">·</td>'; return; }
+      const res = state.roundScores[r]?.find(x => x.playerIndex === pi);
+      if (!res) { row += '<td>—</td>'; return; }
+      const hit = res.bid === res.actual;
+      const isZero = res.bid === 0 && res.actual === 0;
+      const cls = isZero ? 'pts-cell zero-bid' : hit ? 'pts-cell hit' : 'pts-cell miss';
+      row += `<td class="${cls}" title="Bid ${res.bid}, Got ${res.actual}">
+        <div style="font-size:.85rem;font-weight:700">+${res.points}</div>
+        <div style="font-size:.62rem;color:var(--text2)">${res.bid}→${res.actual}</div>
+      </td>`;
     });
     tbody += `<tr>${row}</tr>`;
   }
 
-  // Total row — just each player's total, no round-sum column
+  // Total row — one cell per player, no round-sum column
   let totalRow = '<td class="name-cell" style="font-weight:800">🏆 Total</td>';
   players.forEach((p, pi) => {
-    const total = state.roundScores.reduce((sum, rnd) => {
-      const res = rnd?.find(x => x.playerIndex === pi);
-      return sum + (res ? res.points : 0);
+    const total = state.roundScores.reduce((s, rnd) => {
+      const r = rnd?.find(x => x.playerIndex === pi);
+      return s + (r ? r.points : 0);
     }, 0);
     totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${total}</td>`;
   });
@@ -1364,35 +1355,51 @@ function showYourTurnFlash() {
 }
 
 // ── LEAVE GAME ───────────────────────────────────────────────────────────
-function confirmLeave() {
-  document.getElementById('leave-overlay').classList.remove('hidden');
-}
-function cancelLeave() {
-  document.getElementById('leave-overlay').classList.add('hidden');
-}
+function confirmLeave() { document.getElementById('leave-overlay').classList.remove('hidden'); }
+function cancelLeave()  { document.getElementById('leave-overlay').classList.add('hidden'); }
 function doLeave() {
   clearSession();
   if (socket) { socket.off(); socket.disconnect(); socket = null; }
   document.getElementById('leave-overlay').classList.add('hidden');
   ['arrange-banner','bid-overlay','confirm-banner','round-end-overlay','score-overlay','game-over-overlay']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
-  currentGameState = null;
-  myPlayerIndex = null;
-  myRoomId = null;
-  lastRoundEndShown = -1;
+  currentGameState = null; myPlayerIndex = null; myRoomId = null; lastRoundEndShown = -1;
+  showScreen('home-screen');
+}
+
+// ── KICK PLAYER ──────────────────────────────────────────────────────────
+// ── KICK PLAYER ──────────────────────────────────────────────────────────
+function kickPlayer(idx) {
+  if (!socket) return;
+  socket.emit('kickPlayer', { playerIndex: idx });
+}
+
+// ── PLAY AGAIN / END GAME ────────────────────────────────────────────────
+function votePlayAgain() {
+  if (!socket) return;
+  socket.emit('playAgain');
+  // Grey out button so they can't vote twice
+  const btn = document.querySelector('[onclick="votePlayAgain()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '✓ Voted!'; }
+}
+
+function doEndGame() {
+  clearSession();
+  if (socket) { socket.off(); socket.disconnect(); socket = null; }
+  ['game-over-overlay','round-end-overlay','score-overlay']
+    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  currentGameState = null; myPlayerIndex = null; myRoomId = null; lastRoundEndShown = -1;
   showScreen('home-screen');
 }
 
 // ── AUTO REJOIN ON PAGE LOAD ─────────────────────────────────────────────
-// Loading screen stays visible until we know where to send the user.
-// reconnection:false ensures connect fires only once — no duplicate players.
 (function initOnLoad() {
   const session = loadSession();
   if (session) {
     myName = session.playerName;
-    connectSocket(); // connect event handles rejoin → hideLoading called there
+    connectSocket(); // connect event fires rejoinRoom, then hideLoading
   } else {
-    hideLoading(); // no session, show home immediately
+    hideLoading();
     showScreen('home-screen');
   }
 })();
