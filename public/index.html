@@ -1191,7 +1191,15 @@
 
     .card.disabled {
       cursor: not-allowed;
-      filter: brightness(.7) saturate(.5);
+      filter: brightness(.65) saturate(.4);
+      opacity: .75;
+    }
+
+    /* Extra indicator when it IS your turn but a specific card is locked by suit rules */
+    .card.disabled.suit-locked {
+      filter: brightness(.55) saturate(.3) sepia(.2);
+      opacity: .6;
+      outline: 1.5px solid rgba(224, 80, 80, .3);
     }
 
     .card.playable {
@@ -2217,8 +2225,8 @@
           <div style="display:flex;align-items:center;gap:.5rem;">
             <div class="hand-label">Your Hand</div>
             <div id="hand-trump-badge"
-              style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;">
-              TRUMP</div>
+              style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;letter-spacing:.04em;">
+              <span id="hand-trump-sym"></span> <span id="hand-trump-name"></span></div>
           </div>
           <div class="hand-sort-btns">
             <span style="font-size:.72rem;color:var(--text2);margin-right:.2rem;">Sort:</span>
@@ -3063,20 +3071,34 @@
 
     function renderHand(state) {
       if (isSpectator) return;
-      const hand = state.myHand || []; const isMyTurn = state.state === 'playing' && state.currentTurnIndex === myPlayerIndex;
+      const hand = state.myHand || [];
+      const isMyTurn = state.state === 'playing' && state.currentTurnIndex === myPlayerIndex;
+      // If it's my turn, check if I have the lead suit (determines which cards are locked)
+      const hasLeadSuit = isMyTurn && state.currentTrick.length > 0 && hand.some(c => c.suit === state.leadSuit);
       const sorted = getSortedHand(hand, state.trumpSuit);
       $('my-hand').innerHTML = sorted.map((card, si) => {
         const isPlayable = isMyTurn && canPlayCard(card, state);
+        // Disable (dim) the card when: not my turn at all, OR it's my turn but this card can't be played
+        const isDisabled = !isMyTurn || (isMyTurn && !isPlayable);
+        // suit-locked = it's my turn, I have lead suit, but this card is the wrong suit
+        const isSuitLocked = isMyTurn && hasLeadSuit && !isPlayable;
         return `<div class="card-slot">
       <div class="card-arrows">
         <button class="arrow-btn" onclick="moveCard('${card.id}',-1)" ${si === 0 ? 'disabled' : ''}>◀</button>
         <button class="arrow-btn" onclick="moveCard('${card.id}',+1)" ${si === sorted.length - 1 ? 'disabled' : ''}>▶</button>
       </div>
-      ${cardHTML(card, 'size-lg', state.trumpSuit, isPlayable, !isMyTurn, `selectCard('${card.id}')`)}
+      ${cardHTML(card, 'size-lg', state.trumpSuit, isPlayable, isDisabled, `selectCard('${card.id}')`, isSuitLocked)}
     </div>`;
       }).join('');
+      // Update the trump badge with suit symbol + name
       const hasTrump = hand.some(c => c.suit === state.trumpSuit);
-      $('hand-trump-badge').style.display = hasTrump ? '' : 'none';
+      const badge = $('hand-trump-badge');
+      badge.style.display = hasTrump ? '' : 'none';
+      if (hasTrump) {
+        const sym = $('hand-trump-sym'), nm = $('hand-trump-name');
+        if (sym) { sym.textContent = SUIT_SYM[state.trumpSuit] || ''; sym.className = SUIT_COLORS[state.trumpSuit] || ''; }
+        if (nm) nm.textContent = state.trumpName || state.trumpSuit || '';
+      }
     }
 
     function canPlayCard(card, state) {
@@ -3087,9 +3109,14 @@
       return !hasLead || card.suit === state.leadSuit;
     }
 
-    function cardHTML(card, size, trump, playable, disabled, onclick = '') {
+    function cardHTML(card, size, trump, playable, disabled, onclick = '', suitLocked = false) {
       const sc = SUIT_COLORS[card.suit] || '', isTrump = card.suit === trump;
-      const cls = ['card', size, sc, playable ? 'playable' : '', isTrump ? 'trump-card' : '', disabled ? 'disabled' : ''].filter(Boolean).join(' ');
+      const cls = ['card', size, sc,
+        playable ? 'playable' : '',
+        isTrump ? 'trump-card' : '',
+        disabled ? 'disabled' : '',
+        (disabled && suitLocked) ? 'suit-locked' : ''
+      ].filter(Boolean).join(' ');
       return `<div class="${cls}" id="card-${card.id}" ${onclick ? `onclick="${onclick}"` : ''}><div class="card-inner"><div class="card-rank">${card.rank}</div><div class="card-suit-sym">${SUIT_SYM[card.suit]}</div></div></div>`;
     }
 
