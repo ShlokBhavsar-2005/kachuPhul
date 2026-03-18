@@ -254,6 +254,7 @@
       font-weight: 800;
       background: linear-gradient(135deg, var(--gold), #ff9a4a);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: -1px;
     }
@@ -347,6 +348,7 @@
       font-weight: 800;
       background: linear-gradient(135deg, var(--gold), #ff9a4a);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -966,12 +968,21 @@
       font-weight: 700;
     }
 
-    /* SEATS */
+    /* SEATS — clockwise circular grid */
     .seats-container {
       padding: .8rem;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: .5rem;
+    }
+    /* Layout rules set via JS data-playercount attribute */
+    .seats-container[data-count="2"] { grid-template-columns: 1fr 1fr; }
+    .seats-container[data-count="3"] { grid-template-columns: 1fr 1fr; }
+    .seats-container[data-count="4"] { grid-template-columns: 1fr 1fr; }
+    .seats-container[data-count="5"] { grid-template-columns: 1fr 1fr 1fr; }
+    .seats-container[data-count="6"] { grid-template-columns: 1fr 1fr 1fr; }
+    .seats-container[data-count="7"] { grid-template-columns: 1fr 1fr 1fr; }
+    @media(max-width:480px) {
+      .seats-container { grid-template-columns: repeat(2, 1fr) !important; }
     }
 
     .seat {
@@ -992,6 +1003,34 @@
       border-color: var(--green);
       box-shadow: 0 0 14px rgba(63, 185, 80, .3);
       animation: seat-pulse 1.2s ease-in-out infinite;
+    }
+
+    /* Play-order badge */
+    .play-order-badge {
+      position: absolute;
+      top: .3rem;
+      right: .35rem;
+      font-size: .6rem;
+      font-weight: 800;
+      font-family: 'Rajdhani', sans-serif;
+      color: var(--text2);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .seat.current-turn .play-order-badge {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .seat.my-seat .play-order-badge {
+      border-color: var(--gold);
     }
 
     .seat.disconnected {
@@ -1922,10 +1961,6 @@
     }
 
     @media(max-width:480px) {
-      .seats-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
       .card.size-lg {
         width: 62px;
         height: 86px;
@@ -2505,7 +2540,12 @@
         const prevTurn = currentGameState?.currentTurnIndex;
         currentGameState = state;
         renderGameState(state);
-        if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex) showYourTurnFlash();
+        // Show "Your Turn" flash only when it freshly becomes our turn AND the trick
+        // isn't already complete (all players have played = trick is resolving, not a real turn).
+        const trickFull = state.currentTrick && state.currentTrick.length >= state.players.length;
+        if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex && !trickFull) {
+          showYourTurnFlash();
+        }
       });
 
       socket.on('spectating', ({ roomId }) => {
@@ -2919,20 +2959,87 @@
 
     function renderSeats(state) {
       const myIdx = isSpectator ? -1 : myPlayerIndex;
-      $('seats-container').innerHTML = state.players.map((p, i) => {
-        const isMine = i === myIdx, isTurn = state.currentTurnIndex === i, played = state.currentTrick.find(t => t.playerIndex === i);
+      const playerCount = state.players.length;
+
+      // Build clockwise visual order from playerOrder array.
+      // playerOrder[0] = first to bid/lead in round 1. We place them clockwise:
+      // top-left → top-right → (middle-right for odd) → bottom-right → bottom-left → (middle-left for odd)
+      const po = state.playerOrder || state.players.map((_, i) => i);
+      const clockwiseVisualOrder = buildClockwiseOrder(po, playerCount);
+
+      const sc = $('seats-container');
+      sc.setAttribute('data-count', playerCount);
+
+      // Render seats in clockwise visual order
+      sc.innerHTML = clockwiseVisualOrder.map((playerIdx) => {
+        const p = state.players[playerIdx];
+        const isMine = playerIdx === myIdx;
+        const isTurn = state.currentTurnIndex === playerIdx;
+        const played = state.currentTrick.find(t => t.playerIndex === playerIdx);
+        // Play order number = position in playerOrder array
+        const playOrderNum = po.indexOf(playerIdx) + 1;
         const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', !p.connected ? 'disconnected' : ''].filter(Boolean).join(' ');
         let bidInfo = '';
         if (state.state === 'bidding') bidInfo = p.bidReady ? `<div class="seat-bid-info bid-revealed">✓ Ready</div>` : `<div class="seat-bid-info">thinking…</div>`;
         else if (['playing', 'round_end', 'game_over'].includes(state.state)) bidInfo = `<div class="seat-bid-info bid-revealed">Bid ${p.bid ?? '?'} · Won ${p.tricksWon || 0}</div>`;
         return `<div class="${cls}">
-      <div class="seat-avatar ${AVATAR_COLS[i % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
+      <div class="play-order-badge" title="Plays ${playOrderNum}${playOrderNum===1?'st':playOrderNum===2?'nd':playOrderNum===3?'rd':'th'} in turn order">${playOrderNum}</div>
+      <div class="seat-avatar ${AVATAR_COLS[playerIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
       <div class="seat-name">${p.name}${p.isHost ? ' 👑' : ''}</div>
       <div class="seat-score">${p.score || 0} pts</div>
       ${bidInfo}
       ${played ? `<div class="seat-card-played">${cardHTML(played.card, 'size-sm', state.trumpSuit, false, false)}</div>` : ''}
     </div>`;
       }).join('');
+    }
+
+    /**
+     * Reorder players clockwise in a grid:
+     * For a grid with C columns and R rows, clockwise order is:
+     *   Top row L→R, Right column top→bottom (skip corners), Bottom row R→L, Left column bottom→top (skip corners)
+     * We map the game's playerOrder to this visual layout.
+     */
+    function buildClockwiseOrder(playerOrder, count) {
+      // Determine grid dimensions based on count
+      let cols;
+      if (count <= 4) cols = 2;
+      else cols = 3;
+      const rows = Math.ceil(count / cols);
+
+      // Build grid slots in clockwise order
+      const gridPositions = []; // list of [row, col] in clockwise order
+      // Top row: L→R
+      for (let c = 0; c < cols; c++) gridPositions.push([0, c]);
+      // Right column (skip top-right corner already added): top+1 → bottom
+      if (rows > 1) {
+        for (let r = 1; r < rows; r++) gridPositions.push([r, cols - 1]);
+      }
+      // Bottom row R→L (skip bottom-right corner already added), only if rows>1
+      if (rows > 1) {
+        for (let c = cols - 2; c >= 0; c--) gridPositions.push([rows - 1, c]);
+      }
+      // Left column bottom→top (skip bottom-left and top-left corners): bottom-1 → 1
+      if (rows > 2) {
+        for (let r = rows - 2; r >= 1; r--) gridPositions.push([r, 0]);
+      }
+
+      // We have `count` positions. Map playerOrder[0] to first position, etc.
+      // Fill: clockwiseVisualSlot[i] = playerOrder[i]
+      // Build a grid array and place players
+      const grid = Array.from({ length: rows }, () => Array(cols).fill(null));
+      for (let i = 0; i < count; i++) {
+        const [r, c] = gridPositions[i];
+        grid[r][c] = playerOrder[i];
+      }
+
+      // Read grid row by row to get CSS grid order
+      const result = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (grid[r][c] !== null) result.push(grid[r][c]);
+        }
+      }
+      return result;
     }
 
     function renderTrick(state) {
@@ -2946,6 +3053,9 @@
       const el = $('turn-indicator');
       if (state.state !== 'playing') { el.textContent = ''; el.className = 'turn-indicator'; return; }
       const ti = state.currentTurnIndex; if (ti === null || ti === undefined) { el.textContent = ''; return; }
+      // If the trick is full (all players played), it's resolving — don't show "your turn"
+      const trickComplete = state.currentTrick && state.currentTrick.length >= state.players.length;
+      if (trickComplete) { el.textContent = 'Resolving trick…'; el.className = 'turn-indicator other-turn'; return; }
       const myIdx = isSpectator ? -1 : myPlayerIndex;
       if (ti === myIdx) { el.textContent = '⚡ Your turn — play a card!'; el.className = 'turn-indicator my-turn'; }
       else { el.textContent = `Waiting for ${state.players[ti]?.name || '?'}…`; el.className = 'turn-indicator other-turn'; }
