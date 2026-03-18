@@ -5,69 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Kachu Phul 🌸</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="/socket.io/socket.io.js"></script>
 <style>
 :root {
-  --bg: #0d1117;
-  --bg2: #161b22;
-  --bg3: #21262d;
-  --border: #30363d;
-  --gold: #f0c040;
-  --gold2: #d4a017;
-  --red: #e05050;
-  --green: #3fb950;
-  --blue: #58a6ff;
-  --text: #e6edf3;
-  --text2: #8b949e;
-  --card-bg: #f8f0dc;
-  --trump-glow: 0 0 20px rgba(240,192,64,0.6);
+  --bg: #0d1117; --bg2: #161b22; --bg3: #21262d; --border: #30363d;
+  --gold: #f0c040; --gold2: #d4a017; --red: #e05050; --green: #3fb950;
+  --blue: #58a6ff; --text: #e6edf3; --text2: #8b949e;
+  --card-bg: #f8f0dc; --trump-glow: 0 0 20px rgba(240,192,64,0.6);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Baloo 2',cursive; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
-body::before {
-  content:''; position:fixed; inset:0;
-  background: radial-gradient(ellipse at 20% 20%, rgba(240,192,64,.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 80%, rgba(88,166,255,.05) 0%, transparent 50%);
-  pointer-events:none; z-index:0;
-}
+body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse at 20% 20%,rgba(240,192,64,.06) 0%,transparent 50%), radial-gradient(ellipse at 80% 80%,rgba(88,166,255,.05) 0%,transparent 50%); pointer-events:none; z-index:0; }
 #root { position:relative; z-index:1; min-height:100vh; }
 .screen { display:none; }
 .screen.active { display:block; }
+.hidden { display:none !important; }
+.mt-1 { margin-top:.5rem; } .mt-2 { margin-top:1rem; } .mb-1 { margin-bottom:.5rem; }
 
-/* ── LOADING SCREEN ── */
+/* ── LOADING ── */
 #loading-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:1rem; }
 .loading-spinner { width:40px; height:40px; border:4px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 
-/* ── YOUR TURN FLASH ── */
-.your-turn-flash { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; pointer-events:none; animation:turn-flash-in .2s ease-out, turn-flash-out .3s ease-in .9s forwards; }
-.your-turn-flash-inner { background:rgba(63,185,80,.92); border-radius:20px; padding:1rem 2.5rem; text-align:center; box-shadow:0 0 60px rgba(63,185,80,.6); }
-.your-turn-flash-inner span { font-size:1.8rem; font-weight:800; color:#fff; display:block; }
-.your-turn-flash-inner small { font-size:1rem; color:rgba(255,255,255,.85); }
-@keyframes turn-flash-in  { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
-@keyframes turn-flash-out { to{opacity:0;transform:scale(1.1)} }
-
-/* ── TURN INDICATOR ── */
-.turn-indicator { text-align:center; padding:.5rem 1rem; font-size:1.05rem; font-weight:700; min-height:2.2rem; }
-.turn-indicator.my-turn { color:var(--green); animation:turn-glow 1s ease-in-out infinite; }
-.turn-indicator.other-turn { color:var(--text2); }
-@keyframes turn-glow { 0%,100%{text-shadow:0 0 8px rgba(63,185,80,.4)} 50%{text-shadow:0 0 22px rgba(63,185,80,.9)} }
-
-/* ── LEAVE / CONFIRM OVERLAYS ── */
-.leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(6px); }
-.leave-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.8); }
-.leave-panel h3 { font-size:1.3rem; font-weight:800; margin-bottom:.5rem; }
-.leave-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; line-height:1.5; }
-.leave-btns { display:flex; gap:.7rem; }
-.leave-btns .btn { flex:1; }
-
-/* ── PLAY AGAIN VOTES ── */
-.play-again-votes { margin-top:.8rem; font-size:.85rem; color:var(--text2); text-align:center; }
-.play-again-votes strong { color:var(--green); }
-
-/* ── LOBBY ── */
-.lobby-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
-.lobby-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2.5rem 2rem; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+/* ── TYPOGRAPHY / BASE ── */
 .logo { text-align:center; margin-bottom:2rem; }
 .logo h1 { font-size:2.8rem; font-weight:800; background:linear-gradient(135deg,var(--gold),#ff9a4a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-1px; }
 .logo p { color:var(--text2); font-size:.95rem; margin-top:.3rem; }
@@ -86,6 +47,79 @@ body::before {
 .divider { display:flex; align-items:center; gap:1rem; margin:1.2rem 0; color:var(--text2); font-size:.85rem; }
 .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
 .error-msg { background:rgba(224,80,80,.15); border:1px solid #e05050; border-radius:8px; padding:.6rem 1rem; color:#e05050; font-size:.9rem; margin-bottom:1rem; }
+
+/* ── HOME / LOBBY LAYOUT ── */
+.lobby-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.lobby-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2.5rem 2rem; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+
+/* ── GOOGLE LOGIN ── */
+.google-btn { width:100%; padding:.85rem 1rem; border-radius:12px; border:1.5px solid var(--border); background:var(--bg3); color:var(--text); font-family:'Baloo 2',cursive; font-size:1rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.7rem; transition:all .2s; }
+.google-btn:hover { border-color:#4285f4; background:rgba(66,133,244,.1); }
+.google-btn svg { width:20px; height:20px; flex-shrink:0; }
+.user-bar { display:flex; align-items:center; gap:.8rem; background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:.7rem 1rem; margin-bottom:1rem; }
+.user-avatar { width:36px; height:36px; border-radius:50%; overflow:hidden; background:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:800; color:#1a1000; flex-shrink:0; }
+.user-avatar img { width:100%; height:100%; object-fit:cover; }
+.user-name { font-weight:700; font-size:.95rem; flex:1; }
+.user-tag { font-size:.72rem; color:var(--text2); }
+.logout-btn { background:none; border:none; color:var(--text2); cursor:pointer; font-size:.75rem; padding:.2rem .5rem; border-radius:6px; transition:color .2s; }
+.logout-btn:hover { color:var(--red); }
+
+/* ── GAME NAME SETUP ── */
+.setup-overlay { position:fixed; inset:0; background:rgba(0,0,0,.9); display:flex; align-items:center; justify-content:center; z-index:800; padding:1rem; backdrop-filter:blur(8px); }
+.setup-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:380px; text-align:center; }
+.setup-panel h2 { font-size:1.6rem; font-weight:800; margin-bottom:.4rem; }
+.setup-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; }
+
+/* ── FRIENDS PANEL ── */
+.friends-btn { position:fixed; top:1rem; right:1rem; z-index:500; background:var(--bg2); border:1.5px solid var(--border); border-radius:12px; padding:.5rem .9rem; color:var(--text); cursor:pointer; font-family:'Baloo 2',cursive; font-size:.9rem; font-weight:700; display:flex; align-items:center; gap:.4rem; transition:all .2s; }
+.friends-btn:hover { border-color:var(--gold); color:var(--gold); }
+.friends-btn .badge-count { background:var(--red); color:#fff; border-radius:999px; font-size:.65rem; padding:.1rem .4rem; font-weight:800; }
+.friends-panel { position:fixed; right:0; top:0; bottom:0; width:min(320px,100vw); background:var(--bg2); border-left:1px solid var(--border); z-index:600; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .3s cubic-bezier(.4,0,.2,1); box-shadow:-8px 0 32px rgba(0,0,0,.5); }
+.friends-panel.open { transform:translateX(0); }
+.friends-header { display:flex; align-items:center; gap:.6rem; padding:1rem 1.2rem; border-bottom:1px solid var(--border); flex-shrink:0; }
+.friends-header h3 { flex:1; font-size:1rem; font-weight:800; }
+.friends-close { background:none; border:none; color:var(--text2); font-size:1.2rem; cursor:pointer; padding:.2rem; }
+.friends-section { font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; font-weight:700; padding:.7rem 1.2rem .3rem; }
+.friend-item { display:flex; align-items:center; gap:.7rem; padding:.65rem 1.2rem; transition:background .15s; border-bottom:1px solid rgba(48,54,61,.4); }
+.friend-item:hover { background:var(--bg3); }
+.friend-avatar { width:34px; height:34px; border-radius:50%; overflow:hidden; background:var(--bg3); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; flex-shrink:0; position:relative; }
+.friend-avatar img { width:100%; height:100%; object-fit:cover; }
+.online-dot { position:absolute; bottom:-1px; right:-1px; width:10px; height:10px; border-radius:50%; border:2px solid var(--bg2); }
+.online-dot.online { background:var(--green); }
+.online-dot.in-game { background:var(--gold); }
+.online-dot.offline { background:var(--text2); }
+.friend-info { flex:1; min-width:0; }
+.friend-name { font-weight:700; font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.friend-status { font-size:.72rem; color:var(--text2); }
+.friend-status.online { color:var(--green); }
+.friend-status.in-game { color:var(--gold); }
+.friend-actions { display:flex; gap:.3rem; flex-shrink:0; }
+.invite-btn { background:rgba(240,192,64,.15); border:1px solid var(--gold); border-radius:6px; color:var(--gold); cursor:pointer; font-size:.72rem; padding:.25rem .55rem; font-family:'Baloo 2',cursive; font-weight:700; transition:all .15s; white-space:nowrap; }
+.invite-btn:hover { background:rgba(240,192,64,.3); }
+.spectate-btn { background:rgba(88,166,255,.15); border:1px solid var(--blue); border-radius:6px; color:var(--blue); cursor:pointer; font-size:.72rem; padding:.25rem .55rem; font-family:'Baloo 2',cursive; font-weight:700; transition:all .15s; }
+.spectate-btn:hover { background:rgba(88,166,255,.3); }
+.friend-req-item { padding:.7rem 1.2rem; border-bottom:1px solid rgba(48,54,61,.4); }
+.friend-req-name { font-weight:700; font-size:.9rem; margin-bottom:.4rem; }
+.friend-req-btns { display:flex; gap:.4rem; }
+.accept-btn { flex:1; background:var(--green); border:none; border-radius:8px; color:#fff; cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; padding:.35rem; font-size:.8rem; }
+.reject-btn { flex:1; background:rgba(224,80,80,.2); border:1px solid var(--red); border-radius:8px; color:var(--red); cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; padding:.35rem; font-size:.8rem; }
+.add-friend-row { padding:.8rem 1.2rem; border-top:1px solid var(--border); flex-shrink:0; }
+.add-friend-row input { width:100%; background:var(--bg3); border:1.5px solid var(--border); border-radius:8px; padding:.55rem .8rem; color:var(--text); font-family:'Baloo 2',cursive; font-size:.88rem; outline:none; transition:border-color .2s; margin-bottom:.4rem; }
+.add-friend-row input:focus { border-color:var(--gold); }
+.add-friend-btn { width:100%; padding:.5rem; border-radius:8px; border:none; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#1a1000; font-family:'Baloo 2',cursive; font-weight:700; font-size:.88rem; cursor:pointer; }
+.friends-list-scroll { flex:1; overflow-y:auto; }
+
+/* ── INVITE POPUP ── */
+.invite-popup { position:fixed; top:1rem; left:50%; transform:translateX(-50%); background:var(--bg2); border:2px solid var(--gold); border-radius:16px; padding:1.2rem 1.5rem; z-index:700; min-width:280px; max-width:340px; box-shadow:0 12px 40px rgba(0,0,0,.7); animation:pop-in .3s ease-out; }
+@keyframes pop-in { from{opacity:0;transform:translateX(-50%) translateY(-20px) scale(.9)} to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
+.invite-popup-title { font-weight:800; margin-bottom:.3rem; }
+.invite-popup-sub { color:var(--text2); font-size:.85rem; margin-bottom:1rem; }
+.invite-popup-btns { display:flex; gap:.5rem; }
+.invite-accept { flex:1; background:var(--green); border:none; border-radius:10px; color:#fff; cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; padding:.55rem; font-size:.9rem; }
+.invite-reject { flex:1; background:transparent; border:1.5px solid var(--border); border-radius:10px; color:var(--text2); cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; padding:.55rem; font-size:.9rem; }
+
+/* ── SPECTATOR BANNER ── */
+.spectator-bar { background:rgba(88,166,255,.1); border-bottom:1px solid var(--blue); padding:.4rem 1rem; text-align:center; font-size:.82rem; color:var(--blue); font-weight:700; letter-spacing:.05em; }
 
 /* ── WAITING ROOM ── */
 .waiting-wrap { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1rem; }
@@ -121,7 +155,6 @@ body::before {
 .seat-name { font-weight:700; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .seat-score { font-size:.75rem; color:var(--gold); font-weight:700; }
 .seat-bid-info { font-size:.72rem; color:var(--text2); margin-top:.1rem; min-height:1em; }
-/* Bid revealed — show it highlighted */
 .seat-bid-info.bid-revealed { color:var(--blue); font-weight:700; }
 .seat-card-played { margin-top:.35rem; display:flex; justify-content:center; }
 
@@ -137,7 +170,6 @@ body::before {
 .card.disabled { cursor:not-allowed; filter:brightness(.7) saturate(.5); }
 .card.playable { border-color:var(--gold); }
 .card.trump-card { border-color:rgba(240,192,64,.6); }
-/* selected state for confirm-play */
 .card.selected-to-play { border-color:var(--green) !important; box-shadow:0 0 16px rgba(63,185,80,.6) !important; transform:translateY(-10px) scale(1.06) !important; }
 .card-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:.3rem .4rem; }
 .card-rank { font-family:'Rajdhani',sans-serif; font-weight:700; line-height:1; }
@@ -151,14 +183,11 @@ body::before {
 .card.size-sm { width:36px; height:52px; }
 .card.size-sm .card-rank { font-size:.8rem; }
 .card.size-sm .card-suit-sym { font-size:.85rem; }
-.suit-spades { color:#222; }
-.suit-diamonds { color:#d32f2f; }
-.suit-clubs { color:#1b5e20; }
-.suit-hearts { color:#d32f2f; }
+.suit-spades { color:#222; } .suit-diamonds { color:#d32f2f; }
+.suit-clubs { color:#1b5e20; } .suit-hearts { color:#d32f2f; }
 
 /* ── MY HAND ── */
 .my-hand-section { background:var(--bg2); border-top:1px solid var(--border); padding:.8rem; padding-bottom:5rem; }
-/* Extra bottom padding when a fixed banner is visible — keeps cards clear */
 body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .hand-top-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; flex-wrap:wrap; gap:.4rem; }
 .hand-label { font-size:.78rem; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
@@ -168,22 +197,29 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .sort-btn.active { background:rgba(240,192,64,.15); border-color:var(--gold); color:var(--gold); }
 .hand-cards { display:flex; flex-wrap:wrap; gap:.35rem; justify-content:center; }
 
-/* ── CARD REORDER ARROWS ── */
+/* ── CARD REORDER ── */
 .card-slot { display:flex; flex-direction:column; align-items:center; gap:.2rem; }
 .card-arrows { display:flex; gap:.15rem; }
 .arrow-btn { background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--text2); font-size:.65rem; width:20px; height:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; }
 .arrow-btn:hover { border-color:var(--gold); color:var(--gold); }
 .arrow-btn:disabled { opacity:.3; cursor:not-allowed; }
 
+/* ── TURN INDICATOR ── */
+.turn-indicator { text-align:center; padding:.5rem 1rem; font-size:1.05rem; font-weight:700; min-height:2.2rem; }
+.turn-indicator.my-turn { color:var(--green); animation:turn-glow 1s ease-in-out infinite; }
+.turn-indicator.other-turn { color:var(--text2); }
+@keyframes turn-glow { 0%,100%{text-shadow:0 0 8px rgba(63,185,80,.4)} 50%{text-shadow:0 0 22px rgba(63,185,80,.9)} }
+
+/* ── YOUR TURN FLASH ── */
+.your-turn-flash { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; pointer-events:none; animation:turn-flash-in .2s ease-out,turn-flash-out .3s ease-in .9s forwards; }
+.your-turn-flash-inner { background:rgba(63,185,80,.92); border-radius:20px; padding:1rem 2.5rem; text-align:center; box-shadow:0 0 60px rgba(63,185,80,.6); }
+.your-turn-flash-inner span { font-size:1.8rem; font-weight:800; color:#fff; display:block; }
+.your-turn-flash-inner small { font-size:1rem; color:rgba(255,255,255,.85); }
+@keyframes turn-flash-in { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
+@keyframes turn-flash-out { to{opacity:0;transform:scale(1.1)} }
+
 /* ── CONFIRM PLAY BANNER ── */
-.confirm-banner {
-  position:fixed; bottom:0; left:0; right:0;
-  background:var(--bg2); border-top:2px solid var(--green);
-  padding:.8rem 1rem;
-  display:flex; align-items:center; justify-content:space-between; gap:.8rem;
-  z-index:90;
-  animation:slide-up .2s ease-out;
-}
+.confirm-banner { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--green); padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:.8rem; z-index:90; animation:slide-up .2s ease-out; }
 @keyframes slide-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .confirm-banner-text { font-size:.9rem; font-weight:700; color:var(--green); flex:1; }
 .confirm-banner-card { display:flex; align-items:center; gap:.5rem; }
@@ -191,27 +227,12 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .confirm-yes { background:var(--green); color:#fff; border:none; border-radius:10px; padding:.5rem 1.1rem; font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; cursor:pointer; }
 .confirm-no { background:var(--red); color:#fff; border:none; border-radius:10px; padding:.5rem 1rem; font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; cursor:pointer; }
 
-/* ── ARRANGE PHASE BANNER ── */
-.arrange-banner {
-  position:fixed; bottom:0; left:0; right:0;
-  background:var(--bg2); border-top:2px solid var(--gold);
-  padding:.9rem 1.2rem;
-  display:flex; align-items:center; justify-content:space-between; gap:.8rem;
-  z-index:95;
-  animation:slide-up .25s ease-out;
-}
+/* ── ARRANGE BANNER ── */
+.arrange-banner { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:2px solid var(--gold); padding:.9rem 1.2rem; display:flex; align-items:center; justify-content:space-between; gap:.8rem; z-index:95; animation:slide-up .25s ease-out; }
 .arrange-banner-left { flex:1; }
 .arrange-banner-title { font-size:1rem; font-weight:800; color:var(--gold); margin-bottom:.15rem; }
 .arrange-banner-sub { font-size:.78rem; color:var(--text2); }
-.arrange-ready-btn {
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
-  color:#1a1000; border:none; border-radius:12px;
-  padding:.65rem 1.3rem; font-family:'Baloo 2',cursive;
-  font-size:.95rem; font-weight:800; cursor:pointer;
-  white-space:nowrap; flex-shrink:0;
-  box-shadow:0 4px 16px rgba(240,192,64,.35);
-  transition:all .15s;
-}
+.arrange-ready-btn { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#1a1000; border:none; border-radius:12px; padding:.65rem 1.3rem; font-family:'Baloo 2',cursive; font-size:.95rem; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 4px 16px rgba(240,192,64,.35); transition:all .15s; }
 .arrange-ready-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(240,192,64,.5); }
 
 /* ── BIDDING ── */
@@ -229,6 +250,14 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .bid-status-chip.ready .dot { background:var(--green); }
 .bid-status-chip.waiting .dot { background:var(--text2); }
 
+/* ── LEAVE OVERLAY ── */
+.leave-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:600; padding:1rem; backdrop-filter:blur(6px); }
+.leave-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.8); }
+.leave-panel h3 { font-size:1.3rem; font-weight:800; margin-bottom:.5rem; }
+.leave-panel p { color:var(--text2); font-size:.9rem; margin-bottom:1.5rem; line-height:1.5; }
+.leave-btns { display:flex; gap:.7rem; }
+.leave-btns .btn { flex:1; }
+
 /* ── ROUND END ── */
 .round-end-overlay { position:fixed; inset:0; background:rgba(0,0,0,.88); display:flex; align-items:center; justify-content:center; z-index:200; padding:1rem; backdrop-filter:blur(6px); }
 .round-end-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:1.5rem; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,.8); max-height:90vh; overflow-y:auto; }
@@ -244,7 +273,6 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .score-overlay { position:fixed; inset:0; background:rgba(0,0,0,.88); display:flex; align-items:center; justify-content:center; z-index:300; padding:1rem; backdrop-filter:blur(6px); }
 .score-panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:1.5rem; width:100%; max-width:600px; box-shadow:0 20px 60px rgba(0,0,0,.8); max-height:90vh; overflow-y:auto; }
 .score-panel h2 { font-size:1.4rem; font-weight:800; margin-bottom:1rem; text-align:center; }
-/* Full scoreboard table */
 .score-table { width:100%; border-collapse:collapse; font-size:.82rem; }
 .score-table th { background:var(--bg3); padding:.45rem .5rem; text-align:center; color:var(--text2); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; border:1px solid var(--border); white-space:nowrap; }
 .score-table th.name-col { text-align:left; min-width:80px; }
@@ -256,10 +284,6 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .score-table .pts-cell.zero-bid { color:var(--gold); }
 .score-table tr:hover td { background:rgba(255,255,255,.03); }
 .score-table .total-row td { background:var(--bg3); font-weight:800; }
-.score-table .total-row .total-score { color:var(--gold); font-size:1rem; }
-/* Round header in scoreboard */
-.score-round-header { font-size:.7rem; color:var(--text2); font-weight:600; }
-.score-trump-sym { font-size:.85rem; }
 
 /* ── GAME OVER ── */
 .game-over-overlay { position:fixed; inset:0; background:rgba(0,0,0,.95); display:flex; align-items:center; justify-content:center; z-index:400; padding:1rem; }
@@ -271,6 +295,8 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .podium-rank { font-size:1.5rem; width:2rem; text-align:center; }
 .podium-name { flex:1; font-weight:700; text-align:left; }
 .podium-score { font-size:1.2rem; font-weight:800; color:var(--gold); }
+.play-again-votes { margin-top:.8rem; font-size:.85rem; color:var(--text2); text-align:center; }
+.play-again-votes strong { color:var(--green); }
 
 /* ── NOTIFICATIONS ── */
 .notif { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:.7rem 1.3rem; font-size:.9rem; font-weight:600; z-index:1000; box-shadow:0 8px 24px rgba(0,0,0,.5); animation:notif-in .3s ease-out,notif-out .3s ease-in 2.5s forwards; pointer-events:none; }
@@ -281,9 +307,9 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 @keyframes notif-out { to{opacity:0;transform:translateX(-50%) translateY(20px)} }
 
 /* ── TRICK WON ── */
-.trick-won-banner { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--bg2); border:2px solid var(--gold); border-radius:16px; padding:1rem 2rem; font-size:1.2rem; font-weight:800; color:var(--gold); z-index:150; text-align:center; box-shadow:var(--trump-glow); animation:pop-in .25s ease-out,pop-out .25s ease-in 1.2s forwards; pointer-events:none; }
-@keyframes pop-in { from{opacity:0;transform:translate(-50%,-50%) scale(.7)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
-@keyframes pop-out { to{opacity:0;transform:translate(-50%,-50%) scale(.8)} }
+.trick-won-banner { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--bg2); border:2px solid var(--gold); border-radius:16px; padding:1rem 2rem; font-size:1.2rem; font-weight:800; color:var(--gold); z-index:150; text-align:center; box-shadow:var(--trump-glow); animation:bpop-in .25s ease-out,bpop-out .25s ease-in 1.2s forwards; pointer-events:none; }
+@keyframes bpop-in { from{opacity:0;transform:translate(-50%,-50%) scale(.7)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+@keyframes bpop-out { to{opacity:0;transform:translate(-50%,-50%) scale(.8)} }
 
 /* ── ROUNDS SELECTOR ── */
 .rounds-selector { background:var(--bg3); border:1px solid var(--border); border-radius:14px; padding:1rem 1.2rem; margin-bottom:.2rem; }
@@ -293,7 +319,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .rounds-arrow:hover { border-color:var(--gold); color:var(--gold); }
 .rounds-arrow:disabled { opacity:.3; cursor:not-allowed; }
 .rounds-display { text-align:center; min-width:80px; }
-.rounds-display #chosen-rounds { font-family:'Rajdhani',sans-serif; font-size:2.2rem; font-weight:700; color:var(--gold); line-height:1; display:block; }
+#chosen-rounds { font-family:'Rajdhani',sans-serif; font-size:2.2rem; font-weight:700; color:var(--gold); line-height:1; display:block; }
 .rounds-max { font-size:.78rem; color:var(--text2); display:block; margin-top:.1rem; }
 .rounds-hint { text-align:center; font-size:.78rem; color:var(--text2); min-height:1.2em; margin-bottom:.5rem; }
 .rounds-presets { display:flex; gap:.4rem; justify-content:center; flex-wrap:wrap; }
@@ -301,11 +327,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 .preset-btn:hover { border-color:var(--gold); color:var(--gold); }
 .preset-btn.active { background:rgba(240,192,64,.15); border-color:var(--gold); color:var(--gold); font-weight:700; }
 
-.hidden { display:none !important; }
-.mt-1 { margin-top:.5rem; }
-.mt-2 { margin-top:1rem; }
-.mb-1 { margin-bottom:.5rem; }
-
+/* ── AVATAR COLORS ── */
 .c0{background:#e05050;color:#fff} .c1{background:#58a6ff;color:#fff} .c2{background:#3fb950;color:#fff}
 .c3{background:#f0c040;color:#1a1000} .c4{background:#a371f7;color:#fff} .c5{background:#ff7f50;color:#fff}
 .c6{background:#20b2aa;color:#fff}
@@ -322,6 +344,47 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 <body>
 <div id="root">
 
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-spinner"></div>
+  <div style="color:var(--text2);font-size:.9rem;">Connecting…</div>
+</div>
+
+<!-- GAME NAME SETUP OVERLAY (shown after Google login for new users) -->
+<div id="setup-overlay" class="setup-overlay hidden">
+  <div class="setup-panel">
+    <div style="font-size:2.5rem;margin-bottom:.5rem;">🎮</div>
+    <h2>Choose your Game Name</h2>
+    <p>This is your permanent in-game ID — like a PUBG username.<br>Letters, numbers and _ only. 2–16 chars.</p>
+    <div id="setup-error" class="error-msg hidden"></div>
+    <div class="input-group" style="text-align:left;">
+      <label>Game Name</label>
+      <input type="text" id="setup-name-input" placeholder="e.g. CardKing99" maxlength="16" oninput="checkNameAvailability()">
+    </div>
+    <div id="name-check" style="font-size:.8rem;margin-bottom:1rem;min-height:1.2em;"></div>
+    <button class="btn btn-gold" id="setup-confirm-btn" onclick="confirmSetupName()" disabled>Confirm Name →</button>
+  </div>
+</div>
+
+<!-- FRIENDS PANEL (slide in from right) -->
+<div id="friends-panel" class="friends-panel">
+  <div class="friends-header">
+    <h3>👥 Friends</h3>
+    <button class="friends-close" onclick="closeFriendsPanel()">✕</button>
+  </div>
+  <div class="friends-list-scroll" id="friends-list-scroll">
+    <div class="friends-section">Pending Requests</div>
+    <div id="pending-requests-list"></div>
+    <div class="friends-section">Friends</div>
+    <div id="friends-list"></div>
+  </div>
+  <div class="add-friend-row">
+    <div id="add-friend-error" style="font-size:.78rem;color:var(--red);margin-bottom:.3rem;min-height:1em;"></div>
+    <input type="text" id="add-friend-input" placeholder="Add friend by game name…" maxlength="16" onkeydown="if(event.key==='Enter')sendFriendRequest()">
+    <button class="add-friend-btn" onclick="sendFriendRequest()">+ Send Friend Request</button>
+  </div>
+</div>
+
 <!-- SCREEN: HOME -->
 <div id="home-screen" class="screen active">
   <div class="lobby-wrap">
@@ -332,11 +395,33 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
         <p>The classic bidding card game — online with friends</p>
       </div>
       <div id="home-error" class="error-msg hidden"></div>
-      <div class="input-group">
-        <label>Your Name</label>
-        <input type="text" id="player-name" placeholder="Enter your name" maxlength="16">
+
+      <!-- Logged-in user bar (shown when authenticated) -->
+      <div id="user-bar" class="user-bar hidden">
+        <div class="user-avatar" id="user-avatar-img">?</div>
+        <div>
+          <div class="user-name" id="user-display-name">—</div>
+          <div class="user-tag" id="user-display-tag"></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Sign out</button>
       </div>
-      <button class="btn btn-gold" onclick="showCreateJoin()">Play Now</button>
+
+      <!-- Google login button (hidden when logged in) -->
+      <div id="google-login-wrap">
+        <button class="google-btn" onclick="triggerGoogleLogin()">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        <div style="margin-top:.7rem;text-align:center;">
+          <button class="btn-outline btn btn-sm" style="width:auto;font-size:.8rem;opacity:.6;" onclick="playAsGuest()">Play as Guest (no account)</button>
+        </div>
+      </div>
+
+      <!-- Play buttons (shown when logged in) -->
+      <div id="play-buttons" class="hidden">
+        <button class="btn btn-gold mb-1" onclick="showCreateJoin()">🎴 Play Now</button>
+        <button class="btn btn-outline" onclick="openFriendsPanel()">👥 Friends & Invites</button>
+      </div>
     </div>
   </div>
 </div>
@@ -351,8 +436,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
       <div class="divider">or join existing</div>
       <div class="input-group">
         <label>Room Code</label>
-        <input type="text" id="room-code-input" placeholder="e.g. XK9A2B" maxlength="6"
-          style="text-transform:uppercase;letter-spacing:.15em;font-size:1.2rem;font-weight:700;">
+        <input type="text" id="room-code-input" placeholder="e.g. XK9A2B" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;font-size:1.2rem;font-weight:700;">
       </div>
       <button class="btn btn-outline" onclick="joinRoom()">Join Room →</button>
       <div class="mt-2">
@@ -366,13 +450,12 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 <div id="waiting-screen" class="screen">
   <div class="waiting-wrap">
     <div class="waiting-card">
+      <div id="spectator-bar" class="spectator-bar hidden">👁 You are spectating</div>
       <div class="room-code-label">Room Code — Share with friends</div>
       <div class="room-code" id="display-room-code">------</div>
       <button class="btn btn-outline btn-sm mt-1" onclick="copyRoomCode()" style="margin:0 auto .5rem;display:block;">📋 Copy Code</button>
       <div id="player-list" class="player-list"></div>
       <div id="game-info-preview" class="mt-1" style="text-align:center;color:var(--text2);font-size:.85rem;"></div>
-
-      <!-- HOST: round selector + start -->
       <div id="start-btn-wrap" class="mt-2 hidden">
         <div class="rounds-selector" id="rounds-selector">
           <div class="rounds-label">How many rounds?</div>
@@ -385,14 +468,11 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
             <button class="rounds-arrow" onclick="changeRounds(+1)">▶</button>
           </div>
           <div class="rounds-hint" id="rounds-hint"></div>
-          <!-- Quick presets: full / half / custom -->
           <div class="rounds-presets" id="rounds-presets"></div>
         </div>
         <button class="btn btn-gold" style="margin-top:.8rem;" onclick="startGame()">🚀 Start Game</button>
         <p style="text-align:center;color:var(--text2);font-size:.8rem;margin-top:.4rem;">You are the host</p>
       </div>
-
-      <!-- NON-HOST: wait message -->
       <div id="wait-msg" class="mt-2" style="text-align:center;color:var(--text2);font-size:.9rem;">Waiting for host to start…</div>
       <div class="mt-2">
         <button class="btn btn-outline" onclick="confirmLeave()" style="border-color:rgba(224,80,80,.4);color:var(--red);font-size:.85rem;padding:.6rem;">🚪 Leave Room</button>
@@ -403,6 +483,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 
 <!-- SCREEN: GAME -->
 <div id="game-screen" class="screen">
+  <div id="spectator-game-bar" class="spectator-bar hidden">👁 SPECTATING — watching the game</div>
   <div class="top-bar">
     <div class="top-info">
       <div class="trump-badge">
@@ -416,15 +497,12 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
     <button class="btn btn-outline btn-sm" onclick="showScoreboard()">📊 Scores</button>
     <button class="btn btn-sm" onclick="confirmLeave()" style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">🚪 Leave</button>
   </div>
-
   <div class="seats-container" id="seats-container"></div>
-
   <div class="table-area">
     <div id="trick-status" style="font-size:.82rem;color:var(--text2);margin-bottom:.4rem;text-align:center;"></div>
     <div class="trick-cards" id="trick-cards"></div>
   </div>
   <div class="turn-indicator" id="turn-indicator"></div>
-
   <div class="my-hand-section">
     <div class="hand-top-row">
       <div style="display:flex;align-items:center;gap:.5rem;">
@@ -445,7 +523,12 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 
 </div><!-- #root -->
 
-<!-- ARRANGE BANNER: shown during bidding phase before player opens bid panel -->
+<!-- FRIENDS BUTTON (global, shown when logged in and not in a game on mobile) -->
+<button id="friends-float-btn" class="friends-btn hidden" onclick="openFriendsPanel()">
+  👥 Friends <span id="friends-notif-badge" class="badge-count hidden">0</span>
+</button>
+
+<!-- ARRANGE BANNER -->
 <div class="arrange-banner hidden" id="arrange-banner">
   <div class="arrange-banner-left">
     <div class="arrange-banner-title">🃏 Arrange your cards</div>
@@ -454,10 +537,10 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   <button class="arrange-ready-btn" onclick="openBidPanel()">📝 Place Bid →</button>
 </div>
 
-<!-- OVERLAY: BIDDING -->
+<!-- BID OVERLAY -->
 <div class="bid-overlay hidden" id="bid-overlay">
   <div class="bid-panel">
-    <button onclick="closeBidPanel()" style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">✕</button>
+    <button onclick="closeBidPanel()" style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
     <h2>📝 Place Your Bid</h2>
     <p id="bid-subtitle">How many tricks will you win this round?</p>
     <div class="bid-buttons" id="bid-buttons"></div>
@@ -466,7 +549,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   </div>
 </div>
 
-<!-- OVERLAY: CONFIRM PLAY (bottom slide-up) -->
+<!-- CONFIRM PLAY -->
 <div class="confirm-banner hidden" id="confirm-banner">
   <div class="confirm-banner-text" id="confirm-banner-text">Play this card?</div>
   <div class="confirm-banner-card" id="confirm-banner-card"></div>
@@ -476,7 +559,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   </div>
 </div>
 
-<!-- OVERLAY: ROUND END -->
+<!-- ROUND END -->
 <div class="round-end-overlay hidden" id="round-end-overlay">
   <div class="round-end-panel">
     <h2 id="round-end-title">Round Results</h2>
@@ -485,7 +568,7 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   </div>
 </div>
 
-<!-- OVERLAY: SCOREBOARD -->
+<!-- SCOREBOARD -->
 <div class="score-overlay hidden" id="score-overlay">
   <div class="score-panel">
     <h2>📊 Full Scoreboard</h2>
@@ -494,27 +577,19 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
   </div>
 </div>
 
-<!-- OVERLAY: GAME OVER -->
+<!-- GAME OVER -->
 <div class="game-over-overlay hidden" id="game-over-overlay">
   <div class="game-over-panel">
     <h1>🏆 Game Over!</h1>
     <div class="winner-name" id="winner-name"></div>
     <div class="podium-list" id="podium-list"></div>
-    <div id="play-again-votes" class="play-again-votes"></div>
-    <div style="display:flex;gap:.6rem;margin-top:.8rem;">
-      <button class="btn btn-gold" style="flex:1" onclick="votePlayAgain()">🔄 Play Again</button>
-      <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">🏠 End Game</button>
-    </div>
+    <div class="play-again-votes" id="play-again-votes"></div>
+    <button class="btn btn-gold mt-2" onclick="votePlayAgain()">🔄 Play Again</button>
+    <button class="btn btn-outline mt-1" onclick="doEndGame()" style="margin-top:.5rem;">Exit to Lobby</button>
   </div>
 </div>
 
-<!-- LOADING SCREEN -->
-<div id="loading-screen">
-  <div class="loading-spinner"></div>
-  <div style="color:var(--text2);font-size:.9rem;">Connecting…</div>
-</div>
-
-<!-- OVERLAY: LEAVE CONFIRM -->
+<!-- LEAVE OVERLAY -->
 <div class="leave-overlay hidden" id="leave-overlay">
   <div class="leave-panel">
     <h3>🚪 Leave Game?</h3>
@@ -527,38 +602,47 @@ body.banner-visible .my-hand-section { padding-bottom:8rem; }
 </div>
 
 <script>
-// ════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════
-let socket = null;
-let myPlayerIndex = null;
-let myRoomId = null;
-let myName = '';
-let currentGameState = null;
-let selectedBid = null;
-let lastRoundEndShown = -1;
-
-// Card order management — custom order stored as array of card IDs
-let customHandOrder = []; // array of card IDs in display order
-let sortMode = 'custom';  // 'custom' | 'suit' | 'value' | 'trump'
-
-// Confirm-play state
-let pendingCardId = null;
-let chosenRounds = null;   // host's selected round count
-let maxRoundsAvailable = 0;
-let bidPanelOpen = false;  // true once player clicks "Place Bid" in arrange phase
-
+// ════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════════════
 const SUIT_COLORS  = { spades:'suit-spades', diamonds:'suit-diamonds', clubs:'suit-clubs', hearts:'suit-hearts' };
 const SUIT_SYM     = { spades:'♠', diamonds:'♦', clubs:'♣', hearts:'♥' };
 const SUIT_ORDER   = { spades:0, diamonds:1, clubs:2, hearts:3 };
 const RANK_ORDER   = { '2':0,'3':1,'4':2,'5':3,'6':4,'7':5,'8':6,'9':7,'10':8,'J':9,'Q':10,'K':11,'A':12 };
 const AVATAR_COLORS = ['c0','c1','c2','c3','c4','c5','c6'];
-// Trump suit sequence for scoreboard display
-const TRUMP_SEQ = ['spades','diamonds','clubs','hearts'];
+const TRUMP_SEQ    = ['spades','diamonds','clubs','hearts'];
+const SESSION_KEY  = 'kachuphul_session';
+const AUTH_KEY     = 'kachuphul_auth';
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let socket           = null;
+let myPlayerIndex    = null;
+let myRoomId         = null;
+let myName           = '';
+let currentGameState = null;
+let selectedBid      = null;
+let lastRoundEndShown = -1;
+let customHandOrder  = [];
+let sortMode         = 'custom';
+let pendingCardId    = null;
+let chosenRounds     = null;
+let maxRoundsAvailable = 0;
+let bidPanelOpen     = false;
+let isSpectator      = false;
+
+// Auth state
+let authUser = null; // { gameName, googleId, sessionToken, picture }
+let pendingGoogleUser = null; // { googleId, idToken, email, picture } — during name setup
+let nameCheckTimeout = null;
+let pendingInvites = []; // queue of invite popups
+let friendsData = { friends: [], pending: [] };
+let friendsNotifCount = 0;
+
+// ════════════════════════════════════════════════════════════
 //  HELPERS
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
@@ -578,46 +662,429 @@ function notify(msg, type = 'info') {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
-
-// ════════════════════════════════════════════
-//  LOBBY
-// ════════════════════════════════════════════
-function showCreateJoin() {
-  const name = document.getElementById('player-name').value.trim();
-  if (!name) { showErr('home-error', 'Please enter your name first'); return; }
-  myName = name;
-  showScreen('lobby-screen');
-}
-
-// ── SESSION ───────────────────────────────────────────────────────────────
-const SESSION_KEY = 'kachuphul_session';
+function hideLoading() { document.getElementById('loading-screen').classList.add('hidden'); }
 function saveSession(d) { try { localStorage.setItem(SESSION_KEY, JSON.stringify(d)); } catch(e) {} }
 function loadSession()  { try { const s=localStorage.getItem(SESSION_KEY); return s?JSON.parse(s):null; } catch(e){return null;} }
 function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch(e) {} }
-function hideLoading()  { document.getElementById('loading-screen').classList.add('hidden'); }
+function saveAuth(d)    { try { localStorage.setItem(AUTH_KEY, JSON.stringify(d)); } catch(e) {} }
+function loadAuth()     { try { const s=localStorage.getItem(AUTH_KEY); return s?JSON.parse(s):null; } catch(e){return null;} }
+function clearAuth()    { try { localStorage.removeItem(AUTH_KEY); } catch(e) {} }
 
+// ════════════════════════════════════════════════════════════
+//  GOOGLE AUTH
+// ════════════════════════════════════════════════════════════
+function triggerGoogleLogin() {
+  // Use the Google Identity Services popup
+  const clientId = window.GOOGLE_CLIENT_ID || '';
+  if (!clientId) { notify('Google login not configured', 'err'); return; }
+
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+  google.accounts.id.prompt((notification) => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // Fallback: show One Tap or redirect
+      google.accounts.id.renderButton(
+        document.createElement('div'), { theme:'outline', size:'large' }
+      );
+    }
+  });
+}
+
+async function handleGoogleCredential(response) {
+  const idToken = response.credential;
+  try {
+    const res = await fetch('/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    const data = await res.json();
+
+    if (data.status === 'new') {
+      // Need to pick a game name
+      pendingGoogleUser = { googleId: data.googleId, idToken, email: data.email, picture: data.picture };
+      document.getElementById('setup-overlay').classList.remove('hidden');
+      document.getElementById('setup-name-input').focus();
+    } else if (data.status === 'ok') {
+      setAuthUser({ gameName: data.gameName, googleId: data.googleId, sessionToken: data.sessionToken, picture: data.picture });
+    } else {
+      notify(data.error || 'Login failed', 'err');
+    }
+  } catch(e) {
+    notify('Login failed — server error', 'err');
+  }
+}
+
+async function confirmSetupName() {
+  const name = document.getElementById('setup-name-input').value.trim();
+  if (!name || !pendingGoogleUser) return;
+
+  const btn = document.getElementById('setup-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        googleId: pendingGoogleUser.googleId,
+        gameName: name,
+        idToken: pendingGoogleUser.idToken,
+        picture: pendingGoogleUser.picture,
+      }),
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      document.getElementById('setup-overlay').classList.add('hidden');
+      setAuthUser({ gameName: data.gameName, googleId: data.googleId, sessionToken: data.sessionToken, picture: pendingGoogleUser.picture });
+      pendingGoogleUser = null;
+    } else {
+      document.getElementById('setup-error').textContent = data.error || 'Error';
+      document.getElementById('setup-error').classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Confirm Name →';
+    }
+  } catch(e) {
+    document.getElementById('setup-error').textContent = 'Server error';
+    document.getElementById('setup-error').classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'Confirm Name →';
+  }
+}
+
+let _lastNameCheck = '';
+function checkNameAvailability() {
+  const name = document.getElementById('setup-name-input').value.trim();
+  const el = document.getElementById('name-check');
+  const btn = document.getElementById('setup-confirm-btn');
+
+  if (name.length < 2) { el.textContent = ''; btn.disabled = true; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+    el.style.color = 'var(--red)'; el.textContent = '✗ Only letters, numbers, _';
+    btn.disabled = true; return;
+  }
+  if (name === _lastNameCheck) return;
+  _lastNameCheck = name;
+
+  el.style.color = 'var(--text2)'; el.textContent = 'Checking…';
+  btn.disabled = true;
+
+  clearTimeout(nameCheckTimeout);
+  nameCheckTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(`/auth/check-name/${encodeURIComponent(name)}`);
+      const data = await res.json();
+      if (data.available) {
+        el.style.color = 'var(--green)'; el.textContent = '✓ Available!';
+        btn.disabled = false;
+      } else {
+        el.style.color = 'var(--red)'; el.textContent = '✗ Already taken';
+        btn.disabled = true;
+      }
+    } catch(e) { el.textContent = ''; }
+  }, 500);
+}
+
+function setAuthUser(user) {
+  authUser = user;
+  myName = user.gameName;
+  saveAuth(user);
+
+  // Update UI
+  document.getElementById('user-bar').classList.remove('hidden');
+  document.getElementById('google-login-wrap').classList.add('hidden');
+  document.getElementById('play-buttons').classList.remove('hidden');
+  document.getElementById('friends-float-btn').classList.remove('hidden');
+
+  const avatarEl = document.getElementById('user-avatar-img');
+  if (user.picture) {
+    avatarEl.innerHTML = `<img src="${user.picture}" alt="">`;
+  } else {
+    avatarEl.textContent = user.gameName[0].toUpperCase();
+  }
+  document.getElementById('user-display-name').textContent = user.gameName;
+  document.getElementById('user-display-tag').textContent = 'Logged in with Google';
+
+  // Connect socket and authenticate
+  connectSocket();
+
+  // Load friends
+  loadFriends();
+}
+
+function playAsGuest() {
+  authUser = null;
+  document.getElementById('user-bar').classList.add('hidden');
+  document.getElementById('google-login-wrap').classList.add('hidden');
+  document.getElementById('play-buttons').classList.remove('hidden');
+
+  const nameInput = document.getElementById('home-name-guest');
+  showScreen('home-screen');
+  showGuestNameInput();
+}
+
+function showGuestNameInput() {
+  const guestEl = document.getElementById('guest-name-wrap');
+  if (guestEl) { guestEl.classList.remove('hidden'); return; }
+  // Insert a name input for guests
+  const playBtns = document.getElementById('play-buttons');
+  const wrap = document.createElement('div');
+  wrap.id = 'guest-name-wrap';
+  wrap.innerHTML = `<div class="input-group" style="margin-bottom:.7rem;"><label>Your Name</label><input type="text" id="guest-name-input" placeholder="Enter your name" maxlength="16"></div>`;
+  playBtns.parentNode.insertBefore(wrap, playBtns);
+}
+
+function logout() {
+  clearAuth();
+  clearSession();
+  if (socket) { socket.off(); socket.disconnect(); socket = null; }
+  authUser = null; myName = '';
+  document.getElementById('user-bar').classList.add('hidden');
+  document.getElementById('google-login-wrap').classList.remove('hidden');
+  document.getElementById('play-buttons').classList.add('hidden');
+  document.getElementById('friends-float-btn').classList.add('hidden');
+  showScreen('home-screen');
+}
+
+// ════════════════════════════════════════════════════════════
+//  FRIENDS PANEL
+// ════════════════════════════════════════════════════════════
+function openFriendsPanel() {
+  document.getElementById('friends-panel').classList.add('open');
+  loadFriends();
+}
+function closeFriendsPanel() {
+  document.getElementById('friends-panel').classList.remove('open');
+}
+
+async function loadFriends() {
+  if (!authUser) return;
+  try {
+    const res = await fetch('/friends/list', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ sessionToken: authUser.sessionToken }),
+    });
+    const data = await res.json();
+    if (data.friends !== undefined) {
+      friendsData = data;
+      renderFriendsList();
+    }
+  } catch(e) {}
+}
+
+function renderFriendsList() {
+  const { friends, pending } = friendsData;
+
+  // Pending requests (received)
+  const pendingReceived = pending.filter(r => r.to === authUser.gameName);
+  const pendingEl = document.getElementById('pending-requests-list');
+  if (pendingReceived.length === 0) {
+    pendingEl.innerHTML = '<div style="padding:.5rem 1.2rem;font-size:.82rem;color:var(--text2);">No pending requests</div>';
+  } else {
+    pendingEl.innerHTML = pendingReceived.map(r => `
+      <div class="friend-req-item">
+        <div class="friend-req-name">📨 ${r.from} wants to be friends</div>
+        <div class="friend-req-btns">
+          <button class="accept-btn" onclick="respondFriendRequest('${r.from}','accept')">✓ Accept</button>
+          <button class="reject-btn" onclick="respondFriendRequest('${r.from}','reject')">✗ Decline</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Update badge
+  friendsNotifCount = pendingReceived.length;
+  const badge = document.getElementById('friends-notif-badge');
+  if (friendsNotifCount > 0) {
+    badge.textContent = friendsNotifCount; badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+
+  // Friends list
+  const listEl = document.getElementById('friends-list');
+  if (friends.length === 0) {
+    listEl.innerHTML = '<div style="padding:.7rem 1.2rem;font-size:.82rem;color:var(--text2);">No friends yet — add some!</div>';
+    return;
+  }
+
+  listEl.innerHTML = friends.map(f => {
+    const statusText = f.status === 'in-game' ? '🎮 In game' : f.status === 'online' ? '🟢 Online' : '⚫ Offline';
+    const dotClass = f.status === 'in-game' ? 'in-game' : f.status === 'online' ? 'online' : 'offline';
+    const avatarContent = f.picture ? `<img src="${f.picture}" alt="">` : f.gameName[0].toUpperCase();
+
+    let actionBtns = '';
+    // Invite button: only if we're in a lobby and they're online
+    if (myRoomId && !isSpectator && f.online && f.status !== 'in-game') {
+      actionBtns += `<button class="invite-btn" onclick="inviteFriendToRoom('${f.gameName}')">+ Invite</button>`;
+    }
+    // Spectate button: if they're in a game
+    if (f.inGame && f.roomId) {
+      actionBtns += `<button class="spectate-btn" onclick="spectateRoom('${f.roomId}')">👁 Watch</button>`;
+    }
+
+    return `<div class="friend-item">
+      <div class="friend-avatar">
+        ${avatarContent}
+        <div class="online-dot ${dotClass}"></div>
+      </div>
+      <div class="friend-info">
+        <div class="friend-name">${f.gameName}</div>
+        <div class="friend-status ${dotClass}">${statusText}</div>
+      </div>
+      <div class="friend-actions">${actionBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+async function sendFriendRequest() {
+  if (!authUser) { notify('Login first', 'err'); return; }
+  const name = document.getElementById('add-friend-input').value.trim();
+  if (!name) return;
+
+  const errEl = document.getElementById('add-friend-error');
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch('/friends/request', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ sessionToken: authUser.sessionToken, gameName: name }),
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      notify(`Friend request sent to ${name}!`, 'win');
+      document.getElementById('add-friend-input').value = '';
+    } else {
+      errEl.textContent = data.error || 'Error';
+    }
+  } catch(e) {
+    errEl.textContent = 'Server error';
+  }
+}
+
+async function respondFriendRequest(from, action) {
+  if (!authUser) return;
+  try {
+    await fetch('/friends/respond', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ sessionToken: authUser.sessionToken, from, action }),
+    });
+    notify(action === 'accept' ? `Now friends with ${from}!` : `Declined ${from}`, action === 'accept' ? 'win' : 'info');
+    loadFriends();
+  } catch(e) {}
+}
+
+function inviteFriendToRoom(gameName) {
+  if (!socket || !myRoomId) return;
+  socket.emit('inviteFriend', { targetGameName: gameName });
+  notify(`Invite sent to ${gameName}!`, 'info');
+}
+
+function spectateRoom(roomId) {
+  if (!socket) { connectSocket(); }
+  closeFriendsPanel();
+  isSpectator = true;
+  socket.emit('spectateRoom', { roomId });
+}
+
+// ════════════════════════════════════════════════════════════
+//  GAME INVITE POPUP
+// ════════════════════════════════════════════════════════════
+function showInvitePopup(from, roomId) {
+  document.querySelectorAll('.invite-popup').forEach(e => e.remove());
+  const el = document.createElement('div');
+  el.className = 'invite-popup';
+  el.innerHTML = `
+    <div class="invite-popup-title">🎮 Game Invite!</div>
+    <div class="invite-popup-sub">${from} invites you to play</div>
+    <div class="invite-popup-btns">
+      <button class="invite-accept" onclick="acceptInvite('${roomId}',this.closest('.invite-popup'))">Join Game</button>
+      <button class="invite-reject" onclick="this.closest('.invite-popup').remove()">Decline</button>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 20000); // auto-dismiss after 20s
+}
+
+function acceptInvite(roomId, popupEl) {
+  if (popupEl) popupEl.remove();
+  if (!socket) connectSocket();
+  isSpectator = false;
+  const name = authUser ? authUser.gameName : (document.getElementById('guest-name-input')?.value.trim() || 'Guest');
+  myName = name;
+  socket.emit('joinRoom', { roomId, playerName: name });
+}
+
+// ════════════════════════════════════════════════════════════
+//  SOCKET CONNECTION + AUTO-RECONNECT
+// ════════════════════════════════════════════════════════════
 function connectSocket() {
-  // Fully destroy old socket first — prevents duplicate listeners / ghost players
+  if (socket && socket.connected) {
+    // Already connected — just authenticate if needed
+    if (authUser) socket.emit('authenticate', { sessionToken: authUser.sessionToken });
+    return;
+  }
   if (socket) { socket.off(); socket.disconnect(); socket = null; }
 
-  // reconnection:false — we control reconnect via session/initOnLoad.
-  // Auto-reconnect causes connect to fire multiple times → duplicate players.
-  socket = io({ reconnection: false });
+  socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: Infinity, // keep trying forever — handles phone background
+    timeout: 20000,
+  });
 
   socket.on('connect', () => {
     console.log('socket connected', socket.id);
+
+    // Authenticate if logged in
+    if (authUser) {
+      socket.emit('authenticate', { sessionToken: authUser.sessionToken });
+    }
+
+    // Try to rejoin room if we have a session
     const s = loadSession();
-    if (s) {
+    if (s && !isSpectator) {
       socket.emit('rejoinRoom', { roomId: s.roomId, playerToken: s.playerToken });
     } else {
       hideLoading();
     }
   });
 
-  socket.on('connect_error', () => {
-    clearSession(); hideLoading();
-    notify('Could not connect to server', 'err');
-    showScreen('home-screen');
+  socket.on('reconnect', (attempt) => {
+    console.log(`reconnected after ${attempt} attempts`);
+    notify('Reconnected!', 'win');
+    // Re-authenticate
+    if (authUser) socket.emit('authenticate', { sessionToken: authUser.sessionToken });
+    // Rejoin room
+    const s = loadSession();
+    if (s && !isSpectator) {
+      socket.emit('rejoinRoom', { roomId: s.roomId, playerToken: s.playerToken });
+    }
+  });
+
+  socket.on('reconnect_attempt', () => {
+    // Silently trying to reconnect — don't flash UI
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      // Server forced disconnect — don't auto-reconnect
+      notify('Disconnected by server', 'err');
+    }
+    // For other reasons (network, background) socket.io will auto-reconnect
+  });
+
+  socket.on('connect_error', (err) => {
+    console.log('connect error:', err.message);
+    // Don't clear session — socket.io will keep retrying
+  });
+
+  socket.on('authenticated', ({ gameName }) => {
+    console.log('authenticated as', gameName);
   });
 
   socket.on('error', msg => notify(msg, 'err'));
@@ -626,17 +1093,22 @@ function connectSocket() {
     myRoomId = roomId;
     myPlayerIndex = playerIndex;
     myName = playerName;
+    isSpectator = false;
     saveSession({ roomId, playerIndex, playerToken, playerName });
     document.getElementById('display-room-code').textContent = roomId;
+    document.getElementById('spectator-bar').classList.add('hidden');
     hideLoading();
     if (!isRejoin) showScreen('waiting-screen');
+    renderFriendsList(); // refresh invite buttons
   });
 
-  // Server tells us our updated index (after kick/reorder)
-  socket.on('yourIndex', idx => {
-    myPlayerIndex = idx;
-    const s = loadSession();
-    if (s) { s.playerIndex = idx; saveSession(s); }
+  socket.on('spectating', ({ roomId }) => {
+    myRoomId = roomId;
+    isSpectator = true;
+    document.getElementById('display-room-code').textContent = roomId;
+    document.getElementById('spectator-bar').classList.remove('hidden');
+    hideLoading();
+    showScreen('waiting-screen');
   });
 
   socket.on('rejoinFailed', reason => {
@@ -661,11 +1133,11 @@ function connectSocket() {
 
   socket.on('gameState', state => {
     hideLoading();
-    syncCustomOrder(state.myHand);
+    if (!isSpectator) syncCustomOrder(state.myHand);
     const prevTurn = currentGameState?.currentTurnIndex;
     currentGameState = state;
     renderGameState(state);
-    if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex) {
+    if (!isSpectator && state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex) {
       showYourTurnFlash();
     }
   });
@@ -680,119 +1152,156 @@ function connectSocket() {
 
   socket.on('playerDisconnected', ({ name }) => notify(`${name} disconnected`, 'err'));
   socket.on('playerRejoined',    ({ name }) => notify(`${name} reconnected`, 'win'));
+  socket.on('spectatorJoined',   ({ gameName }) => notify(`${gameName} is watching`, 'info'));
 
-  // Play again: server created new lobby — move there
   socket.on('newLobby', ({ roomId, playerIndex, playerToken, playerName }) => {
-    myRoomId = roomId;
-    myPlayerIndex = playerIndex;
-    myName = playerName;
+    myRoomId = roomId; myPlayerIndex = playerIndex; myName = playerName; isSpectator = false;
     saveSession({ roomId, playerIndex, playerToken, playerName });
     document.getElementById('display-room-code').textContent = roomId;
-    // Hide game over overlay and go to waiting room
     document.getElementById('game-over-overlay').classList.add('hidden');
     showScreen('waiting-screen');
   });
 
-  // Show who has voted play again
   socket.on('playAgainUpdate', ({ votes, total }) => {
     const el = document.getElementById('play-again-votes');
-    if (el) el.innerHTML = `<strong>${votes.length}/${total}</strong> want to play again: ${votes.join(', ')}`;
+    if (el) el.innerHTML = `<strong>${votes.length}/${total}</strong> voted: ${votes.join(', ')}`;
+  });
+
+  // Friends / social events
+  socket.on('friendRequest', ({ from, picture }) => {
+    notify(`📨 ${from} sent you a friend request!`, 'info');
+    friendsNotifCount++;
+    const badge = document.getElementById('friends-notif-badge');
+    badge.textContent = friendsNotifCount; badge.classList.remove('hidden');
+    loadFriends();
+  });
+
+  socket.on('friendAccepted', ({ gameName }) => {
+    notify(`🎉 ${gameName} accepted your friend request!`, 'win');
+    loadFriends();
+  });
+
+  socket.on('friendStatusUpdate', ({ gameName, online, status, roomId }) => {
+    // Update local data
+    const f = friendsData.friends.find(f => f.gameName === gameName);
+    if (f) {
+      f.online = online; f.status = status; f.inGame = status === 'in-game'; f.roomId = roomId;
+      renderFriendsList();
+    }
+  });
+
+  socket.on('gameInvite', ({ from, roomId }) => {
+    showInvitePopup(from, roomId);
+  });
+
+  socket.on('inviteSent', ({ to }) => {
+    notify(`Invite sent to ${to}`, 'info');
   });
 }
 
-function createRoom() {
-  connectSocket();
-  socket.emit('createRoom', { playerName: myName });
+// ════════════════════════════════════════════════════════════
+//  LOBBY ACTIONS
+// ════════════════════════════════════════════════════════════
+function showCreateJoin() {
+  if (authUser) {
+    myName = authUser.gameName;
+    showScreen('lobby-screen');
+  } else {
+    // Guest
+    const guestInput = document.getElementById('guest-name-input');
+    const name = guestInput?.value.trim();
+    if (!name) { showGuestNameInput(); notify('Enter your name to play as guest', 'err'); return; }
+    myName = name;
+    showScreen('lobby-screen');
+  }
 }
+
+function createRoom() {
+  if (!myName) { showErr('lobby-error', 'Name required'); return; }
+  connectSocket();
+  socket.on('connect', function onConnect() {
+    socket.off('connect', onConnect);
+    socket.emit('createRoom', { playerName: myName });
+  });
+  if (socket.connected) socket.emit('createRoom', { playerName: myName });
+}
+
 function joinRoom() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (!code || code.length < 4) { showErr('lobby-error', 'Enter a valid room code'); return; }
+  if (!myName) { showErr('lobby-error', 'Name required'); return; }
   connectSocket();
-  socket.emit('joinRoom', { roomId: code, playerName: myName });
-}
-function startGame() {
-  if (!chosenRounds || chosenRounds < 1) {
-    notify('Please select the number of rounds first', 'err');
-    return;
+  if (socket.connected) {
+    socket.emit('joinRoom', { roomId: code, playerName: myName });
+  } else {
+    socket.on('connect', function onConnect() {
+      socket.off('connect', onConnect);
+      socket.emit('joinRoom', { roomId: code, playerName: myName });
+    });
   }
+}
+
+function startGame() {
+  if (!chosenRounds || chosenRounds < 1) { notify('Please select the number of rounds first', 'err'); return; }
   socket.emit('startGame', { totalRounds: chosenRounds });
 }
+
 function copyRoomCode() {
   navigator.clipboard.writeText(myRoomId).then(() => notify('Room code copied!', 'info'));
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  WAITING ROOM
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function renderWaitingRoom(room) {
   document.getElementById('player-list').innerHTML = room.players.map((p, i) => `
     <div class="player-item">
       <div class="player-avatar ${AVATAR_COLORS[i % 7]}">${p.name[0].toUpperCase()}</div>
-      <div class="player-item-name">${p.name}</div>
+      <div class="player-item-name">${p.name}${p.gameName && p.gameName !== p.name ? ` <span style="font-size:.7rem;color:var(--text2);">(${p.gameName})</span>` : ''}</div>
       ${p.isHost ? '<span class="badge">HOST</span>' : ''}
       ${!p.connected ? '<span class="badge" style="background:var(--red)">OFFLINE</span>' : ''}
-      ${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}
-    </div>`).join('');
+      ${room.isHost && !p.isHost && !isSpectator ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}
+    </div>`).join('') +
+    (room.spectatorCount > 0 ? `<div style="text-align:center;font-size:.78rem;color:var(--blue);margin-top:.3rem;">👁 ${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching</div>` : '');
 
   const n = room.players.length;
   const maxRounds = room.maxRounds || Math.floor(52 / n);
   maxRoundsAvailable = maxRounds;
+  if (!chosenRounds || chosenRounds > maxRounds) chosenRounds = maxRounds;
 
-  // Init chosenRounds to max when first set or when player count changes
-  if (!chosenRounds || chosenRounds > maxRounds) {
-    chosenRounds = maxRounds;
-  }
-
-  // Show game info for non-hosts (uses chosenRounds if available from state, else max)
   document.getElementById('game-info-preview').textContent = n >= 2
     ? `${n} players · up to ${maxRounds} rounds possible`
     : 'Need at least 2 players to start';
 
-  if (room.isHost) {
+  if (room.isHost && !isSpectator) {
     document.getElementById('start-btn-wrap').classList.remove('hidden');
     document.getElementById('wait-msg').classList.add('hidden');
     renderRoundsSelector(maxRounds);
   } else {
     document.getElementById('start-btn-wrap').classList.add('hidden');
     document.getElementById('wait-msg').classList.remove('hidden');
+    document.getElementById('wait-msg').textContent = isSpectator ? '👁 Spectating — game will start soon' : 'Waiting for host to start…';
   }
 }
 
 function renderRoundsSelector(maxRounds) {
-  // Update display
   document.getElementById('chosen-rounds').textContent = chosenRounds;
   document.getElementById('rounds-max-label').textContent = `/ ${maxRounds} max`;
-
-  // Hint: show card range for chosen rounds
-  const n = document.getElementById('player-list').children.length || 2;
-  const startCards = chosenRounds; // first round has chosenRounds cards
-  const endCards   = 1; // last round always has 1 card
-  const trumpEnd   = ['♠','♦','♣','♥'][(chosenRounds - 1) % 4];
-  document.getElementById('rounds-hint').textContent =
-    `Cards: ${startCards} → ${endCards}  ·  Last trump: ${trumpEnd}`;
-
-  // Arrow buttons enable/disable
+  const trumpEnd = ['♠','♦','♣','♥'][(chosenRounds - 1) % 4];
+  document.getElementById('rounds-hint').textContent = `Cards: ${chosenRounds} → 1  ·  Last trump: ${trumpEnd}`;
   const arrows = document.querySelectorAll('.rounds-arrow');
   arrows[0].disabled = chosenRounds <= 1;
   arrows[1].disabled = chosenRounds >= maxRounds;
-
-  // Preset buttons: Full, ¾, Half, ¼ (only those ≥ 1)
   const presets = [
-    { label: 'Full',   val: maxRounds },
-    { label: '¾',      val: Math.max(1, Math.round(maxRounds * 0.75)) },
-    { label: 'Half',   val: Math.max(1, Math.round(maxRounds * 0.5)) },
-    { label: 'Quick',  val: Math.max(1, Math.round(maxRounds * 0.25)) },
+    { label:'Full', val:maxRounds },
+    { label:'¾',   val:Math.max(1, Math.round(maxRounds * 0.75)) },
+    { label:'Half', val:Math.max(1, Math.round(maxRounds * 0.5)) },
+    { label:'Quick',val:Math.max(1, Math.round(maxRounds * 0.25)) },
   ];
-  // Deduplicate preset values
   const seen = new Set();
-  const uniquePresets = presets.filter(p => {
-    if (seen.has(p.val)) return false;
-    seen.add(p.val);
-    return true;
-  });
-  document.getElementById('rounds-presets').innerHTML = uniquePresets.map(p =>
-    `<button class="preset-btn ${chosenRounds === p.val ? 'active' : ''}"
-      onclick="setRounds(${p.val})">${p.label} (${p.val})</button>`
+  const unique = presets.filter(p => { if(seen.has(p.val)) return false; seen.add(p.val); return true; });
+  document.getElementById('rounds-presets').innerHTML = unique.map(p =>
+    `<button class="preset-btn ${chosenRounds===p.val?'active':''}" onclick="setRounds(${p.val})">${p.label} (${p.val})</button>`
   ).join('');
 }
 
@@ -800,52 +1309,35 @@ function changeRounds(delta) {
   chosenRounds = Math.max(1, Math.min(maxRoundsAvailable, chosenRounds + delta));
   renderRoundsSelector(maxRoundsAvailable);
 }
-
 function setRounds(val) {
   chosenRounds = Math.max(1, Math.min(maxRoundsAvailable, val));
   renderRoundsSelector(maxRoundsAvailable);
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  HAND SORT / REORDER
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function syncCustomOrder(hand) {
-  // Keep existing order, add new cards at end, remove missing ones
   const handIds = hand.map(c => c.id);
-  // Remove cards no longer in hand
   customHandOrder = customHandOrder.filter(id => handIds.includes(id));
-  // Add new cards not yet tracked
-  handIds.forEach(id => {
-    if (!customHandOrder.includes(id)) customHandOrder.push(id);
-  });
+  handIds.forEach(id => { if (!customHandOrder.includes(id)) customHandOrder.push(id); });
 }
-
 function setSortMode(mode) {
   sortMode = mode;
   document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sort-' + mode).classList.add('active');
   if (currentGameState) renderHand(currentGameState);
 }
-
 function getSortedHand(hand, trumpSuit) {
-  if (sortMode === 'custom') {
-    // Return in customHandOrder sequence
-    return customHandOrder
-      .map(id => hand.find(c => c.id === id))
-      .filter(Boolean);
-  }
+  if (sortMode === 'custom') return customHandOrder.map(id => hand.find(c => c.id === id)).filter(Boolean);
   const arr = [...hand];
   if (sortMode === 'suit') {
-    arr.sort((a, b) => {
-      if (SUIT_ORDER[a.suit] !== SUIT_ORDER[b.suit]) return SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit];
-      return RANK_ORDER[a.rank] - RANK_ORDER[b.rank];
-    });
+    arr.sort((a, b) => SUIT_ORDER[a.suit] !== SUIT_ORDER[b.suit] ? SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit] : RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
   } else if (sortMode === 'value') {
     arr.sort((a, b) => RANK_ORDER[b.rank] - RANK_ORDER[a.rank]);
   } else if (sortMode === 'trump') {
     arr.sort((a, b) => {
-      const aT = a.suit === trumpSuit ? 1 : 0;
-      const bT = b.suit === trumpSuit ? 1 : 0;
+      const aT = a.suit === trumpSuit ? 1 : 0, bT = b.suit === trumpSuit ? 1 : 0;
       if (aT !== bT) return bT - aT;
       if (SUIT_ORDER[a.suit] !== SUIT_ORDER[b.suit]) return SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit];
       return RANK_ORDER[a.rank] - RANK_ORDER[b.rank];
@@ -853,18 +1345,10 @@ function getSortedHand(hand, trumpSuit) {
   }
   return arr;
 }
-
 function moveCard(cardId, direction) {
-  // direction: -1 = left, +1 = right
-  // Always work on customHandOrder when moving
   if (sortMode !== 'custom') {
-    // Switching to custom mode and apply current sorted order first
-    const state = currentGameState;
-    if (state) {
-      customHandOrder = getSortedHand(state.myHand, state.trumpSuit).map(c => c.id);
-    }
-    setSortMode('custom');
-    return; // re-render happens in setSortMode, user can press again
+    if (currentGameState) { customHandOrder = getSortedHand(currentGameState.myHand, currentGameState.trumpSuit).map(c => c.id); }
+    setSortMode('custom'); return;
   }
   const idx = customHandOrder.indexOf(cardId);
   if (idx === -1) return;
@@ -874,53 +1358,39 @@ function moveCard(cardId, direction) {
   if (currentGameState) renderHand(currentGameState);
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  GAME RENDER
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function renderGameState(state) {
   showScreen('game-screen');
+
+  const spectBar = document.getElementById('spectator-game-bar');
+  if (isSpectator) { spectBar.classList.remove('hidden'); } else { spectBar.classList.add('hidden'); }
 
   if (state.state === 'bidding') {
     document.getElementById('round-end-overlay').classList.add('hidden');
     cancelPlay();
-    // Reset bid panel state for new round
-    if (!currentGameState || currentGameState.currentRound !== state.currentRound) {
-      bidPanelOpen = false;
-    }
+    if (!currentGameState || currentGameState.currentRound !== state.currentRound) bidPanelOpen = false;
   }
 
-  // Top bar
   const trumpEl = document.getElementById('top-trump-sym');
   trumpEl.textContent = SUIT_SYM[state.trumpSuit] || '?';
   trumpEl.className = `trump-symbol ${SUIT_COLORS[state.trumpSuit] || ''}`;
   document.getElementById('top-trump-name').textContent = state.trumpName || state.trumpSuit || '—';
   document.getElementById('top-round').textContent = state.currentRound + 1;
   document.getElementById('top-total-rounds').textContent = state.totalRounds;
-  // Cards this round = totalRounds - roundIndex (counts down to 1 on last round)
-  const cardsThisRound = state.totalRounds - state.currentRound;
-  document.getElementById('top-cards').textContent = cardsThisRound;
+  document.getElementById('top-cards').textContent = state.totalRounds - state.currentRound;
 
   renderSeats(state);
   renderTrick(state);
   renderHand(state);
 
-  // Bidding phase: two steps
-  // Step 1 — arrange phase: show cards + arrange banner, bid panel hidden
-  // Step 2 — bid panel: slides up after player clicks "Place Bid"
-  if (state.state === 'bidding') {
+  if (!isSpectator && state.state === 'bidding') {
     if (!state.myBidReady) {
-      // Show arrange banner always (player can see cards)
       document.getElementById('arrange-banner').classList.remove('hidden');
-      document.getElementById('arrange-banner-sub').textContent =
-        `Trump: ${state.trumpName} ${SUIT_SYM[state.trumpSuit]} · ${state.myHand.length} cards`;
-      // Only show bid panel if player has clicked "Place Bid"
-      if (bidPanelOpen) {
-        showBidOverlay(state);
-      } else {
-        document.getElementById('bid-overlay').classList.add('hidden');
-      }
+      document.getElementById('arrange-banner-sub').textContent = `Trump: ${state.trumpName} ${SUIT_SYM[state.trumpSuit]} · ${state.myHand.length} cards`;
+      if (bidPanelOpen) { showBidOverlay(state); } else { document.getElementById('bid-overlay').classList.add('hidden'); }
     } else {
-      // Already bid — hide arrange banner, show waiting status
       document.getElementById('arrange-banner').classList.add('hidden');
       document.getElementById('bid-overlay').classList.remove('hidden');
       renderBidStatusOnly(state);
@@ -931,202 +1401,142 @@ function renderGameState(state) {
     bidPanelOpen = false;
   }
 
-  // Sync bottom-padding for hand section based on which banners are visible
   syncBannerPadding();
 
-  // Turn indicator below table
   const ti = document.getElementById('turn-indicator');
-  if (ti) {
-    if (state.state === 'playing') {
-      if (state.currentTurnIndex === state.myIndex) {
-        ti.className = 'turn-indicator my-turn';
-        ti.textContent = '🟢 YOUR TURN — Tap a card!';
-      } else {
-        const name = state.players[state.currentTurnIndex]?.name || '';
-        ti.className = 'turn-indicator other-turn';
-        ti.textContent = `${name}'s turn…`;
-      }
-    } else if (state.state === 'bidding') {
-      const waiting = state.players.filter(p => !p.bidReady).length;
-      ti.className = 'turn-indicator other-turn';
-      ti.textContent = waiting > 0 ? `Waiting for ${waiting} to bid…` : 'All bids in — round starting!';
+  if (state.state === 'playing') {
+    if (!isSpectator && state.currentTurnIndex === state.myIndex) {
+      ti.className = 'turn-indicator my-turn'; ti.textContent = '🟢 YOUR TURN — Tap a card!';
     } else {
-      ti.className = 'turn-indicator'; ti.textContent = '';
+      ti.className = 'turn-indicator other-turn';
+      ti.textContent = `${state.players[state.currentTurnIndex]?.name || ''}'s turn…`;
     }
-  }
+  } else if (state.state === 'bidding') {
+    const waiting = state.players.filter(p => !p.bidReady).length;
+    ti.className = 'turn-indicator other-turn';
+    ti.textContent = waiting > 0 ? `Waiting for ${waiting} to bid…` : 'All bids in!';
+  } else { ti.className = 'turn-indicator'; ti.textContent = ''; }
 }
 
-// ════════════════════════════════════════════
-//  SEATS — show bid once everyone has bid
-// ════════════════════════════════════════════
 function renderSeats(state) {
   const allBid = state.players.every(p => p.bidReady);
-
   document.getElementById('seats-container').innerHTML = state.playerOrder.map(pIdx => {
     const p = state.players[pIdx];
-    const isMe = pIdx === state.myIndex;
+    const isMe = !isSpectator && pIdx === state.myIndex;
     const isTurn = state.currentTurnIndex === pIdx && state.state === 'playing';
     const trickCard = state.currentTrick.find(t => t.playerIndex === pIdx);
-
-    let bidInfo = '';
-    let bidClass = '';
+    let bidInfo = '', bidClass = '';
 
     if (state.state === 'bidding') {
-      if (isMe && p.bidReady) {
-        bidInfo = `Your bid: ${p.bid}`;
-        bidClass = 'bid-revealed';
-      } else {
-        bidInfo = p.bidReady ? '✓ Ready' : '…thinking';
-      }
+      if (isMe && p.bidReady) { bidInfo = `Your bid: ${p.bid}`; bidClass = 'bid-revealed'; }
+      else if (isSpectator && p.bidReady) { bidInfo = `Bid: ${p.bid}`; bidClass = 'bid-revealed'; }
+      else { bidInfo = p.bidReady ? '✓ Ready' : '…thinking'; }
     } else if (state.state === 'playing' || state.state === 'round_end') {
-      // Show bids to all once game starts
       const bid = p.bid !== null ? p.bid : '?';
-      bidInfo = `Bid: ${bid} | Won: ${p.tricksWon}`;
-      bidClass = 'bid-revealed';
+      bidInfo = `Bid: ${bid} | Won: ${p.tricksWon}`; bidClass = 'bid-revealed';
     }
 
-    return `<div class="seat ${isMe ? 'my-seat' : ''} ${isTurn ? 'current-turn' : ''} ${!p.connected ? 'disconnected' : ''}">
+    return `<div class="seat ${isMe?'my-seat':''} ${isTurn?'current-turn':''} ${!p.connected?'disconnected':''}">
       <div class="seat-avatar ${AVATAR_COLORS[pIdx % 7]}">
-        ${p.name[0].toUpperCase()}
-        ${isTurn ? '<div class="turn-dot"></div>' : ''}
+        ${p.name[0].toUpperCase()}${isTurn?'<div class="turn-dot"></div>':''}
       </div>
-      <div class="seat-name">${p.name}${isMe ? ' (You)' : ''}</div>
+      <div class="seat-name">${p.name}${isMe?' (You)':''}</div>
       <div class="seat-score">⭐ ${p.score}</div>
       <div class="seat-bid-info ${bidClass}">${bidInfo}</div>
-      ${trickCard ? `<div class="seat-card-played">${renderCardHTML(trickCard.card, 'sm', false, false)}</div>` : ''}
+      ${trickCard ? `<div class="seat-card-played">${renderCardHTML(trickCard.card,'sm',false,false)}</div>` : ''}
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════
-//  TRICK — show ALL cards played in current trick
-// ════════════════════════════════════════════
 function renderTrick(state) {
   const tc = document.getElementById('trick-cards');
   const ts = document.getElementById('trick-status');
   if (!state.currentTrick || state.currentTrick.length === 0) {
-    tc.innerHTML = '<span style="color:var(--text2);font-size:.82rem;">Cards played here</span>';
-    ts.textContent = '';
-    return;
+    tc.innerHTML = '<span style="color:var(--text2);font-size:.82rem;">Cards played here</span>'; ts.textContent = ''; return;
   }
-  // Keep play order: first played = leftmost (currentTrick is already in play order)
   tc.innerHTML = state.currentTrick.map((t, idx) => {
     const pName = state.players[t.playerIndex]?.name || '';
-    const isMe = t.playerIndex === state.myIndex;
-    const isFirst = idx === 0;
+    const isMe = !isSpectator && t.playerIndex === state.myIndex;
     return `<div class="trick-card-slot">
-      ${isFirst ? `<div style="font-size:.62rem;color:var(--blue);font-weight:700;margin-bottom:.1rem;">LEAD</div>` : '<div style="height:.9rem;"></div>'}
-      <div class="trick-player-name" style="${isMe ? 'color:var(--gold)' : ''}">${pName}</div>
-      ${renderCardHTML(t.card, 'md', false, t.card.suit === state.trumpSuit)}
+      ${idx===0 ? '<div style="font-size:.62rem;color:var(--blue);font-weight:700;margin-bottom:.1rem;">LEAD</div>' : '<div style="height:.9rem;"></div>'}
+      <div class="trick-player-name" style="${isMe?'color:var(--gold)':''}">${pName}</div>
+      ${renderCardHTML(t.card,'md',false,t.card.suit===state.trumpSuit)}
     </div>`;
   }).join('');
   ts.textContent = `${state.currentTrick.length} / ${state.players.length} cards played`;
 }
 
-// ════════════════════════════════════════════
-//  MY HAND — with reorder arrows
-// ════════════════════════════════════════════
 function renderHand(state) {
   const handEl = document.getElementById('my-hand');
   const label  = document.getElementById('hand-label');
+  const tb     = document.getElementById('hand-trump-badge');
 
-  // Trump badge
-  const tb = document.getElementById('hand-trump-badge');
+  if (isSpectator) {
+    handEl.innerHTML = '<span style="color:var(--text2);font-size:.85rem;">👁 Spectating — cards hidden for fairness</span>';
+    label.textContent = 'Spectator View';
+    if (tb) tb.style.display = 'none';
+    return;
+  }
+
   if (tb && state.trumpSuit) {
-    const sym = { spades:'♠', diamonds:'♦', clubs:'♣', hearts:'♥' }[state.trumpSuit];
+    const sym = SUIT_SYM[state.trumpSuit];
     const col = (state.trumpSuit==='diamonds'||state.trumpSuit==='hearts') ? '#e05050' : 'var(--text)';
     tb.innerHTML = `<span style="color:${col}">${sym}</span> TRUMP`;
     tb.style.display = 'inline-flex'; tb.style.alignItems = 'center'; tb.style.gap = '.25rem';
   }
 
   if (!state.myHand || state.myHand.length === 0) {
-    handEl.innerHTML = '<span style="color:var(--text2);">No cards in hand</span>';
-    label.textContent = 'Your Hand';
-    return;
+    handEl.innerHTML = '<span style="color:var(--text2);">No cards in hand</span>'; label.textContent = 'Your Hand'; return;
   }
 
   const isMyTurn = state.currentTurnIndex === state.myIndex && state.state === 'playing';
-  label.textContent = isMyTurn
-    ? `🟢 Your Hand (${state.myHand.length}) — Tap a card!`
-    : `Your Hand (${state.myHand.length} cards)`;
+  label.textContent = isMyTurn ? `🟢 Your Hand (${state.myHand.length}) — Tap a card!` : `Your Hand (${state.myHand.length} cards)`;
 
   const sorted = getSortedHand(state.myHand, state.trumpSuit);
-  const totalCards = sorted.length;
-
   handEl.innerHTML = sorted.map((card, idx) => {
-    let playable = false;
-    let disabled = !isMyTurn || state.state !== 'playing';
+    let playable = false, disabled = !isMyTurn || state.state !== 'playing';
     if (isMyTurn && state.state === 'playing') {
-      if (state.currentTrick.length === 0) {
-        playable = true;
-      } else {
-        const hasLeadSuit = state.myHand.some(c => c.suit === state.leadSuit);
-        playable = hasLeadSuit ? card.suit === state.leadSuit : true;
-      }
+      if (state.currentTrick.length === 0) { playable = true; }
+      else { const hasLead = state.myHand.some(c => c.suit === state.leadSuit); playable = hasLead ? card.suit === state.leadSuit : true; }
       if (!playable) disabled = true;
     }
     const isPending = card.id === pendingCardId;
-    const isTrump = card.suit === state.trumpSuit;
-    const isFirst = idx === 0;
-    const isLast = idx === totalCards - 1;
-
     return `<div class="card-slot">
-      ${renderCardHTML(card, 'lg', disabled, isTrump, isMyTurn && playable, isPending)}
+      ${renderCardHTML(card,'lg',disabled,card.suit===state.trumpSuit,isMyTurn&&playable,isPending)}
       <div class="card-arrows">
-        <button class="arrow-btn" onclick="moveCard('${card.id}',-1)" ${isFirst ? 'disabled' : ''} title="Move left">◀</button>
-        <button class="arrow-btn" onclick="moveCard('${card.id}',+1)" ${isLast ? 'disabled' : ''} title="Move right">▶</button>
+        <button class="arrow-btn" onclick="moveCard('${card.id}',-1)" ${idx===0?'disabled':''}>◀</button>
+        <button class="arrow-btn" onclick="moveCard('${card.id}',+1)" ${idx===sorted.length-1?'disabled':''}>▶</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderCardHTML(card, size = 'lg', disabled = false, isTrump = false, clickable = false, isPending = false) {
+function renderCardHTML(card, size='lg', disabled=false, isTrump=false, clickable=false, isPending=false) {
   const sym = SUIT_SYM[card.suit] || '?';
-  const cls = ['card', `size-${size}`,
-    disabled   ? 'disabled'          : '',
-    isTrump    ? 'trump-card'         : '',
-    clickable  ? 'playable'           : '',
-    isPending  ? 'selected-to-play'   : ''
-  ].filter(Boolean).join(' ');
-  // Clicking a playable card opens confirm banner, not direct play
+  const cls = ['card',`size-${size}`,disabled?'disabled':'',isTrump?'trump-card':'',clickable?'playable':'',isPending?'selected-to-play':''].filter(Boolean).join(' ');
   const onclick = clickable ? `onclick="selectCardToPlay('${card.id}')"` : '';
-  return `<div class="${cls}" ${onclick}>
-    <div class="card-inner ${SUIT_COLORS[card.suit] || ''}">
-      <div class="card-rank">${card.rank}</div>
-      <div class="card-suit-sym">${sym}</div>
-    </div>
-  </div>`;
+  return `<div class="${cls}" ${onclick}><div class="card-inner ${SUIT_COLORS[card.suit]||''}"><div class="card-rank">${card.rank}</div><div class="card-suit-sym">${sym}</div></div></div>`;
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  CONFIRM PLAY
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function selectCardToPlay(cardId) {
   if (!currentGameState || currentGameState.currentTurnIndex !== myPlayerIndex) return;
-  const state = currentGameState;
-  const card = state.myHand.find(c => c.id === cardId);
+  const card = currentGameState.myHand.find(c => c.id === cardId);
   if (!card) return;
-
   pendingCardId = cardId;
-  renderHand(state); // re-render to highlight selected card
-
-  const sym = SUIT_SYM[card.suit];
-  const colorStyle = card.suit === 'diamonds' || card.suit === 'hearts'
-    ? 'color:#d32f2f' : 'color:#222';
-  document.getElementById('confirm-banner-text').textContent =
-    `Play ${card.rank}${sym}?`;
-  document.getElementById('confirm-banner-card').innerHTML =
-    renderCardHTML(card, 'sm', false, card.suit === state.trumpSuit);
+  renderHand(currentGameState);
+  document.getElementById('confirm-banner-text').textContent = `Play ${card.rank}${SUIT_SYM[card.suit]}?`;
+  document.getElementById('confirm-banner-card').innerHTML = renderCardHTML(card,'sm',false,card.suit===currentGameState.trumpSuit);
   document.getElementById('confirm-banner').classList.remove('hidden');
 }
-
 function confirmPlay() {
   if (!pendingCardId) return;
   socket.emit('playCard', { cardId: pendingCardId });
   pendingCardId = null;
   document.getElementById('confirm-banner').classList.add('hidden');
 }
-
 function cancelPlay() {
   pendingCardId = null;
   document.getElementById('confirm-banner').classList.add('hidden');
@@ -1134,217 +1544,74 @@ function cancelPlay() {
   if (currentGameState) renderHand(currentGameState);
 }
 
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  BIDDING
-// ════════════════════════════════════════════
-// Track whether any bottom banner is visible so hand gets extra padding
+// ════════════════════════════════════════════════════════════
 function syncBannerPadding() {
-  const arrangVisible = !document.getElementById('arrange-banner').classList.contains('hidden');
-  const bidVisible    = !document.getElementById('bid-overlay').classList.contains('hidden');
-  const confirmVisible= !document.getElementById('confirm-banner').classList.contains('hidden');
-  if (arrangVisible || bidVisible || confirmVisible) {
-    document.body.classList.add('banner-visible');
-  } else {
-    document.body.classList.remove('banner-visible');
-  }
+  const a = !document.getElementById('arrange-banner').classList.contains('hidden');
+  const b = !document.getElementById('bid-overlay').classList.contains('hidden');
+  const c = !document.getElementById('confirm-banner').classList.contains('hidden');
+  document.body.classList.toggle('banner-visible', a || b || c);
 }
-
-// Called when player clicks "Place Bid →" after arranging cards
 function openBidPanel() {
   bidPanelOpen = true;
   document.getElementById('arrange-banner').classList.add('hidden');
   if (currentGameState) showBidOverlay(currentGameState);
 }
-
 function closeBidPanel() {
   bidPanelOpen = false;
   document.getElementById('bid-overlay').classList.add('hidden');
   document.getElementById('arrange-banner').classList.remove('hidden');
   selectedBid = null;
 }
-
 function showBidOverlay(state) {
   document.getElementById('bid-overlay').classList.remove('hidden');
   const maxBid = state.myHand.length;
-  document.getElementById('bid-subtitle').textContent =
-    `You have ${maxBid} card${maxBid !== 1 ? 's' : ''}. Trump: ${state.trumpName || state.trumpSuit}`;
-
+  document.getElementById('bid-subtitle').textContent = `You have ${maxBid} card${maxBid!==1?'s':''}. Trump: ${state.trumpName||state.trumpSuit}`;
   const btns = document.getElementById('bid-buttons');
   btns.innerHTML = '';
   for (let i = 0; i <= maxBid; i++) {
     const btn = document.createElement('button');
-    btn.className = 'bid-btn' + (selectedBid === i ? ' selected' : '');
+    btn.className = 'bid-btn' + (selectedBid===i?' selected':'');
     btn.textContent = i;
     btn.onclick = () => selectBid(i);
     btns.appendChild(btn);
   }
-
   renderBidStatusChips(state);
   const cb = document.getElementById('bid-confirm-btn');
   cb.disabled = selectedBid === null;
   cb.textContent = selectedBid !== null ? `Confirm Bid: ${selectedBid}` : 'Confirm Bid';
 }
-
 function renderBidStatusOnly(state) {
   document.getElementById('bid-overlay').classList.remove('hidden');
-  document.getElementById('bid-subtitle').textContent =
-    `Your bid: ${state.myBid} · Waiting for others…`;
-  document.getElementById('bid-buttons').innerHTML =
-    `<div style="color:var(--green);font-size:1.1rem;font-weight:700;">Your bid: ${state.myBid} ✓</div>`;
+  document.getElementById('bid-subtitle').textContent = `Your bid: ${state.myBid} · Waiting for others…`;
+  document.getElementById('bid-buttons').innerHTML = `<div style="color:var(--green);font-size:1.1rem;font-weight:700;">Your bid: ${state.myBid} ✓</div>`;
   const cb = document.getElementById('bid-confirm-btn');
-  cb.disabled = true;
-  cb.textContent = 'Bid Submitted ✓';
+  cb.disabled = true; cb.textContent = 'Bid Submitted ✓';
   renderBidStatusChips(state);
 }
-
 function renderBidStatusChips(state) {
-  document.getElementById('bid-status-chips').innerHTML = state.players.map(p => `
-    <div class="bid-status-chip ${p.bidReady ? 'ready' : 'waiting'}">
-      <div class="dot"></div>${p.name}
-    </div>`).join('');
+  document.getElementById('bid-status-chips').innerHTML = state.players.map(p =>
+    `<div class="bid-status-chip ${p.bidReady?'ready':'waiting'}"><div class="dot"></div>${p.name}</div>`
+  ).join('');
 }
-
 function selectBid(val) {
   selectedBid = val;
-  document.querySelectorAll('.bid-btn').forEach((btn, i) => btn.classList.toggle('selected', i === val));
+  document.querySelectorAll('.bid-btn').forEach((btn, i) => btn.classList.toggle('selected', i===val));
   const cb = document.getElementById('bid-confirm-btn');
-  cb.disabled = false;
-  cb.textContent = `Confirm Bid: ${val}`;
+  cb.disabled = false; cb.textContent = `Confirm Bid: ${val}`;
 }
-
 function confirmBid() {
   if (selectedBid === null) return;
-  socket.emit('submitBid', { bid: selectedBid });
-  selectedBid = null;
-  bidPanelOpen = false;
+  socket.emit('placeBid', { bid: selectedBid });
+  selectedBid = null; bidPanelOpen = false;
   const cb = document.getElementById('bid-confirm-btn');
-  cb.disabled = true;
-  cb.textContent = 'Bid Submitted ✓';
+  cb.disabled = true; cb.textContent = 'Bid Submitted ✓';
 }
 
-// ════════════════════════════════════════════
-//  TRICK WON
-// ════════════════════════════════════════════
-function showTrickWonBanner(name) {
-  document.querySelectorAll('.trick-won-banner').forEach(b => b.remove());
-  const el = document.createElement('div');
-  el.className = 'trick-won-banner';
-  el.textContent = name === myName ? '🎉 You won the hand!' : `${name} won the hand!`;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1600);
-}
-
-// ════════════════════════════════════════════
-//  ROUND END
-// ════════════════════════════════════════════
-function showRoundEnd(roundIndex, results) {
-  document.getElementById('round-end-overlay').classList.remove('hidden');
-  document.getElementById('round-end-title').textContent = `Round ${roundIndex + 1} Results`;
-  document.getElementById('round-end-results').innerHTML = results.map(r => {
-    const hit = r.bid === r.actual;
-    return `<div class="result-row">
-      <div class="player-avatar ${AVATAR_COLORS[r.playerIndex % 7]}"
-        style="width:32px;height:32px;font-size:.85rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        ${r.name[0].toUpperCase()}
-      </div>
-      <div class="result-name">${r.name}</div>
-      <div class="result-bid">Bid ${r.bid} · Got ${r.actual}</div>
-      <div class="result-pts ${hit ? 'hit' : 'miss'}">+${r.points}</div>
-    </div>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════
-//  SCOREBOARD — full grid: rows=players, cols=rounds
-// ════════════════════════════════════════════
-function showScoreboard() {
-  if (!currentGameState) return;
-  const state = currentGameState;
-  document.getElementById('score-overlay').classList.remove('hidden');
-
-  const players = state.players;
-  const roundsPlayed = state.roundScores.length;
-  const totalRounds = state.totalRounds;
-
-  // Rows = rounds, Cols = players
-  let thead = '<tr><th class="name-col" style="text-align:left">Round</th>';
-  players.forEach((p, pi) => {
-    const isMe = pi === myPlayerIndex;
-    thead += `<th style="text-align:center">${p.name}${isMe ? '<br><span style="color:var(--gold);font-size:.65rem">(You)</span>':''}</th>`;
-  });
-  thead += '</tr>';
-
-  let tbody = '';
-  for (let r = 0; r < totalRounds; r++) {
-    const trumpSuit = TRUMP_SEQ[r % 4];
-    const trumpSym = SUIT_SYM[trumpSuit];
-    const col = (trumpSuit==='diamonds'||trumpSuit==='hearts') ? '#e05050' : 'var(--text)';
-    const played = r < roundsPlayed;
-    let row = `<td class="name-cell" style="opacity:${played?1:.4}">
-      <div style="font-weight:700">R${r+1}</div>
-      <div style="color:${col};font-size:.9rem">${trumpSym}</div>
-      <div style="font-size:.62rem;color:var(--text2)">${totalRounds-r}c</div>
-    </td>`;
-    players.forEach((p, pi) => {
-      if (!played) { row += '<td style="opacity:.2">·</td>'; return; }
-      const res = state.roundScores[r]?.find(x => x.playerIndex === pi);
-      if (!res) { row += '<td>—</td>'; return; }
-      const hit = res.bid === res.actual;
-      const isZero = res.bid === 0 && res.actual === 0;
-      const cls = isZero ? 'pts-cell zero-bid' : hit ? 'pts-cell hit' : 'pts-cell miss';
-      row += `<td class="${cls}" title="Bid ${res.bid}, Got ${res.actual}">
-        <div style="font-size:.85rem;font-weight:700">+${res.points}</div>
-        <div style="font-size:.62rem;color:var(--text2)">${res.bid}→${res.actual}</div>
-      </td>`;
-    });
-    tbody += `<tr>${row}</tr>`;
-  }
-
-  // Total row — one cell per player, no round-sum column
-  let totalRow = '<td class="name-cell" style="font-weight:800">🏆 Total</td>';
-  players.forEach((p, pi) => {
-    const total = state.roundScores.reduce((s, rnd) => {
-      const r = rnd?.find(x => x.playerIndex === pi);
-      return s + (r ? r.points : 0);
-    }, 0);
-    totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${total}</td>`;
-  });
-
-  document.getElementById('score-table-wrap').innerHTML = `
-    <table class="score-table">
-      <thead>${thead}</thead>
-      <tbody>${tbody}<tr class="total-row">${totalRow}</tr></tbody>
-    </table>
-    <p style="text-align:center;color:var(--text2);font-size:.75rem;margin-top:.7rem;">
-      Green = hit bid · Red = missed · Gold = 0 bid 0 won = 1pt
-    </p>`;
-}
-
-function hideScoreboard() {
-  document.getElementById('score-overlay').classList.add('hidden');
-}
-
-// ════════════════════════════════════════════
-//  GAME OVER
-// ════════════════════════════════════════════
-function showGameOver(finalScores) {
-  document.getElementById('round-end-overlay').classList.add('hidden');
-  document.getElementById('game-over-overlay').classList.remove('hidden');
-  const winner = finalScores[0];
-  document.getElementById('winner-name').textContent = `👑 ${winner.name} wins with ${winner.score} pts!`;
-  const medals = ['🥇', '🥈', '🥉'];
-  document.getElementById('podium-list').innerHTML = finalScores.map((p, i) => `
-    <div class="podium-item">
-      <div class="podium-rank">${medals[i] || (i + 1) + '.'}</div>
-      <div class="podium-name">${p.name}</div>
-      <div class="podium-score">${p.score} pts</div>
-    </div>`).join('');
-}
-
-// ════════════════════════════════════════════
-//  INPUT EVENTS
-// ════════════════════════════════════════════
-// ── YOUR TURN FLASH ──────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  TRICK WON / ROUND END / GAME OVER
+// ════════════════════════════════════════════════════════════
 function showYourTurnFlash() {
   document.querySelectorAll('.your-turn-flash').forEach(e => e.remove());
   const el = document.createElement('div');
@@ -1353,66 +1620,195 @@ function showYourTurnFlash() {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1400);
 }
+function showTrickWonBanner(name) {
+  document.querySelectorAll('.trick-won-banner').forEach(b => b.remove());
+  const el = document.createElement('div');
+  el.className = 'trick-won-banner';
+  el.textContent = name === myName ? '🎉 You won the hand!' : `${name} won the hand!`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+function showRoundEnd(roundIndex, results) {
+  document.getElementById('round-end-overlay').classList.remove('hidden');
+  document.getElementById('round-end-title').textContent = `Round ${roundIndex+1} Results`;
+  document.getElementById('round-end-results').innerHTML = results.map(r => {
+    const hit = r.bid === r.actual;
+    return `<div class="result-row">
+      <div class="player-avatar ${AVATAR_COLORS[r.playerIndex%7]}" style="width:32px;height:32px;font-size:.85rem;flex-shrink:0;">${r.name[0].toUpperCase()}</div>
+      <div class="result-name">${r.name}</div>
+      <div class="result-bid">Bid ${r.bid} · Got ${r.actual}</div>
+      <div class="result-pts ${hit?'hit':'miss'}">+${r.points}</div>
+    </div>`;
+  }).join('');
+}
+function showGameOver(finalScores) {
+  document.getElementById('round-end-overlay').classList.add('hidden');
+  document.getElementById('game-over-overlay').classList.remove('hidden');
+  const winner = finalScores[0];
+  document.getElementById('winner-name').textContent = `👑 ${winner.name} wins with ${winner.score} pts!`;
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('podium-list').innerHTML = finalScores.map((p,i) => `
+    <div class="podium-item">
+      <div class="podium-rank">${medals[i]||(i+1)+'.'}</div>
+      <div class="podium-name">${p.name}</div>
+      <div class="podium-score">${p.score} pts</div>
+    </div>`).join('');
+}
 
-// ── LEAVE GAME ───────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  SCOREBOARD
+// ════════════════════════════════════════════════════════════
+function showScoreboard() {
+  if (!currentGameState) return;
+  const state = currentGameState;
+  document.getElementById('score-overlay').classList.remove('hidden');
+  const players = state.players, roundsPlayed = state.roundScores.length, totalRounds = state.totalRounds;
+  let thead = '<tr><th class="name-col" style="text-align:left">Round</th>';
+  players.forEach((p, pi) => {
+    const isMe = !isSpectator && pi === myPlayerIndex;
+    thead += `<th style="text-align:center">${p.name}${isMe?'<br><span style="color:var(--gold);font-size:.65rem">(You)</span>':''}</th>`;
+  });
+  thead += '</tr>';
+  let tbody = '';
+  for (let r = 0; r < totalRounds; r++) {
+    const ts = TRUMP_SEQ[r%4], sym = SUIT_SYM[ts];
+    const col = (ts==='diamonds'||ts==='hearts') ? '#e05050' : 'var(--text)';
+    const played = r < roundsPlayed;
+    let row = `<td class="name-cell" style="opacity:${played?1:.4}"><div style="font-weight:700">R${r+1}</div><div style="color:${col};font-size:.9rem">${sym}</div><div style="font-size:.62rem;color:var(--text2)">${totalRounds-r}c</div></td>`;
+    players.forEach((p, pi) => {
+      if (!played) { row += '<td style="opacity:.2">·</td>'; return; }
+      const res = state.roundScores[r]?.find(x => x.playerIndex === pi);
+      if (!res) { row += '<td>—</td>'; return; }
+      const hit = res.bid===res.actual, isZero = res.bid===0&&res.actual===0;
+      const cls = isZero?'pts-cell zero-bid':hit?'pts-cell hit':'pts-cell miss';
+      row += `<td class="${cls}" title="Bid ${res.bid}, Got ${res.actual}"><div style="font-size:.85rem;font-weight:700">+${res.points}</div><div style="font-size:.62rem;color:var(--text2)">${res.bid}→${res.actual}</div></td>`;
+    });
+    tbody += `<tr>${row}</tr>`;
+  }
+  let totalRow = '<td class="name-cell" style="font-weight:800">🏆 Total</td>';
+  players.forEach((p, pi) => {
+    const total = state.roundScores.reduce((s, rnd) => { const r = rnd?.find(x => x.playerIndex===pi); return s+(r?r.points:0); }, 0);
+    totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${total}</td>`;
+  });
+  document.getElementById('score-table-wrap').innerHTML = `
+    <table class="score-table"><thead>${thead}</thead><tbody>${tbody}<tr class="total-row">${totalRow}</tr></tbody></table>
+    <p style="text-align:center;color:var(--text2);font-size:.75rem;margin-top:.7rem;">Green = hit bid · Red = missed · Gold = 0 bid 0 won = 1pt</p>`;
+}
+function hideScoreboard() { document.getElementById('score-overlay').classList.add('hidden'); }
+
+// ════════════════════════════════════════════════════════════
+//  GAME CONTROLS
+// ════════════════════════════════════════════════════════════
+function kickPlayer(idx) { if (socket) socket.emit('kickPlayer', { playerIndex: idx }); }
+function votePlayAgain() {
+  if (!socket) return;
+  socket.emit('playAgain');
+  const btn = document.querySelector('[onclick="votePlayAgain()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '✓ Voted!'; }
+}
 function confirmLeave() { document.getElementById('leave-overlay').classList.remove('hidden'); }
 function cancelLeave()  { document.getElementById('leave-overlay').classList.add('hidden'); }
 function doLeave() {
   clearSession();
-  if (socket) { socket.off(); socket.disconnect(); socket = null; }
+  if (socket) { socket.emit('leaveRoom'); }
   document.getElementById('leave-overlay').classList.add('hidden');
   ['arrange-banner','bid-overlay','confirm-banner','round-end-overlay','score-overlay','game-over-overlay']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
   currentGameState = null; myPlayerIndex = null; myRoomId = null; lastRoundEndShown = -1;
+  isSpectator = false;
   showScreen('home-screen');
+  if (authUser) renderFriendsList();
 }
-
-// ── KICK PLAYER ──────────────────────────────────────────────────────────
-// ── KICK PLAYER ──────────────────────────────────────────────────────────
-function kickPlayer(idx) {
-  if (!socket) return;
-  socket.emit('kickPlayer', { playerIndex: idx });
-}
-
-// ── PLAY AGAIN / END GAME ────────────────────────────────────────────────
-function votePlayAgain() {
-  if (!socket) return;
-  socket.emit('playAgain');
-  // Grey out button so they can't vote twice
-  const btn = document.querySelector('[onclick="votePlayAgain()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '✓ Voted!'; }
-}
-
 function doEndGame() {
   clearSession();
-  if (socket) { socket.off(); socket.disconnect(); socket = null; }
   ['game-over-overlay','round-end-overlay','score-overlay']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
   currentGameState = null; myPlayerIndex = null; myRoomId = null; lastRoundEndShown = -1;
+  isSpectator = false;
   showScreen('home-screen');
 }
 
-// ── AUTO REJOIN ON PAGE LOAD ─────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  PAGE VISIBILITY — auto-reconnect when coming back to foreground
+// ════════════════════════════════════════════════════════════
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Page became visible again (user returned from background)
+    if (!socket || !socket.connected) {
+      console.log('Page visible, socket disconnected — reconnecting');
+      // socket.io will handle this automatically with reconnection:true
+      // But if socket is null, reinit
+      if (!socket) {
+        const s = loadSession();
+        if (s || authUser) connectSocket();
+      }
+    } else {
+      // Socket is "connected" but server might have dropped us — ping to verify
+      socket.emit('ping');
+    }
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
 (function initOnLoad() {
-  const session = loadSession();
-  if (session) {
-    myName = session.playerName;
-    connectSocket(); // connect event fires rejoinRoom, then hideLoading
+  // Check saved auth
+  const savedAuth = loadAuth();
+  if (savedAuth?.sessionToken) {
+    // Verify session is still valid
+    fetch('/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ sessionToken: savedAuth.sessionToken }),
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        setAuthUser({ ...savedAuth, gameName: data.gameName, googleId: data.googleId });
+        // After auth, check for game session
+        const session = loadSession();
+        if (!session) { hideLoading(); showScreen('home-screen'); }
+        // connectSocket handles session rejoin
+      } else {
+        clearAuth();
+        hideLoading();
+        showScreen('home-screen');
+      }
+    }).catch(() => {
+      // Server offline — try connecting anyway with game session
+      const session = loadSession();
+      if (session) {
+        myName = session.playerName;
+        connectSocket();
+      } else {
+        hideLoading();
+        showScreen('home-screen');
+      }
+    });
   } else {
-    hideLoading();
-    showScreen('home-screen');
+    // No saved auth — check for game session (guest)
+    const session = loadSession();
+    if (session) {
+      myName = session.playerName;
+      connectSocket();
+    } else {
+      hideLoading();
+      showScreen('home-screen');
+    }
   }
 })();
 
-document.getElementById('player-name').addEventListener('keydown', e => {
-  if (e.key === 'Enter') showCreateJoin();
-});
-document.getElementById('room-code-input').addEventListener('input', () => {
-  document.getElementById('room-code-input').value =
-    document.getElementById('room-code-input').value.toUpperCase();
+// Google Client ID is injected at runtime
+window.GOOGLE_CLIENT_ID = '924650692397-2arlu694766obrgi71b00ei6mud8qooa.apps.googleusercontent.com';
+
+// Input event listeners
+document.getElementById('room-code-input').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
 });
 document.getElementById('room-code-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') joinRoom();
+});
+document.getElementById('setup-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmSetupName();
 });
 </script>
 </body>

@@ -1,7 +1,7 @@
 {
-  "name": "judgment-card-game",
-  "version": "1.0.0",
-  "description": "Online Judgment Card Game",
+  "name": "kachu-phul",
+  "version": "2.0.0",
+  "description": "Kachu Phul Card Game with Google Auth & Friends",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.6.1",
+    "mongodb": "^6.3.0",
+    "google-auth-library": "^9.4.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
