@@ -2128,9 +2128,11 @@
           <h3>🎴 Play</h3>
           <button class="btn btn-gold mb-1" onclick="createRoom()">Create New Room</button>
           <div class="divider">or join with room code</div>
-          <div class="room-input-row">
+          <div style="display:flex;flex-direction:column;gap:.5rem;">
             <input type="text" id="room-code-input" placeholder="Room Code (e.g. XK9A2B)" maxlength="6"
-              autocomplete="off">
+              autocomplete="off"
+              style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
             <button class="btn btn-outline" onclick="joinRoom()">Join →</button>
           </div>
           <div id="menu-error" class="error-msg hidden mt-1"></div>
