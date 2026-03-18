@@ -55,16 +55,18 @@
       min-height: 100vh;
     }
 
+    /* !important beats the #game-screen { display:flex } ID rule */
     .screen {
-      display: none;
+      display: none !important;
     }
 
     .screen.active {
-      display: block;
+      display: block !important;
     }
 
-    #game-screen {
-      min-height: 0;
+    /* Game screen needs flex when active */
+    #game-screen.active {
+      display: flex !important;
     }
 
     .hidden {
