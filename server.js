@@ -599,11 +599,22 @@ function startRound(room) {
 function resolveTrick(room) {
   const winner = trickWinner(room.currentTrick, room.leadSuit, room.trumpSuit);
   room.tricks[winner] = (room.tricks[winner] || 0) + 1;
-  io.to(room.id).emit('trickWon', { winnerIndex: winner, winnerName: room.players[winner].name });
-  room.currentTrick = []; room.leadSuit = null; room.currentLeader = winner;
-  const cardsLeft = Object.values(room.hands).reduce((s, h) => s + h.length, 0);
-  if (cardsLeft === 0) setTimeout(() => endRound(room), 1000);
-  else broadcastGameState(room);
+  // Find the winning card from the trick
+  const winningEntry = room.currentTrick.find(t => t.playerIndex === winner);
+  const winningCard = winningEntry ? winningEntry.card : null;
+  io.to(room.id).emit('trickWon', {
+    winnerIndex: winner,
+    winnerName: room.players[winner].name,
+    winningCard: winningCard,
+    trick: [...room.currentTrick], // send full trick so client can show animation
+  });
+  // Delay clearing the trick so clients can animate the winning card
+  setTimeout(() => {
+    room.currentTrick = []; room.leadSuit = null; room.currentLeader = winner;
+    const cardsLeft = Object.values(room.hands).reduce((s, h) => s + h.length, 0);
+    if (cardsLeft === 0) setTimeout(() => endRound(room), 1000);
+    else broadcastGameState(room);
+  }, 2000);
 }
 function endRound(room) {
   const results = room.players.map((p, i) => {

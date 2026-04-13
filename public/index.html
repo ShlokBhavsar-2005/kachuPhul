@@ -1134,6 +1134,28 @@
       flex-direction: column;
       align-items: center;
       gap: .25rem;
+      transition: opacity .3s ease;
+    }
+
+    /* Winning card — raise & brighten the card in-place */
+    .trick-card-slot.winner-highlight .card {
+      transform: translateY(-14px) scale(1.18);
+      filter: brightness(1.35) drop-shadow(0 0 12px rgba(240, 192, 64, .75));
+      border-color: var(--gold) !important;
+      box-shadow: 0 10px 32px rgba(240, 192, 64, .45) !important;
+      position: relative;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s ease, box-shadow .3s ease;
+    }
+    .trick-card-slot.winner-highlight .trick-player-name { color: var(--gold); font-weight: 800; }
+    .trick-card-slot.loser-dim { opacity: .4; }
+
+    /* Empty placeholder slot in hand area */
+    .card-empty {
+      width: 48px;
+      height: 68px;
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      opacity: .35;
     }
 
     .trick-player-name {
@@ -2354,6 +2376,12 @@
     let customHandOrder = [], sortMode = 'custom', pendingCardId = null;
     let chosenRounds = null, maxRoundsAvailable = 0, bidPanelOpen = false;
     let pendingGoogleId = '', pendingCredential = '', pendingPicture = '';
+    // Track cards played in current hand (to hide from your card area)
+    let playedCardIds = new Set();
+    // Winner highlight state
+    let trickWinData = null;
+    // Fixed match player count (set once game starts)
+    let matchPlayerCount = 0;
 
     const SUIT_COLORS = { spades: 'suit-spades', diamonds: 'suit-diamonds', clubs: 'suit-clubs', hearts: 'suit-hearts' };
     const SUIT_SYM = { spades: '♠', diamonds: '♦', clubs: '♣', hearts: '♥' };
@@ -2546,12 +2574,16 @@
       socket.on('gameState', state => {
         hideLoading();
         if (state.isSpectator) { renderSpectatorState(state); return; }
+        // Set matchPlayerCount once at game start
+        if (matchPlayerCount === 0) matchPlayerCount = state.players.length;
         syncCustomOrder(state.myHand);
         const prevTurn = currentGameState?.currentTurnIndex;
         currentGameState = state;
+        // Track which cards are in the current hand (playing area)
+        playedCardIds = new Set(state.currentTrick.map(t => t.card.id));
         renderGameState(state);
-        // Show "Your Turn" flash only when it freshly becomes our turn AND the trick
-        // isn't already complete (all players have played = trick is resolving, not a real turn).
+        // Show "Your Turn" flash only when it freshly becomes our turn AND the hand
+        // isn't already complete (all players have played = hand is resolving, not a real turn).
         const trickFull = state.currentTrick && state.currentTrick.length >= state.players.length;
         if (state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && prevTurn !== myPlayerIndex && !trickFull) {
           showYourTurnFlash();
@@ -2567,7 +2599,12 @@
         notify('Spectating room ' + roomId, 'info');
       });
 
-      socket.on('trickWon', ({ winnerName }) => showTrickWonBanner(winnerName));
+      socket.on('trickWon', ({ winnerName, winnerIndex, winningCard, trick }) => {
+        trickWinData = { winnerIndex, winningCard, trick };
+        // Raise & brighten the winning card directly in the playing area
+        if (currentGameState) renderTrick(currentGameState);
+        setTimeout(() => { trickWinData = null; }, 2200);
+      });
 
       socket.on('roundEnd', ({ roundIndex, results }) => {
         if (roundIndex !== lastRoundEndShown) { lastRoundEndShown = roundIndex; showRoundEnd(roundIndex, results); }
@@ -3054,8 +3091,27 @@
 
     function renderTrick(state) {
       const el = $('trick-cards'), st = $('trick-status');
-      if (!state.currentTrick || !state.currentTrick.length) { el.innerHTML = '<div style="color:var(--text2);font-size:.85rem;margin:auto;">No cards played yet</div>'; st.textContent = ''; return; }
-      el.innerHTML = state.currentTrick.map(t => `<div class="trick-card-slot"><div class="trick-player-name">${state.players[t.playerIndex]?.name || '?'}</div>${cardHTML(t.card, 'size-md', state.trumpSuit, false, false)}</div>`).join('');
+      const totalPlayers = matchPlayerCount || state.players.length;
+      const po = state.playerOrder || state.players.map((_, i) => i);
+      const leaderIdx = po.indexOf(state.currentLeader);
+      const handOrder = [];
+      for (let i = 0; i < totalPlayers; i++) handOrder.push(po[(leaderIdx + i) % po.length]);
+
+      let html = '';
+      for (let i = 0; i < totalPlayers; i++) {
+        const pIdx = handOrder[i];
+        const playerName = state.players[pIdx]?.name || '?';
+        const played = state.currentTrick.find(t => t.playerIndex === pIdx);
+        const isWinner = trickWinData && trickWinData.winnerIndex === pIdx;
+        const isLoser = trickWinData && trickWinData.winnerIndex !== pIdx && played;
+        const slotCls = ['trick-card-slot', isWinner ? 'winner-highlight' : '', isLoser ? 'loser-dim' : ''].filter(Boolean).join(' ');
+        if (played) {
+          html += `<div class="${slotCls}" data-player="${pIdx}"><div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
+        } else {
+          html += `<div class="trick-card-slot" data-player="${pIdx}"><div class="trick-player-name">${playerName}</div><div class="card-empty"></div></div>`;
+        }
+      }
+      el.innerHTML = html;
       st.textContent = state.leadSuit ? `Lead: ${SUIT_SYM[state.leadSuit]} ${state.leadSuit}` : '';
     }
 
@@ -3065,7 +3121,7 @@
       const ti = state.currentTurnIndex; if (ti === null || ti === undefined) { el.textContent = ''; return; }
       // If the trick is full (all players played), it's resolving — don't show "your turn"
       const trickComplete = state.currentTrick && state.currentTrick.length >= state.players.length;
-      if (trickComplete) { el.textContent = 'Resolving trick…'; el.className = 'turn-indicator other-turn'; return; }
+      if (trickComplete) { el.textContent = 'Resolving hand…'; el.className = 'turn-indicator other-turn'; return; }
       const myIdx = isSpectator ? -1 : myPlayerIndex;
       if (ti === myIdx) { el.textContent = '⚡ Your turn — play a card!'; el.className = 'turn-indicator my-turn'; }
       else { el.textContent = `Waiting for ${state.players[ti]?.name || '?'}…`; el.className = 'turn-indicator other-turn'; }
@@ -3074,10 +3130,12 @@
     function renderHand(state) {
       if (isSpectator) return;
       const hand = state.myHand || [];
+      // Filter out cards already placed in the playing area
+      const visibleHand = hand.filter(c => !playedCardIds.has(c.id));
       const isMyTurn = state.state === 'playing' && state.currentTurnIndex === myPlayerIndex;
-      // If it's my turn, check if I have the lead suit (determines which cards are locked)
-      const hasLeadSuit = isMyTurn && state.currentTrick.length > 0 && hand.some(c => c.suit === state.leadSuit);
-      const sorted = getSortedHand(hand, state.trumpSuit);
+      // Check lead suit against visible hand only
+      const hasLeadSuit = isMyTurn && state.currentTrick.length > 0 && visibleHand.some(c => c.suit === state.leadSuit);
+      const sorted = getSortedHand(visibleHand, state.trumpSuit);
       $('my-hand').innerHTML = sorted.map((card, si) => {
         const isPlayable = isMyTurn && canPlayCard(card, state);
         // Disable (dim) the card when: not my turn at all, OR it's my turn but this card can't be played
