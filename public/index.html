@@ -3097,6 +3097,7 @@
       const handOrder = [];
       for (let i = 0; i < totalPlayers; i++) handOrder.push(po[(leaderIdx + i) % po.length]);
 
+      const isBidding = state.state === 'bidding';
       let html = '';
       for (let i = 0; i < totalPlayers; i++) {
         const pIdx = handOrder[i];
@@ -3106,9 +3107,11 @@
         const isLoser = trickWinData && trickWinData.winnerIndex !== pIdx && played;
         const slotCls = ['trick-card-slot', isWinner ? 'winner-highlight' : '', isLoser ? 'loser-dim' : ''].filter(Boolean).join(' ');
         if (played) {
-          html += `<div class="${slotCls}" data-player="${pIdx}"><div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
+          // Name below card so it stays visible when winner-highlight raises the card up
+          html += `<div class="${slotCls}" data-player="${pIdx}">${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}<div class="trick-player-name">${playerName}</div></div>`;
         } else {
-          html += `<div class="trick-card-slot" data-player="${pIdx}"><div class="trick-player-name">${playerName}</div><div class="card-empty"></div></div>`;
+          // Hide names on empty slots during bidding — don't reveal who leads first
+          html += `<div class="trick-card-slot" data-player="${pIdx}"><div class="card-empty"></div>${!isBidding ? `<div class="trick-player-name">${playerName}</div>` : ''}</div>`;
         }
       }
       el.innerHTML = html;
