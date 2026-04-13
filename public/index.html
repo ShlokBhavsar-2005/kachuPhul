@@ -1123,10 +1123,11 @@
       background: rgba(255, 255, 255, .03);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 1rem;
+      padding: 1rem 1rem 1.4rem;
       min-width: 200px;
       min-height: 90px;
       margin-bottom: .8rem;
+      overflow: visible;
     }
 
     .trick-card-slot {
@@ -1134,20 +1135,52 @@
       flex-direction: column;
       align-items: center;
       gap: .25rem;
-      transition: opacity .3s ease;
+      transition: opacity .35s ease;
+      position: relative;
     }
 
-    /* Winning card — raise & brighten the card in-place */
-    .trick-card-slot.winner-highlight .card {
-      transform: translateY(-14px) scale(1.18);
-      filter: brightness(1.35) drop-shadow(0 0 12px rgba(240, 192, 64, .75));
-      border-color: var(--gold) !important;
-      box-shadow: 0 10px 32px rgba(240, 192, 64, .45) !important;
-      position: relative;
-      transition: transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s ease, box-shadow .3s ease;
+    /* Winner badge that floats above the card */
+    .winner-crown {
+      display: none;
+      font-size: .85rem;
+      line-height: 1;
+      margin-bottom: .15rem;
+      animation: crown-pop .3s cubic-bezier(.34,1.56,.64,1);
     }
-    .trick-card-slot.winner-highlight .trick-player-name { color: var(--gold); font-weight: 800; }
-    .trick-card-slot.loser-dim { opacity: .4; }
+    .trick-card-slot.winner-highlight .winner-crown { display: block; }
+    @keyframes crown-pop {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+    }
+
+    /* Winning card — smooth scale + gold pulse */
+    .trick-card-slot.winner-highlight .card {
+      animation: winner-pulse 1.8s ease-in-out infinite;
+      border-color: var(--gold) !important;
+      transform: scale(1.12);
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1), border-color .2s;
+    }
+    @keyframes winner-pulse {
+      0%, 100% {
+        box-shadow: 0 0 12px rgba(240,192,64,.5), 0 6px 20px rgba(0,0,0,.5);
+        filter: brightness(1.2) drop-shadow(0 0 8px rgba(240,192,64,.6));
+      }
+      50% {
+        box-shadow: 0 0 28px rgba(240,192,64,.85), 0 8px 28px rgba(0,0,0,.5);
+        filter: brightness(1.35) drop-shadow(0 0 18px rgba(240,192,64,.95));
+      }
+    }
+
+    /* Winner player name — shown above card, gold + bold */
+    .trick-card-slot.winner-highlight .trick-player-name {
+      color: var(--gold);
+      font-weight: 800;
+      font-size: .78rem;
+      order: -1;   /* pulls the name to sit ABOVE the card inside flex */
+      margin-bottom: .2rem;
+      text-shadow: 0 0 10px rgba(240,192,64,.5);
+    }
+    .trick-card-slot.loser-dim { opacity: .35; filter: grayscale(.4); }
 
     /* Empty placeholder slot in hand area */
     .card-empty {
@@ -1159,7 +1192,7 @@
     }
 
     .trick-player-name {
-      font-size: .7rem;
+      font-size: .72rem;
       color: var(--text2);
       font-weight: 600;
     }
@@ -3107,8 +3140,9 @@
         const isLoser = trickWinData && trickWinData.winnerIndex !== pIdx && played;
         const slotCls = ['trick-card-slot', isWinner ? 'winner-highlight' : '', isLoser ? 'loser-dim' : ''].filter(Boolean).join(' ');
         if (played) {
-          // Name below card so it stays visible when winner-highlight raises the card up
-          html += `<div class="${slotCls}" data-player="${pIdx}">${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}<div class="trick-player-name">${playerName}</div></div>`;
+          const crownEl = isWinner ? `<div class="winner-crown">👑</div>` : '';
+          // Name is repositioned above card via CSS `order:-1` on winner-highlight
+          html += `<div class="${slotCls}" data-player="${pIdx}">${crownEl}<div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
         } else {
           // Hide names on empty slots during bidding — don't reveal who leads first
           html += `<div class="trick-card-slot" data-player="${pIdx}"><div class="card-empty"></div>${!isBidding ? `<div class="trick-player-name">${playerName}</div>` : ''}</div>`;
