@@ -70,7 +70,7 @@ function shuffle(d) {
 function getTrump(ri) { return SUITS[ri % 4]; }
 function getCardsForRound(total, ri) { return total - ri; }
 function dealCards(pc, total, ri) {
-  const n = getCardsForRound(total, ri), deck = shuffle(createDeck());
+  const n = getCardsForRound(total, ri), deck = shuffle(createDeck()).slice(0, pc * n);
   return Array.from({ length: pc }, (_, i) => deck.slice(i * n, (i + 1) * n));
 }
 function cardValue(card, lead, trump) {
