@@ -2092,7 +2092,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      z-index: 80;
+      z-index: 200;
       box-shadow: 0 4px 16px rgba(0,0,0,.4);
       transition: transform .15s;
     }
@@ -2119,7 +2119,7 @@
       background: rgba(0,0,0,.65);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      z-index: 310;
+      z-index: 5500;
       display: flex;
       align-items: flex-end;
       justify-content: center;
@@ -2242,7 +2242,7 @@
       position: fixed;
       bottom: 74px;
       left: 12px;
-      z-index: 75;
+      z-index: 199;
       display: flex;
       flex-direction: column;
       gap: .3rem;
@@ -2793,10 +2793,11 @@
       socket.on('rejoinFailed', () => { clearGameSession(); hideLoading(); showMenuAndLoad(); notify('Session expired', 'err'); });
       socket.on('kicked', msg => { clearGameSession(); hideLoading(); showMenuAndLoad(); notify(msg || 'Removed from room', 'err'); });
 
-      socket.on('roomUpdate', room => { hideLoading(); if (!isSpectator) showScreen('waiting-screen'); renderWaitingRoom(room); });
+      socket.on('roomUpdate', room => { hideLoading(); if (!isSpectator) showScreen('waiting-screen'); renderWaitingRoom(room); $('chat-fab').classList.remove('hidden'); });
 
       socket.on('gameState', state => {
         hideLoading();
+        $('chat-fab').classList.remove('hidden');
         if (state.isSpectator) { renderSpectatorState(state); return; }
         // Set matchPlayerCount once at game start
         if (matchPlayerCount === 0) matchPlayerCount = state.players.length;
@@ -2850,6 +2851,7 @@
         $('display-room-code').textContent = roomId;
         $('game-over-overlay').classList.add('hidden');
         showScreen('waiting-screen');
+        $('chat-fab').classList.remove('hidden');
       });
 
       socket.on('playAgainUpdate', ({ votes, total }) => {
