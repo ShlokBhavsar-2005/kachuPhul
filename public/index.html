@@ -2077,41 +2077,27 @@
     .lobby-invite-item:last-child { margin-bottom:0; }
 
     /* ═══ CHAT ═══ */
-    .chat-fab {
-      position: fixed;
-      bottom: 18px;
-      right: 18px;
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), #b8860b);
-      color: #111;
-      border: none;
-      font-size: 1.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .chat-inline-btn {
+      background: rgba(240,192,64,.1);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      border-radius: 6px;
+      padding: .2rem .55rem;
+      font-family: 'Baloo 2', cursive;
+      font-size: .78rem;
+      font-weight: 700;
       cursor: pointer;
-      z-index: 200;
-      box-shadow: 0 4px 16px rgba(0,0,0,.4);
-      transition: transform .15s;
-    }
-    .chat-fab:active { transform: scale(.9); }
-    .chat-fab .unread-badge {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      background: var(--red);
-      color: #fff;
-      font-size: .6rem;
-      font-weight: 800;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
-      justify-content: center;
-      pointer-events: none;
+      gap: .3rem;
+      transition: all .15s;
+      letter-spacing: .04em;
+    }
+    .chat-inline-btn:hover {
+      background: rgba(240,192,64,.2);
+    }
+    .chat-inline-btn:active {
+      transform: scale(.95);
     }
     .chat-overlay {
       position: fixed;
@@ -2444,7 +2430,7 @@
       <div class="my-hand-section" id="my-hand-section">
         <div class="hand-top-row">
           <div style="display:flex;align-items:center;gap:.5rem;">
-            <div class="hand-label">Your Hand</div>
+            <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()">💬 Chat</button>
             <div id="hand-trump-badge"
               style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;letter-spacing:.04em;">
               <span id="hand-trump-sym"></span> <span id="hand-trump-name"></span></div>
@@ -2540,11 +2526,6 @@
     </div>
   </div>
 
-  <!-- CHAT FAB -->
-  <button class="chat-fab hidden" id="chat-fab" onclick="openChat()">
-    💬
-    <div class="unread-badge hidden" id="chat-unread">0</div>
-  </button>
 
   <!-- CHAT BUBBLES (floating) -->
   <div class="chat-bubbles" id="chat-bubbles"></div>
@@ -3554,7 +3535,9 @@
       }
     }
     function updateChatBadge() {
+      // Unread badge removed, keeping function for compatibility
       const badge = $('chat-unread');
+      if (!badge) return;
       if (unreadChat > 0) { badge.textContent = unreadChat > 9 ? '9+' : unreadChat; badge.classList.remove('hidden'); }
       else badge.classList.add('hidden');
     }
