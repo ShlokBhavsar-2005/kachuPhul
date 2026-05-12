@@ -354,6 +354,15 @@ io.on('connection', socket => {
       broadcastRoomUpdate(room); return;
     }
 
+    // Leave any previous room before joining a new one
+    if (socket.data.roomId && socket.data.roomId !== code && rooms[socket.data.roomId]) {
+      const oldRoom = rooms[socket.data.roomId];
+      const oldIdx = oldRoom.players.findIndex(p => p.socketId === socket.id);
+      if (oldIdx !== -1) { if (oldRoom.state === 'lobby') oldRoom.players.splice(oldIdx, 1); else oldRoom.players[oldIdx].connected = false; }
+      socket.leave(socket.data.roomId);
+      if (oldRoom.players.length) broadcastRoomUpdate(oldRoom);
+    }
+
     const token = genToken(), playerIndex = room.players.length;
     room.players.push({ socketId: socket.id, name, gameName: socket.data.gameName || null, googleId: socket.data.googleId || null, connected: true, token });
     socket.join(code); socket.data.roomId = code; socket.data.playerIndex = playerIndex; socket.data.token = token; socket.data.isSpectator = false;
@@ -464,6 +473,7 @@ io.on('connection', socket => {
     const room = rooms[socket.data.roomId];
     const pIdx = socket.data.playerIndex;
     if (!room || room.state !== 'playing') return;
+    if (room.currentTrick.length >= room.players.length) return; // trick complete, waiting for resolution
     if (getCurrentTurn(room) !== pIdx) return socket.emit('error', 'Not your turn');
 
     const hand = room.hands[pIdx];
@@ -515,12 +525,47 @@ io.on('connection', socket => {
       newRoom.players.forEach((p, i) => {
         if (p.connected) {
           const s = io.sockets.sockets.get(p.socketId);
-          if (s) { s.leave(room.id); s.join(newRoomId); s.data.roomId = newRoomId; s.data.playerIndex = i; }
+          if (s) { s.leave(room.id); s.join(newRoomId); s.data.roomId = newRoomId; s.data.playerIndex = i; s.data.token = p.token; }
         }
       });
       newRoom.players.forEach(p => { if (p.connected) io.to(p.socketId).emit('roomUpdate', sanitizeRoom(newRoom, p.socketId)); });
       delete rooms[room.id];
     }
+  });
+
+  // ── LEAVE ROOM ────────────────────────────────────────────────────────────────
+  socket.on('leaveRoom', () => {
+    const roomId = socket.data.roomId;
+    if (!roomId || !rooms[roomId]) {
+      if (socket.data.googleId && onlineUsers[socket.data.googleId]) {
+        onlineUsers[socket.data.googleId].roomId = null;
+        onlineUsers[socket.data.googleId].status = 'online';
+        broadcastFriendStatus(socket.data.gameName);
+      }
+      socket.data.roomId = null;
+      return;
+    }
+    const room = rooms[roomId];
+    if (socket.data.isSpectator) {
+      room.spectators = (room.spectators || []).filter(s => s.socketId !== socket.id);
+    } else {
+      const pIdx = room.players.findIndex(p => p.socketId === socket.id);
+      if (pIdx !== -1) {
+        if (room.state === 'lobby') room.players.splice(pIdx, 1);
+        else room.players[pIdx].connected = false;
+      }
+    }
+    socket.leave(roomId);
+    socket.data.roomId = null;
+    socket.data.playerIndex = null;
+    socket.data.token = null;
+    socket.data.isSpectator = false;
+    if (socket.data.googleId && onlineUsers[socket.data.googleId]) {
+      onlineUsers[socket.data.googleId].roomId = null;
+      onlineUsers[socket.data.googleId].status = 'online';
+      broadcastFriendStatus(socket.data.gameName);
+    }
+    if (room.players.length || (room.spectators || []).length) broadcastRoomUpdate(room);
   });
 
   // ── DISCONNECT ────────────────────────────────────────────────────────────────

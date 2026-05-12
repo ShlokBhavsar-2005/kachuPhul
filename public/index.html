@@ -2650,6 +2650,10 @@
 
       socket.on('newLobby', ({ roomId, playerIndex, playerToken, playerName }) => {
         myRoomId = roomId; myPlayerIndex = playerIndex; myGameName = playerName; isSpectator = false;
+        // Reset all game state for new match
+        matchPlayerCount = 0; lastRoundEndShown = -1; currentGameState = null;
+        trickWinData = null; playedCardIds = new Set(); customHandOrder = [];
+        selectedBid = null; bidPanelOpen = false; chosenRounds = null;
         saveGameSession({ roomId, playerIndex, playerToken, playerName });
         $('display-room-code').textContent = roomId;
         $('game-over-overlay').classList.add('hidden');
@@ -2920,7 +2924,10 @@
         const data = await res.json();
         if (!data.friends) return;
         const el = $('lobby-invite-list'); if (!el) return;
-        const available = data.friends.filter(f => f.online && !f.inGame);
+        // Also exclude players already in the current room
+        const roomPlayerNames = new Set();
+        document.querySelectorAll('#player-list .player-item-name').forEach(el => roomPlayerNames.add(el.textContent));
+        const available = data.friends.filter(f => f.online && !f.inGame && !roomPlayerNames.has(f.gameName));
         if (!available.length) {
           el.innerHTML = `<div style="color:var(--text2);font-size:.85rem;text-align:center;padding:.5rem 0;">No online friends to invite right now</div>`;
           return;
@@ -3310,6 +3317,9 @@
     function showGameOver(fs) {
       $('round-end-overlay').classList.add('hidden');
       $('game-over-overlay').classList.remove('hidden');
+      // Reset Play Again button state (may be disabled from previous game)
+      const paBtn = document.querySelector('[onclick="votePlayAgain()"]');
+      if (paBtn) { paBtn.disabled = false; paBtn.textContent = '🔄 Play Again'; }
       $('winner-name').textContent = `👑 ${fs[0].name} wins with ${fs[0].score} pts!`;
       $('podium-list').innerHTML = fs.map((p, i) => `<div class="podium-item"><div class="podium-rank">${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'}</div><div class="podium-name">${p.name}</div><div class="podium-score">${p.score} pts</div></div>`).join('');
     }
@@ -3319,13 +3329,14 @@
     // ═══════════════════════════════════════════════
     function kickPlayer(idx) { socket?.emit('kickPlayer', { playerIndex: idx }); }
     function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = '✓ Voted!'; } }
-    function doEndGame() { clearGameSession(); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
+    function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set();['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
     function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
     function cancelLeave() { $('leave-overlay').classList.add('hidden'); }
     function doLeave() {
       clearGameSession();
-      if (isSpectator && socket) socket.emit('spectateRoom', { roomId: '__leave__' });
+      if (socket) socket.emit('leaveRoom');
       isSpectator = false; myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
+      matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set();
       $('leave-overlay').classList.add('hidden');
       ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay'].forEach(id => $(id)?.classList.add('hidden'));
       showMenuAndLoad();
