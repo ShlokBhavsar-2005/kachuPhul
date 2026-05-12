@@ -2079,34 +2079,34 @@
     /* ═══ CHAT ═══ */
     .chat-fab {
       position: fixed;
-      top: 48px;
-      left: 10px;
-      width: 36px;
-      height: 36px;
+      bottom: 18px;
+      right: 18px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--gold), #b8860b);
       color: #111;
       border: none;
-      font-size: 1.05rem;
+      font-size: 1.3rem;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 200;
-      box-shadow: 0 2px 10px rgba(0,0,0,.3);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
       transition: transform .15s;
     }
     .chat-fab:active { transform: scale(.9); }
     .chat-fab .unread-badge {
       position: absolute;
-      top: -3px;
-      right: -3px;
+      top: -2px;
+      right: -2px;
       background: var(--red);
       color: #fff;
-      font-size: .55rem;
+      font-size: .6rem;
       font-weight: 800;
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -2116,27 +2116,28 @@
     .chat-overlay {
       position: fixed;
       inset: 0;
-      background: transparent;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 5500;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
     }
     .chat-panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 280px;
-      max-width: 80vw;
-      background: rgba(10, 12, 20, .93);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-right: 1px solid var(--border);
+      width: 100%;
+      max-width: 520px;
+      max-height: 70vh;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
       display: flex;
       flex-direction: column;
-      animation: chatSlideIn .25s ease-out;
+      animation: chatSlideUp .25s ease-out;
     }
-    @keyframes chatSlideIn {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(0); }
+    @keyframes chatSlideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
     .chat-header {
       display: flex;
@@ -2239,17 +2240,14 @@
     /* Floating bubbles */
     .chat-bubbles {
       position: fixed;
-      left: 8px;
-      bottom: 32vh;
-      max-height: 18vh;
-      overflow: hidden;
+      bottom: 74px;
+      left: 12px;
       z-index: 199;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
       gap: .3rem;
       pointer-events: none;
-      max-width: 200px;
+      max-width: 260px;
     }
     .chat-bubble {
       background: rgba(20,22,30,.88);
