@@ -1025,6 +1025,25 @@
     .kick-vote-btn:hover { background:rgba(224,80,80,.35); }
     .kick-vote-btn.voted { background:var(--red); color:#fff; cursor:default; }
     .kick-vote-count { font-size:.58rem; color:var(--red); font-weight:600; }
+    .kick-confirm-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:5000;
+      display:flex; align-items:center; justify-content:center; padding:1rem;
+      backdrop-filter:blur(4px); animation:modal-in .2s ease-out;
+    }
+    .kick-confirm-panel {
+      background:var(--bg2); border:1.5px solid var(--red); border-radius:16px;
+      padding:1.5rem 1.3rem; width:100%; max-width:320px; text-align:center;
+      box-shadow:0 12px 40px rgba(224,80,80,.3);
+    }
+    .kick-confirm-panel h3 { font-size:1.15rem; font-weight:800; color:var(--red); margin-bottom:.3rem; }
+    .kick-confirm-panel p { color:var(--text2); font-size:.85rem; margin-bottom:1.2rem; line-height:1.5; }
+    .kick-confirm-btns { display:flex; gap:.6rem; }
+    .kick-confirm-btns button {
+      flex:1; border:none; border-radius:10px; padding:.6rem;
+      font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; cursor:pointer;
+    }
+    .kick-confirm-yes { background:var(--red); color:#fff; }
+    .kick-confirm-no { background:var(--bg3); border:1.5px solid var(--border) !important; color:var(--text2); }
 
     @keyframes seat-pulse {
       0%, 100% { box-shadow: 0 0 8px rgba(63, 185, 80, .25) }
@@ -2843,9 +2862,12 @@
       socket.on('spectatorJoined', ({ gameName }) => notify(`${gameName} is spectating`, 'info'));
 
       socket.on('playerRemoved', ({ name }) => {
-        notify(`${name} was removed from the game`, 'info');
+        notify(`${name} was kicked from the game`, 'info');
         kickVoteState = {};
-        // matchPlayerCount will be updated when next gameState arrives
+      });
+
+      socket.on('playerLeft', ({ name }) => {
+        notify(`${name} left the game`, 'info');
       });
 
       socket.on('kickVoteUpdate', ({ targetIndex, targetName, votes, needed, voters }) => {
@@ -3530,6 +3552,28 @@
       if (!socket || !currentGameState) return;
       const target = currentGameState.players[targetIndex];
       if (!target || target.connected) return notify('Player is online', 'err');
+      // Show confirmation dialog
+      showKickConfirm(targetIndex, target.name);
+    }
+    function showKickConfirm(targetIndex, targetName) {
+      dismissKickConfirm();
+      const el = document.createElement('div');
+      el.className = 'kick-confirm-overlay'; el.id = 'kick-confirm-overlay';
+      el.onclick = (e) => { if (e.target === el) dismissKickConfirm(); };
+      el.innerHTML = `<div class="kick-confirm-panel">
+        <h3>👢 Vote to Kick?</h3>
+        <p><strong>${targetName}</strong> is offline.<br>Vote to remove them from the game?</p>
+        <div class="kick-confirm-btns">
+          <button class="kick-confirm-yes" onclick="confirmKickVote(${targetIndex})">Yes, Kick</button>
+          <button class="kick-confirm-no" onclick="dismissKickConfirm()">Cancel</button>
+        </div>
+      </div>`;
+      document.body.appendChild(el);
+    }
+    function dismissKickConfirm() { document.getElementById('kick-confirm-overlay')?.remove(); }
+    function confirmKickVote(targetIndex) {
+      dismissKickConfirm();
+      if (!socket) return;
       socket.emit('voteKickPlayer', { targetIndex });
     }
     function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = '✓ Voted!'; } }

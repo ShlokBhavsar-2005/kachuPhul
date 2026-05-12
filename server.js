@@ -91,7 +91,7 @@ function getCurrentTurn(room) {
 }
 
 // ─── REMOVE PLAYER FROM ACTIVE GAME ──────────────────────────────────────────
-function removePlayerFromGame(room, removedIdx) {
+function removePlayerFromGame(room, removedIdx, reason = 'kicked') {
   const removedPlayer = room.players[removedIdx];
   const removedName = removedPlayer.name;
   const originalPlayerOrder = [...room.playerOrder];
@@ -108,7 +108,7 @@ function removePlayerFromGame(room, removedIdx) {
         io.to(p.socketId).emit('yourIndex', i);
       }
     });
-    io.to(room.id).emit('playerRemoved', { name: removedName });
+    io.to(room.id).emit(reason === 'left' ? 'playerLeft' : 'playerRemoved', { name: removedName });
     endGame(room);
     return;
   }
@@ -192,7 +192,7 @@ function removePlayerFromGame(room, removedIdx) {
   });
 
   // Notify all players
-  io.to(room.id).emit('playerRemoved', { name: removedName });
+  io.to(room.id).emit(reason === 'left' ? 'playerLeft' : 'playerRemoved', { name: removedName });
   room.players.forEach((p, i) => {
     if (p.connected) io.to(p.socketId).emit('yourIndex', i);
   });
@@ -740,7 +740,7 @@ io.on('connection', socket => {
             onlineUsers[socket.data.googleId].status = 'online';
             broadcastFriendStatus(socket.data.gameName);
           }
-          removePlayerFromGame(room, pIdx);
+          removePlayerFromGame(room, pIdx, 'left');
           return;
         }
       }
