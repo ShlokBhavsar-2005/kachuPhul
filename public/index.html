@@ -2440,7 +2440,7 @@
             <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()">💬 Chat</button>
             <div id="hand-trump-badge"
               style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;letter-spacing:.04em;">
-              <span id="hand-trump-sym"></span> <span id="hand-trump-name"></span></div>
+              Trump: <span id="hand-trump-sym"></span></div>
           </div>
           <div class="hand-sort-btns">
             <span style="font-size:.72rem;color:var(--text2);margin-right:.2rem;">Sort:</span>
@@ -3349,14 +3349,12 @@
       ${cardHTML(card, 'size-lg', state.trumpSuit, isPlayable, isDisabled, `selectCard('${card.id}')`, isSuitLocked)}
     </div>`;
       }).join('');
-      // Update the trump badge with suit symbol + name
-      const hasTrump = hand.some(c => c.suit === state.trumpSuit);
+      // Update the trump badge with "Trump: symbol"
       const badge = $('hand-trump-badge');
-      badge.style.display = hasTrump ? '' : 'none';
-      if (hasTrump) {
-        const sym = $('hand-trump-sym'), nm = $('hand-trump-name');
+      badge.style.display = state.trumpSuit ? '' : 'none';
+      if (state.trumpSuit) {
+        const sym = $('hand-trump-sym');
         if (sym) { sym.textContent = SUIT_SYM[state.trumpSuit] || ''; sym.className = SUIT_COLORS[state.trumpSuit] || ''; }
-        if (nm) nm.textContent = state.trumpName || state.trumpSuit || '';
       }
     }
 
