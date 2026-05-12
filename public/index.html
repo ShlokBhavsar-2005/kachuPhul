@@ -968,142 +968,106 @@
       font-weight: 700;
     }
 
-    /* SEATS — clockwise circular grid */
+    /* SEATS — clockwise arrow loop */
     .seats-container {
-      padding: .8rem;
-      display: grid;
-      gap: .5rem;
+      padding: .5rem .7rem;
     }
-    /* Layout rules set via JS data-playercount attribute */
-    .seats-container[data-count="2"] { grid-template-columns: 1fr 1fr; }
-    .seats-container[data-count="3"] { grid-template-columns: 1fr 1fr; }
-    .seats-container[data-count="4"] { grid-template-columns: 1fr 1fr; }
-    .seats-container[data-count="5"] { grid-template-columns: 1fr 1fr 1fr; }
-    .seats-container[data-count="6"] { grid-template-columns: 1fr 1fr 1fr; }
-    .seats-container[data-count="7"] { grid-template-columns: 1fr 1fr 1fr; }
-    @media(max-width:480px) {
-      .seats-container { grid-template-columns: repeat(2, 1fr) !important; }
+    .seats-row {
+      display: flex;
+      align-items: center;
+      gap: .2rem;
+    }
+    .loop-arrow {
+      color: var(--text2);
+      font-size: .7rem;
+      flex-shrink: 0;
+      opacity: .45;
+      padding: 0 .05rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .loop-sides {
+      display: flex;
+      justify-content: space-between;
+      padding: .05rem .8rem;
     }
 
     .seat {
       background: var(--bg2);
       border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: .6rem;
-      position: relative;
+      border-radius: 10px;
+      padding: .3rem .5rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
       transition: border-color .2s, box-shadow .2s;
+      flex: 1;
+      min-width: 0;
     }
 
     .seat.my-seat {
       border-color: var(--gold);
-      box-shadow: 0 0 12px rgba(240, 192, 64, .2);
+      box-shadow: 0 0 8px rgba(240, 192, 64, .15);
     }
 
     .seat.current-turn {
       border-color: var(--green);
-      box-shadow: 0 0 14px rgba(63, 185, 80, .3);
+      box-shadow: 0 0 10px rgba(63, 185, 80, .25);
       animation: seat-pulse 1.2s ease-in-out infinite;
     }
 
-    /* Play-order badge */
-    .play-order-badge {
-      position: absolute;
-      top: .3rem;
-      right: .35rem;
-      font-size: .6rem;
-      font-weight: 800;
-      font-family: 'Rajdhani', sans-serif;
-      color: var(--text2);
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-    .seat.current-turn .play-order-badge {
-      background: var(--green);
-      color: #fff;
-      border-color: var(--green);
-    }
-    .seat.my-seat .play-order-badge {
-      border-color: var(--gold);
-    }
-
-    .seat.disconnected {
-      opacity: .5;
-    }
+    .seat.disconnected { opacity: .5; }
 
     @keyframes seat-pulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 10px rgba(63, 185, 80, .3)
-      }
-
-      50% {
-        box-shadow: 0 0 24px rgba(63, 185, 80, .6)
-      }
+      0%, 100% { box-shadow: 0 0 8px rgba(63, 185, 80, .25) }
+      50% { box-shadow: 0 0 18px rgba(63, 185, 80, .5) }
     }
 
     .seat-avatar {
-      width: 36px;
-      height: 36px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: .8rem;
       font-weight: 800;
-      margin-bottom: .3rem;
+      flex-shrink: 0;
       position: relative;
     }
 
     .turn-dot {
       position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 11px;
-      height: 11px;
+      bottom: -1px;
+      right: -1px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: var(--green);
       border: 2px solid var(--bg2);
     }
 
+    .seat-info { flex: 1; min-width: 0; }
+
     .seat-name {
       font-weight: 700;
-      font-size: .85rem;
+      font-size: .78rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.2;
     }
 
-    .seat-score {
-      font-size: .75rem;
-      color: var(--gold);
-      font-weight: 700;
-    }
-
-    .seat-bid-info {
-      font-size: .72rem;
+    .seat-meta {
+      font-size: .62rem;
       color: var(--text2);
-      margin-top: .1rem;
-      min-height: 1em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
     }
-
-    .seat-bid-info.bid-revealed {
-      color: var(--blue);
-      font-weight: 700;
-    }
-
-    .seat-card-played {
-      margin-top: .35rem;
-      display: flex;
-      justify-content: center;
-    }
+    .seat-meta .m-score { color: var(--gold); font-weight: 700; }
+    .seat-meta .m-bid { color: var(--blue); font-weight: 600; }
 
     /* TABLE */
     .table-area {
@@ -3047,86 +3011,58 @@
     function renderSeats(state) {
       const myIdx = isSpectator ? -1 : myPlayerIndex;
       const playerCount = state.players.length;
-
-      // Build clockwise visual order from playerOrder array.
-      // playerOrder[0] = first to bid/lead in round 1. We place them clockwise:
-      // top-left → top-right → (middle-right for odd) → bottom-right → bottom-left → (middle-left for odd)
       const po = state.playerOrder || state.players.map((_, i) => i);
-      const clockwiseVisualOrder = buildClockwiseOrder(po, playerCount);
-
       const sc = $('seats-container');
-      sc.setAttribute('data-count', playerCount);
 
-      // Render seats in clockwise visual order
-      sc.innerHTML = clockwiseVisualOrder.map((playerIdx) => {
-        const p = state.players[playerIdx];
-        const isMine = playerIdx === myIdx;
-        const isTurn = state.currentTurnIndex === playerIdx;
-        const played = state.currentTrick.find(t => t.playerIndex === playerIdx);
-        // Play order number = position in playerOrder array
-        const playOrderNum = po.indexOf(playerIdx) + 1;
-        const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', !p.connected ? 'disconnected' : ''].filter(Boolean).join(' ');
-        let bidInfo = '';
-        if (state.state === 'bidding') bidInfo = p.bidReady ? `<div class="seat-bid-info bid-revealed">✓ Ready</div>` : `<div class="seat-bid-info">thinking…</div>`;
-        else if (['playing', 'round_end', 'game_over'].includes(state.state)) bidInfo = `<div class="seat-bid-info bid-revealed">Bid ${p.bid ?? '?'} · Won ${p.tricksWon || 0}</div>`;
-        return `<div class="${cls}">
-      <div class="play-order-badge" title="Plays ${playOrderNum}${playOrderNum===1?'st':playOrderNum===2?'nd':playOrderNum===3?'rd':'th'} in turn order">${playOrderNum}</div>
-      <div class="seat-avatar ${AVATAR_COLS[playerIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
-      <div class="seat-name">${p.name}${p.isHost ? ' 👑' : ''}</div>
-      <div class="seat-score">${p.score || 0} pts</div>
-      ${bidInfo}
-      ${played ? `<div class="seat-card-played">${cardHTML(played.card, 'size-sm', state.trumpSuit, false, false)}</div>` : ''}
-    </div>`;
-      }).join('');
+      // Split players into top row (L→R) and bottom row (R←L) for clockwise loop
+      const topCount = Math.ceil(playerCount / 2);
+      const topPlayers = po.slice(0, topCount);
+      const bottomPlayers = po.slice(topCount).reverse(); // reversed for right-to-left visual
+
+      let html = '';
+
+      // Top row
+      html += '<div class="seats-row">';
+      topPlayers.forEach((pIdx, i) => {
+        html += seatHTML(state, pIdx, myIdx);
+        if (i < topPlayers.length - 1) html += '<div class="loop-arrow">→</div>';
+      });
+      html += '</div>';
+
+      // Side arrows + bottom row
+      if (bottomPlayers.length > 0) {
+        html += '<div class="loop-sides"><div class="loop-arrow">↑</div><div class="loop-arrow">↓</div></div>';
+        html += '<div class="seats-row">';
+        bottomPlayers.forEach((pIdx, i) => {
+          html += seatHTML(state, pIdx, myIdx);
+          if (i < bottomPlayers.length - 1) html += '<div class="loop-arrow">←</div>';
+        });
+        html += '</div>';
+      }
+
+      sc.innerHTML = html;
     }
 
-    /**
-     * Reorder players clockwise in a grid:
-     * For a grid with C columns and R rows, clockwise order is:
-     *   Top row L→R, Right column top→bottom (skip corners), Bottom row R→L, Left column bottom→top (skip corners)
-     * We map the game's playerOrder to this visual layout.
-     */
-    function buildClockwiseOrder(playerOrder, count) {
-      // Determine grid dimensions based on count
-      let cols;
-      if (count <= 4) cols = 2;
-      else cols = 3;
-      const rows = Math.ceil(count / cols);
+    function seatHTML(state, pIdx, myIdx) {
+      const p = state.players[pIdx];
+      const isMine = pIdx === myIdx;
+      const isTurn = state.currentTurnIndex === pIdx;
+      const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', !p.connected ? 'disconnected' : ''].filter(Boolean).join(' ');
 
-      // Build grid slots in clockwise order
-      const gridPositions = []; // list of [row, col] in clockwise order
-      // Top row: L→R
-      for (let c = 0; c < cols; c++) gridPositions.push([0, c]);
-      // Right column (skip top-right corner already added): top+1 → bottom
-      if (rows > 1) {
-        for (let r = 1; r < rows; r++) gridPositions.push([r, cols - 1]);
-      }
-      // Bottom row R→L (skip bottom-right corner already added), only if rows>1
-      if (rows > 1) {
-        for (let c = cols - 2; c >= 0; c--) gridPositions.push([rows - 1, c]);
-      }
-      // Left column bottom→top (skip bottom-left and top-left corners): bottom-1 → 1
-      if (rows > 2) {
-        for (let r = rows - 2; r >= 1; r--) gridPositions.push([r, 0]);
+      let meta = `<span class="m-score">${p.score || 0}pts</span>`;
+      if (state.state === 'bidding') {
+        meta += p.bidReady ? ' · <span class="m-bid">✓ Ready</span>' : ' · thinking…';
+      } else if (['playing', 'round_end', 'game_over'].includes(state.state)) {
+        meta += ` · <span class="m-bid">B${p.bid ?? '?'} W${p.tricksWon || 0}</span>`;
       }
 
-      // We have `count` positions. Map playerOrder[0] to first position, etc.
-      // Fill: clockwiseVisualSlot[i] = playerOrder[i]
-      // Build a grid array and place players
-      const grid = Array.from({ length: rows }, () => Array(cols).fill(null));
-      for (let i = 0; i < count; i++) {
-        const [r, c] = gridPositions[i];
-        grid[r][c] = playerOrder[i];
-      }
-
-      // Read grid row by row to get CSS grid order
-      const result = [];
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (grid[r][c] !== null) result.push(grid[r][c]);
-        }
-      }
-      return result;
+      return `<div class="${cls}">
+        <div class="seat-avatar ${AVATAR_COLS[pIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
+        <div class="seat-info">
+          <div class="seat-name">${p.name}${isMine ? ' ★' : ''}${p.isHost ? ' 👑' : ''}</div>
+          <div class="seat-meta">${meta}</div>
+        </div>
+      </div>`;
     }
 
     function renderTrick(state) {
