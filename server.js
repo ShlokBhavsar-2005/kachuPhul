@@ -368,6 +368,7 @@ io.on('connection', socket => {
     socket.join(code); socket.data.roomId = code; socket.data.playerIndex = playerIndex; socket.data.token = token; socket.data.isSpectator = false;
     if (socket.data.googleId) { onlineUsers[socket.data.googleId] = { ...onlineUsers[socket.data.googleId], roomId: code, status: 'in-lobby' }; broadcastFriendStatus(name); }
     socket.emit('joinedRoom', { roomId: code, playerIndex, playerToken: token, playerName: name });
+    if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     broadcastRoomUpdate(room);
     console.log(`${name} joined ${code}`);
   });
@@ -397,6 +398,7 @@ io.on('connection', socket => {
     }
 
     socket.emit('joinedRoom', { roomId, playerIndex, playerToken: player.token, playerName: player.name, isRejoin: true });
+    if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     if (room.state === 'lobby') broadcastRoomUpdate(room);
     else { socket.emit('gameState', buildPlayerState(room, playerIndex)); io.to(roomId).emit('playerRejoined', { playerIndex, name: player.name }); }
     console.log(`${player.name} rejoined ${roomId}`);
@@ -414,6 +416,7 @@ io.on('connection', socket => {
 
     socket.join(code); socket.data.roomId = code; socket.data.isSpectator = true;
     socket.emit('spectating', { roomId: code });
+    if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     if (room.state === 'lobby') socket.emit('roomUpdate', sanitizeRoom(room, null));
     else socket.emit('gameState', buildSpectatorState(room));
     io.to(code).emit('spectatorJoined', { gameName });
@@ -531,6 +534,22 @@ io.on('connection', socket => {
       newRoom.players.forEach(p => { if (p.connected) io.to(p.socketId).emit('roomUpdate', sanitizeRoom(newRoom, p.socketId)); });
       delete rooms[room.id];
     }
+  });
+
+  // ── CHAT ─────────────────────────────────────────────────────────────────────
+  socket.on('chatMessage', ({ message }) => {
+    const roomId = socket.data.roomId;
+    if (!roomId || !rooms[roomId]) return;
+    const room = rooms[roomId];
+    const msg = (message || '').trim().slice(0, 200);
+    if (!msg) return;
+    const name = socket.data.gameName || 'Guest';
+    const playerIndex = socket.data.playerIndex ?? -1;
+    const chatEntry = { name, playerIndex, message: msg, time: Date.now() };
+    if (!room.chatHistory) room.chatHistory = [];
+    room.chatHistory.push(chatEntry);
+    if (room.chatHistory.length > 50) room.chatHistory.shift();
+    io.to(roomId).emit('chatMessage', chatEntry);
   });
 
   // ── LEAVE ROOM ────────────────────────────────────────────────────────────────

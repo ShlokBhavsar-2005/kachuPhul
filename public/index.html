@@ -2075,6 +2075,205 @@
       margin-bottom:.35rem;
     }
     .lobby-invite-item:last-child { margin-bottom:0; }
+
+    /* ═══ CHAT ═══ */
+    .chat-fab {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #b8860b);
+      color: #111;
+      border: none;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 80;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      transition: transform .15s;
+    }
+    .chat-fab:active { transform: scale(.9); }
+    .chat-fab .unread-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--red);
+      color: #fff;
+      font-size: .6rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .chat-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 310;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .chat-panel {
+      width: 100%;
+      max-width: 520px;
+      max-height: 70vh;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      animation: chatSlideUp .25s ease-out;
+    }
+    @keyframes chatSlideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .8rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-header h3 { margin: 0; font-size: 1rem; }
+    .chat-close {
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: .2rem;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: .6rem .8rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      min-height: 120px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .chat-msg {
+      display: flex;
+      gap: .5rem;
+      align-items: flex-start;
+    }
+    .chat-msg-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .chat-msg-body { flex: 1; min-width: 0; }
+    .chat-msg-name {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .chat-msg-text {
+      font-size: .82rem;
+      color: var(--text1);
+      word-break: break-word;
+      line-height: 1.35;
+    }
+    .chat-msg-time {
+      font-size: .55rem;
+      color: var(--text2);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .chat-empty {
+      text-align: center;
+      color: var(--text2);
+      font-size: .85rem;
+      padding: 2rem 0;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: .4rem;
+      padding: .6rem .8rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+      border-radius: 0 0 0 0;
+    }
+    .chat-input-row input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .5rem .7rem;
+      color: var(--text1);
+      font-size: .85rem;
+      outline: none;
+    }
+    .chat-input-row input:focus { border-color: var(--gold); }
+    .chat-send-btn {
+      background: linear-gradient(135deg, var(--gold), #b8860b);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: .5rem .8rem;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .chat-send-btn:active { opacity: .8; }
+    /* Floating bubbles */
+    .chat-bubbles {
+      position: fixed;
+      bottom: 74px;
+      left: 12px;
+      z-index: 75;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      pointer-events: none;
+      max-width: 260px;
+    }
+    .chat-bubble {
+      background: rgba(20,22,30,.88);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .3rem .55rem;
+      animation: bubbleIn .3s ease-out, bubbleFade .5s 4.5s ease-in forwards;
+    }
+    .chat-bubble .cb-name {
+      font-size: .6rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .chat-bubble .cb-text {
+      font-size: .75rem;
+      color: var(--text1);
+      word-break: break-word;
+      line-height: 1.3;
+    }
+    @keyframes bubbleIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes bubbleFade {
+      to { opacity: 0; transform: translateY(-8px); }
+    }
   </style>
 </head>
 
@@ -2341,6 +2540,30 @@
     </div>
   </div>
 
+  <!-- CHAT FAB -->
+  <button class="chat-fab hidden" id="chat-fab" onclick="openChat()">
+    💬
+    <div class="unread-badge hidden" id="chat-unread">0</div>
+  </button>
+
+  <!-- CHAT BUBBLES (floating) -->
+  <div class="chat-bubbles" id="chat-bubbles"></div>
+
+  <!-- CHAT OVERLAY -->
+  <div class="chat-overlay hidden" id="chat-overlay" onclick="chatOverlayClick(event)">
+    <div class="chat-panel" onclick="event.stopPropagation()">
+      <div class="chat-header">
+        <h3>💬 Room Chat</h3>
+        <button class="chat-close" onclick="closeChat()">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type a message…" maxlength="200" autocomplete="off" enterkeyhint="send">
+        <button class="chat-send-btn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RENAME MODAL -->
   <div class="modal-overlay hidden" id="rename-modal" onclick="handleRenameOverlayClick(event)">
     <div class="modal-panel" style="position:relative;">
@@ -2380,6 +2603,8 @@
     let trickWinData = null;
     // Fixed match player count (set once game starts)
     let matchPlayerCount = 0;
+    // Chat state
+    let chatMessages = [], chatOpen = false, unreadChat = 0;
 
     const SUIT_COLORS = { spades: 'suit-spades', diamonds: 'suit-diamonds', clubs: 'suit-clubs', hearts: 'suit-hearts' };
     const SUIT_SYM = { spades: '♠', diamonds: '♦', clubs: '♣', hearts: '♥' };
@@ -2561,6 +2786,7 @@
         $('display-room-code').textContent = roomId;
         hideLoading();
         if (!isRejoin) showScreen('waiting-screen');
+        $('chat-fab').classList.remove('hidden');
       });
 
       socket.on('yourIndex', idx => { myPlayerIndex = idx; const g = loadGameSession(); if (g) { g.playerIndex = idx; saveGameSession(g); } });
@@ -2619,6 +2845,7 @@
         matchPlayerCount = 0; lastRoundEndShown = -1; currentGameState = null;
         trickWinData = null; playedCardIds = new Set(); customHandOrder = [];
         selectedBid = null; bidPanelOpen = false; chosenRounds = null;
+        chatMessages = []; unreadChat = 0; updateChatBadge();
         saveGameSession({ roomId, playerIndex, playerToken, playerName });
         $('display-room-code').textContent = roomId;
         $('game-over-overlay').classList.add('hidden');
@@ -2640,6 +2867,10 @@
       socket.on('friendAccepted', ({ gameName }) => { notify(`${gameName} accepted your request! 🎉`, 'win'); loadFriends(); });
       socket.on('friendStatusUpdate', () => { loadFriends(); refreshLobbyInvitePanel(); });
       socket.on('inviteSent', ({ to }) => notify(`Invite sent to ${to} 📨`, 'win'));
+
+      // ── Chat events ──
+      socket.on('chatMessage', (entry) => onChatMessage(entry));
+      socket.on('chatHistory', ({ messages }) => { chatMessages = messages || []; renderChatMessages(); });
 
       socket.on('gameInvite', ({ from, roomId, roomPlayerCount }) => {
         showInviteBanner(from, roomId, roomPlayerCount || '?');
@@ -3266,7 +3497,7 @@
     // ═══════════════════════════════════════════════
     function kickPlayer(idx) { socket?.emit('kickPlayer', { playerIndex: idx }); }
     function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = '✓ Voted!'; } }
-    function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set();['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
+    function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
     function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
     function cancelLeave() { $('leave-overlay').classList.add('hidden'); }
     function doLeave() {
@@ -3274,9 +3505,85 @@
       if (socket) socket.emit('leaveRoom');
       isSpectator = false; myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
       matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set();
+      chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');
       $('leave-overlay').classList.add('hidden');
       ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay'].forEach(id => $(id)?.classList.add('hidden'));
       showMenuAndLoad();
+    }
+
+    // ═══════════════════════════════════════════════
+    // CHAT FUNCTIONS
+    // ═══════════════════════════════════════════════
+    function openChat() {
+      chatOpen = true;
+      unreadChat = 0;
+      updateChatBadge();
+      $('chat-overlay').classList.remove('hidden');
+      renderChatMessages();
+      const msgEl = $('chat-messages');
+      msgEl.scrollTop = msgEl.scrollHeight;
+      setTimeout(() => $('chat-input').focus(), 200);
+    }
+    function closeChat() {
+      chatOpen = false;
+      $('chat-overlay').classList.add('hidden');
+      $('chat-input').blur();
+    }
+    function chatOverlayClick(e) { if (e.target === $('chat-overlay')) closeChat(); }
+    function sendChat() {
+      const input = $('chat-input');
+      const msg = (input.value || '').trim();
+      if (!msg || !socket) return;
+      socket.emit('chatMessage', { message: msg });
+      input.value = '';
+      input.focus();
+    }
+    function onChatMessage(entry) {
+      chatMessages.push(entry);
+      if (chatMessages.length > 50) chatMessages.shift();
+      if (chatOpen) {
+        renderChatMessages();
+        const msgEl = $('chat-messages');
+        msgEl.scrollTop = msgEl.scrollHeight;
+      } else {
+        unreadChat++;
+        updateChatBadge();
+        showChatBubble(entry);
+      }
+    }
+    function updateChatBadge() {
+      const badge = $('chat-unread');
+      if (unreadChat > 0) { badge.textContent = unreadChat > 9 ? '9+' : unreadChat; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+    }
+    function renderChatMessages() {
+      const el = $('chat-messages');
+      if (!chatMessages.length) { el.innerHTML = '<div class="chat-empty">No messages yet. Say hi! 👋</div>'; return; }
+      el.innerHTML = chatMessages.map(m => {
+        const pIdx = m.playerIndex ?? 0;
+        const col = AVATAR_COLS[Math.abs(pIdx) % 7];
+        const t = new Date(m.time);
+        const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `<div class="chat-msg">
+          <div class="chat-msg-avatar ${col}">${(m.name || '?')[0].toUpperCase()}</div>
+          <div class="chat-msg-body">
+            <div class="chat-msg-name">${m.name}</div>
+            <div class="chat-msg-text">${escapeHTML(m.message)}</div>
+          </div>
+          <div class="chat-msg-time">${timeStr}</div>
+        </div>`;
+      }).join('');
+    }
+    function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function showChatBubble(entry) {
+      const container = $('chat-bubbles');
+      const el = document.createElement('div');
+      el.className = 'chat-bubble';
+      el.innerHTML = `<div class="cb-name">${escapeHTML(entry.name)}</div><div class="cb-text">${escapeHTML(entry.message)}</div>`;
+      container.appendChild(el);
+      // Keep max 3 bubbles
+      while (container.children.length > 3) container.removeChild(container.firstChild);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 5000);
     }
 
     // ═══════════════════════════════════════════════
@@ -3287,6 +3594,7 @@
     $('game-name-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitGameName(); });
     $('add-friend-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendFriendReq(); });
     $('rename-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitRename(); });
+    $('chat-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); if (e.key === 'Escape') closeChat(); });
 
     // ── Mobile: reconnect + refresh on foreground ──
     document.addEventListener('visibilitychange', () => {
