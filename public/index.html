@@ -3050,11 +3050,11 @@
       const isTurn = state.currentTurnIndex === pIdx;
       const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', !p.connected ? 'disconnected' : ''].filter(Boolean).join(' ');
 
-      let meta = `<span class="m-score">${p.score || 0}pts</span>`;
+      let meta = `<span class="m-score">${p.score || 0} pts</span>`;
       if (state.state === 'bidding') {
         meta += p.bidReady ? ' · <span class="m-bid">✓ Ready</span>' : ' · thinking…';
       } else if (['playing', 'round_end', 'game_over'].includes(state.state)) {
-        meta += ` · <span class="m-bid">B${p.bid ?? '?'} W${p.tricksWon || 0}</span>`;
+        meta += ` · <span class="m-bid">Bid ${p.bid ?? '?'} · Won ${p.tricksWon || 0}</span>`;
       }
 
       return `<div class="${cls}">
