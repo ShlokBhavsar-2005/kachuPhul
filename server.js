@@ -90,6 +90,133 @@ function getCurrentTurn(room) {
   return room.playerOrder[(leaderIdx + room.currentTrick.length) % room.playerOrder.length];
 }
 
+// ─── REMOVE PLAYER FROM ACTIVE GAME ──────────────────────────────────────────
+function removePlayerFromGame(room, removedIdx) {
+  const removedPlayer = room.players[removedIdx];
+  const removedName = removedPlayer.name;
+  const originalPlayerOrder = [...room.playerOrder];
+
+  // If only 2 players remain, end the game after removal
+  if (room.players.length <= 2) {
+    room.players.splice(removedIdx, 1);
+    room.scores = { 0: room.scores[removedIdx === 0 ? 1 : 0] || 0 };
+    room.playerOrder = [0];
+    room.players.forEach((p, i) => {
+      if (p.connected) {
+        const s = io.sockets.sockets.get(p.socketId);
+        if (s) s.data.playerIndex = i;
+        io.to(p.socketId).emit('yourIndex', i);
+      }
+    });
+    io.to(room.id).emit('playerRemoved', { name: removedName });
+    endGame(room);
+    return;
+  }
+
+  // Build old→new index mapping
+  const indexMap = {};
+  let ni = 0;
+  for (let i = 0; i < room.players.length; i++) {
+    if (i === removedIdx) continue;
+    indexMap[i] = ni++;
+  }
+
+  // Remove from players array
+  room.players.splice(removedIdx, 1);
+
+  // Rebuild playerOrder
+  room.playerOrder = room.playerOrder
+    .filter(idx => idx !== removedIdx)
+    .map(idx => indexMap[idx]);
+
+  // Rebuild all index-keyed maps
+  function rebuildMap(old) {
+    const m = {};
+    for (const [k, v] of Object.entries(old)) {
+      const oi = parseInt(k);
+      if (oi === removedIdx) continue;
+      m[indexMap[oi]] = v;
+    }
+    return m;
+  }
+  room.hands = rebuildMap(room.hands);
+  room.bids = rebuildMap(room.bids);
+  room.bidsReady = rebuildMap(room.bidsReady);
+  room.tricks = rebuildMap(room.tricks);
+  room.scores = rebuildMap(room.scores);
+
+  // Rebuild roundScores history
+  room.roundScores = room.roundScores.map(round =>
+    round
+      .filter(r => r.playerIndex !== removedIdx)
+      .map(r => ({ ...r, playerIndex: indexMap[r.playerIndex] }))
+  );
+
+  // Remove cards from current trick played by removed player, remap indices
+  room.currentTrick = room.currentTrick
+    .filter(t => t.playerIndex !== removedIdx)
+    .map(t => ({ ...t, playerIndex: indexMap[t.playerIndex] }));
+
+  // Fix currentLeader
+  if (room.currentLeader === removedIdx) {
+    const posInOrder = originalPlayerOrder.indexOf(removedIdx);
+    room.currentLeader = room.playerOrder[posInOrder % room.playerOrder.length];
+  } else {
+    room.currentLeader = indexMap[room.currentLeader];
+  }
+
+  // Fix host
+  if (room.hostSocketId === removedPlayer.socketId) {
+    const first = room.players.find(p => p.connected);
+    if (first) room.hostSocketId = first.socketId;
+  }
+
+  // Clear kick votes
+  room.kickVotes = {};
+
+  // Rebuild playAgainVotes if present
+  if (room.playAgainVotes) {
+    const nv = new Set();
+    for (const v of room.playAgainVotes) {
+      if (v !== removedIdx && indexMap[v] !== undefined) nv.add(indexMap[v]);
+    }
+    room.playAgainVotes = nv;
+  }
+
+  // Update socket data for all remaining players
+  room.players.forEach((p, i) => {
+    if (p.connected) {
+      const s = io.sockets.sockets.get(p.socketId);
+      if (s) s.data.playerIndex = i;
+    }
+  });
+
+  // Notify all players
+  io.to(room.id).emit('playerRemoved', { name: removedName });
+  room.players.forEach((p, i) => {
+    if (p.connected) io.to(p.socketId).emit('yourIndex', i);
+  });
+
+  // Handle state transitions
+  if (room.state === 'playing') {
+    if (room.currentTrick.length >= room.players.length) {
+      setTimeout(() => resolveTrick(room), 1000);
+    } else {
+      broadcastGameState(room);
+    }
+  } else if (room.state === 'bidding') {
+    if (room.players.every((_, i) => room.bidsReady[i])) {
+      setTimeout(() => { room.state = 'playing'; broadcastGameState(room); }, 300);
+    } else {
+      broadcastGameState(room);
+    }
+  } else {
+    broadcastGameState(room);
+  }
+
+  console.log(`${removedName} removed from game ${room.id} (${room.players.length} remain)`);
+}
+
 // ─── AUTH API ──────────────────────────────────────────────────────────────────
 
 // Check if configured
@@ -434,6 +561,35 @@ io.on('connection', socket => {
     broadcastRoomUpdate(room);
   });
 
+  // ── VOTE KICK OFFLINE PLAYER ──────────────────────────────────────────────────
+  socket.on('voteKickPlayer', ({ targetIndex }) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.state === 'lobby') return;
+    const pIdx = socket.data.playerIndex;
+    if (pIdx === null || pIdx === undefined) return;
+    const target = room.players[targetIndex];
+    if (!target || target.connected) return socket.emit('error', 'Can only vote to kick offline players');
+    if (targetIndex === pIdx) return;
+
+    if (!room.kickVotes) room.kickVotes = {};
+    if (!room.kickVotes[targetIndex]) room.kickVotes[targetIndex] = new Set();
+    room.kickVotes[targetIndex].add(pIdx);
+
+    const connectedCount = room.players.filter((p, i) => p.connected && i !== targetIndex).length;
+    const votes = room.kickVotes[targetIndex].size;
+
+    io.to(room.id).emit('kickVoteUpdate', {
+      targetIndex, targetName: target.name,
+      votes, needed: connectedCount,
+      voters: [...room.kickVotes[targetIndex]].map(i => room.players[i]?.name).filter(Boolean),
+    });
+
+    if (votes >= connectedCount) {
+      console.log(`Vote kick passed for ${target.name} in ${room.id}`);
+      removePlayerFromGame(room, targetIndex);
+    }
+  });
+
   // ── START GAME ────────────────────────────────────────────────────────────────
   socket.on('startGame', ({ totalRounds: chosen }) => {
     const room = rooms[socket.data.roomId];
@@ -570,8 +726,23 @@ io.on('connection', socket => {
     } else {
       const pIdx = room.players.findIndex(p => p.socketId === socket.id);
       if (pIdx !== -1) {
-        if (room.state === 'lobby') room.players.splice(pIdx, 1);
-        else room.players[pIdx].connected = false;
+        if (room.state === 'lobby') {
+          room.players.splice(pIdx, 1);
+        } else {
+          // Active game — remove player completely and return early
+          socket.leave(roomId);
+          socket.data.roomId = null;
+          socket.data.playerIndex = null;
+          socket.data.token = null;
+          socket.data.isSpectator = false;
+          if (socket.data.googleId && onlineUsers[socket.data.googleId]) {
+            onlineUsers[socket.data.googleId].roomId = null;
+            onlineUsers[socket.data.googleId].status = 'online';
+            broadcastFriendStatus(socket.data.gameName);
+          }
+          removePlayerFromGame(room, pIdx);
+          return;
+        }
       }
     }
     socket.leave(roomId);

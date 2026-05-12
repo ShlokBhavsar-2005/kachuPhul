@@ -1018,6 +1018,13 @@
     }
 
     .seat.disconnected { opacity: .5; }
+    .seat.disconnected.kickable { cursor: pointer; border-color: var(--red); border-style: dashed; }
+    .seat.disconnected.kickable:hover { background: rgba(224,80,80,.1); }
+    .kick-vote-bar { display:flex; align-items:center; gap:.3rem; margin-top:.15rem; }
+    .kick-vote-btn { font-size:.6rem; background:rgba(224,80,80,.2); border:1px solid var(--red); color:var(--red); border-radius:5px; padding:.1rem .35rem; cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; }
+    .kick-vote-btn:hover { background:rgba(224,80,80,.35); }
+    .kick-vote-btn.voted { background:var(--red); color:#fff; cursor:default; }
+    .kick-vote-count { font-size:.58rem; color:var(--red); font-weight:600; }
 
     @keyframes seat-pulse {
       0%, 100% { box-shadow: 0 0 8px rgba(63, 185, 80, .25) }
@@ -2590,6 +2597,8 @@
     let matchPlayerCount = 0;
     // Chat state
     let chatMessages = [], chatOpen = false, unreadChat = 0;
+    // Kick vote state
+    let kickVoteState = {}; // { targetIndex: { votes, needed, voters } }
 
     const SUIT_COLORS = { spades: 'suit-spades', diamonds: 'suit-diamonds', clubs: 'suit-clubs', hearts: 'suit-hearts' };
     const SUIT_SYM = { spades: '♠', diamonds: '♦', clubs: '♣', hearts: '♥' };
@@ -2778,7 +2787,15 @@
       socket.on('rejoinFailed', () => { clearGameSession(); hideLoading(); showMenuAndLoad(); notify('Session expired', 'err'); });
       socket.on('kicked', msg => { clearGameSession(); hideLoading(); showMenuAndLoad(); notify(msg || 'Removed from room', 'err'); });
 
-      socket.on('roomUpdate', room => { hideLoading(); if (!isSpectator) showScreen('waiting-screen'); renderWaitingRoom(room); $('chat-fab').classList.remove('hidden'); });
+      socket.on('roomUpdate', room => {
+        hideLoading();
+        // Only show waiting screen if NOT in an active game (prevents lobby flash when a player leaves)
+        if (!currentGameState || room.state === 'lobby') {
+          if (!isSpectator) showScreen('waiting-screen');
+          renderWaitingRoom(room);
+        }
+        $('chat-fab').classList.remove('hidden');
+      });
 
       socket.on('gameState', state => {
         hideLoading();
@@ -2822,8 +2839,20 @@
 
       socket.on('gameOver', ({ finalScores }) => setTimeout(() => showGameOver(finalScores), 500));
       socket.on('playerDisconnected', ({ name }) => notify(`${name} disconnected`, 'err'));
-      socket.on('playerRejoined', ({ name }) => notify(`${name} rejoined ✓`, 'win'));
+      socket.on('playerRejoined', ({ name }) => { notify(`${name} rejoined ✓`, 'win'); kickVoteState = {}; });
       socket.on('spectatorJoined', ({ gameName }) => notify(`${gameName} is spectating`, 'info'));
+
+      socket.on('playerRemoved', ({ name }) => {
+        notify(`${name} was removed from the game`, 'info');
+        kickVoteState = {};
+        // matchPlayerCount will be updated when next gameState arrives
+      });
+
+      socket.on('kickVoteUpdate', ({ targetIndex, targetName, votes, needed, voters }) => {
+        kickVoteState[targetIndex] = { votes, needed, voters, targetName };
+        if (currentGameState) renderSeats(currentGameState);
+        notify(`Vote to kick ${targetName}: ${votes}/${needed}`, 'info');
+      });
 
       socket.on('newLobby', ({ roomId, playerIndex, playerToken, playerName }) => {
         myRoomId = roomId; myPlayerIndex = playerIndex; myGameName = playerName; isSpectator = false;
@@ -2831,7 +2860,7 @@
         matchPlayerCount = 0; lastRoundEndShown = -1; currentGameState = null;
         trickWinData = null; playedCardIds = new Set(); customHandOrder = [];
         selectedBid = null; bidPanelOpen = false; chosenRounds = null;
-        chatMessages = []; unreadChat = 0; updateChatBadge();
+        chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge();
         saveGameSession({ roomId, playerIndex, playerToken, playerName });
         $('display-room-code').textContent = roomId;
         $('game-over-overlay').classList.add('hidden');
@@ -3266,7 +3295,10 @@
       const p = state.players[pIdx];
       const isMine = pIdx === myIdx;
       const isTurn = state.currentTurnIndex === pIdx;
-      const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', !p.connected ? 'disconnected' : ''].filter(Boolean).join(' ');
+      const isOffline = !p.connected;
+      const canKick = isOffline && !isMine && !isSpectator;
+      const cls = ['seat', isMine ? 'my-seat' : '', isTurn ? 'current-turn' : '', isOffline ? 'disconnected' : '', canKick ? 'kickable' : ''].filter(Boolean).join(' ');
+      const clickAttr = canKick ? `onclick="voteKickOffline(${pIdx})"` : '';
 
       let meta = `<span class="m-score">${p.score || 0} pts</span>`;
       if (state.state === 'bidding') {
@@ -3275,18 +3307,31 @@
         meta += ` · <span class="m-bid">Bid ${p.bid ?? '?'} · Won ${p.tricksWon || 0}</span>`;
       }
 
-      return `<div class="${cls}">
+      // Kick vote bar for offline players
+      let kickBar = '';
+      if (isOffline) {
+        const kv = kickVoteState[pIdx];
+        const myVoted = kv && kv.voters && kv.voters.includes(myGameName);
+        if (kv) {
+          kickBar = `<div class="kick-vote-bar"><span class="kick-vote-count">⚡ Kick ${kv.votes}/${kv.needed}</span></div>`;
+        } else if (canKick) {
+          kickBar = `<div class="kick-vote-bar"><span style="font-size:.58rem;color:var(--red);">OFFLINE · tap to kick</span></div>`;
+        }
+      }
+
+      return `<div class="${cls}" ${clickAttr}>
         <div class="seat-avatar ${AVATAR_COLS[pIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
         <div class="seat-info">
           <div class="seat-name">${p.name}${isMine ? ' ★' : ''}${p.isHost ? ' 👑' : ''}</div>
           <div class="seat-meta">${meta}</div>
+          ${kickBar}
         </div>
       </div>`;
     }
 
     function renderTrick(state) {
       const el = $('trick-cards'), st = $('trick-status');
-      const totalPlayers = matchPlayerCount || state.players.length;
+      const totalPlayers = state.players.length;
       const po = state.playerOrder || state.players.map((_, i) => i);
       const leaderIdx = po.indexOf(state.currentLeader);
       const handOrder = [];
@@ -3481,15 +3526,21 @@
     // MISC ACTIONS
     // ═══════════════════════════════════════════════
     function kickPlayer(idx) { socket?.emit('kickPlayer', { playerIndex: idx }); }
+    function voteKickOffline(targetIndex) {
+      if (!socket || !currentGameState) return;
+      const target = currentGameState.players[targetIndex];
+      if (!target || target.connected) return notify('Player is online', 'err');
+      socket.emit('voteKickPlayer', { targetIndex });
+    }
     function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = '✓ Voted!'; } }
-    function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
+    function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge(); $('chat-fab').classList.add('hidden');['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
     function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
     function cancelLeave() { $('leave-overlay').classList.add('hidden'); }
     function doLeave() {
       clearGameSession();
       if (socket) socket.emit('leaveRoom');
       isSpectator = false; myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
-      matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set();
+      matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); kickVoteState = {};
       chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');
       $('leave-overlay').classList.add('hidden');
       ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay'].forEach(id => $(id)?.classList.add('hidden'));
