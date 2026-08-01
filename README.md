@@ -1,136 +1,215 @@
-# 🎴 Judgment Card Game — Setup & Hosting Guide
+# 🌸 Kachu Phul — Multiplayer Judgment Card Game
 
-## What is this?
-A real-time multiplayer online version of the **Judgment** card game (also called "Bluff" / "Call Break" variant).
-- Room system with shareable codes — no login needed
-- Cards dealt automatically per round
-- Trump suit rotates: ♠ → ♦ → ♣ → ♥ → ♠ …
-- Bids are private until everyone submits
-- Full card validation (must follow led suit)
-- Live scoreboard, round results, game over screen
+**Kachu Phul** is a real-time multiplayer online version of the classic **Judgment** (Kachu Phul / Call Break) card game.  
+Built with **Node.js**, **Socket.io**, **MongoDB**, and a single-page vanilla HTML/CSS/JS frontend.
+
+---
+
+## ✨ Features
+
+- 🔐 **Google Sign-In** — optional auth with persistent game names and session tokens
+- 👥 **Friends System** — add friends, see who's online or in a game, send game invites
+- 🏠 **Room System** — create or join rooms with a shareable 6-character code; no login required to play
+- 👁️ **Spectator Mode** — watch any active game in real time without participating
+- 💬 **In-Game Chat** — persistent per-room chat with a 50-message history
+- 🃏 **Full Card Game Logic** — trump suit, suit-following rules, trick resolution, bidding phase
+- 🔄 **Reconnect Support** — players who drop can rejoin a live game via token or Google ID
+- 🗳️ **Vote-Kick** — collectively kick disconnected players from an active game
+- 🎮 **Play Again** — unanimous vote creates a fresh lobby with the same players
+- 📊 **Scoreboard** — round-by-round scoring with a final game-over screen
+- ⚙️ **Configurable Rounds** — host chooses how many rounds to play (up to the card-deal maximum)
 
 ---
 
 ## 📁 Project Structure
 
 ```
-judgment-game/
-├── server.js          ← Node.js backend (game logic + Socket.io)
-├── package.json       ← Dependencies
+kachufool/
+├── server.js          ← Node.js + Express + Socket.io backend (all game logic)
+├── package.json       ← Dependencies & scripts
+├── .env               ← Environment variables (not committed)
 ├── public/
-│   └── index.html     ← The entire frontend (one file)
+│   ├── index.html     ← Entire single-page frontend (HTML + CSS + JS)
+│   ├── css/           ← (reserved, currently empty)
+│   └── js/            ← (reserved, currently empty)
 └── README.md
 ```
 
 ---
 
-## 🖥️ LOCAL SETUP (Play on same WiFi)
+## 🚀 Quick Start (Local)
 
-### Step 1 — Install Node.js
-Download from https://nodejs.org (choose LTS version)
+### 1. Install Node.js
+Download from https://nodejs.org — **LTS version recommended** (Node ≥ 18 required).
 
-### Step 2 — Install dependencies
-Open terminal in the `judgment-game` folder:
+### 2. Clone / download the project
+```bash
+git clone https://github.com/ShlokBhavsar-2005/kachufool.git
+cd kachufool
+```
+
+### 3. Install dependencies
 ```bash
 npm install
 ```
 
-### Step 3 — Start the server
+### 4. Configure environment variables
+Create a `.env` file in the project root:
+
+```env
+# Required for Google Sign-In (optional feature)
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+
+# Required for friends system and auth persistence
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true
+
+# Optional — defaults to 3000
+PORT=3000
+```
+
+> **Without `.env`**: The game still works fully in guest mode (no auth, no friends list, no persistence).
+
+### 5. Start the server
 ```bash
 npm start
 ```
-You'll see: `🎴 Judgment Game server running on port 3000`
+You should see:
+```
+✅ MongoDB connected
+🎴 Kachu Phul on port 3000
+```
 
-### Step 4 — Find your local IP
-- **Windows**: Run `ipconfig` in CMD → look for IPv4 Address (e.g. `192.168.1.5`)
-- **Mac/Linux**: Run `ifconfig` or `ip addr` → look for `inet` under your WiFi adapter
-
-### Step 5 — Share with friends (same WiFi)
-Everyone on the same network opens: `http://YOUR_IP:3000`  
-Example: `http://192.168.1.5:3000`
+### 6. Open in browser
+- **Same machine**: http://localhost:3000
+- **Local network**: find your IPv4 address (`ipconfig` on Windows / `ifconfig` on Mac/Linux) and open `http://YOUR_IP:3000`
 
 ---
 
-## 🌐 HOSTING ONLINE (Play from anywhere)
+## 🌐 Deploying Online
 
-### Option A — Railway (Easiest, Free)
-1. Go to https://railway.app — sign up with GitHub
-2. Create a new project → "Deploy from GitHub repo"
-3. Push your `judgment-game` folder to a GitHub repo
-4. Railway auto-detects Node.js and runs `npm start`
-5. You get a public URL like `https://judgment-xyz.up.railway.app`
-6. Share that URL with friends — done!
+### Option A — Railway *(easiest)*
+1. Push the repo to GitHub.
+2. Go to https://railway.app → New Project → Deploy from GitHub.
+3. Add environment variables in the Railway dashboard.
+4. Railway auto-detects Node.js and runs `npm start`. You'll get a public URL.
 
-### Option B — Render (Free tier)
-1. Go to https://render.com — sign up
-2. New → Web Service → Connect your GitHub repo
-3. Build command: `npm install`
-4. Start command: `node server.js`
-5. Environment: Node
-6. Free tier URL: `https://your-app.onrender.com`
-> Note: Free tier sleeps after 15 min inactivity. First load is slow.
+### Option B — Render *(free tier)*
+1. Go to https://render.com → New Web Service → connect your repo.
+2. Build command: `npm install` | Start command: `node server.js`
+3. Add env vars under **Environment**.
+> Free tier spins down after 15 min of inactivity — first load will be slow.
 
-### Option C — Fly.io (Free, always on)
+### Option C — Fly.io *(always on)*
 ```bash
 npm install -g flyctl
 fly auth login
-fly launch      # follow prompts
+fly launch
 fly deploy
 ```
+Set secrets with `fly secrets set MONGO_URI=... GOOGLE_CLIENT_ID=...`.
 
 ### Option D — VPS (DigitalOcean / Hetzner / Linode)
-1. Get a cheap VPS (~$4/month)
-2. SSH in, install Node.js
-3. Clone/upload your project
-4. Run with PM2 for persistence:
 ```bash
 npm install -g pm2
-pm2 start server.js --name judgment
-pm2 startup   # auto-start on reboot
-pm2 save
+pm2 start server.js --name kachufool
+pm2 startup && pm2 save
 ```
-5. Open port 3000 in firewall, or set up nginx as reverse proxy on port 80
+Open port 3000 in your firewall, or set up nginx as a reverse proxy on port 80/443.
 
 ---
 
-## 🎮 HOW TO PLAY
+## 🔐 Auth & User Accounts
 
-1. One player creates a room → shares the 6-letter code
-2. All players join with the code
-3. Host clicks **Start Game**
-4. Players are randomly seated (order is fixed throughout game)
-5. Each player sees their own cards and the trump suit
-6. **Bidding phase**: Enter how many tricks you think you'll win → Confirm
-   - Other players' bids are hidden until all have bid
-7. **Playing phase**: Click a card to play it
-   - You MUST follow the led suit if you have it
-   - Otherwise play any card (including trump)
-8. **Scoring**: Bid exactly right → get those points (0 bid → 1 point!)
-9. Game ends after all rounds are complete
+Authentication is entirely **optional**. Players can join as guests with just a display name.
 
----
+When Google Sign-In is configured:
+- Players sign in with their Google account.
+- On first login they choose a unique **game name** (3–16 chars, alphanumeric + `_`).
+- A session token is stored in `localStorage` for automatic re-login.
+- Game names can be renamed from the profile menu; all friend references update automatically.
 
-## ⚙️ CONFIGURATION
-
-Edit `server.js` to change:
-- `PORT` (default 3000) — or set `PORT` environment variable
-- Max players: currently 7 (limited by 52 cards / min deal)
-- Trick resolution delay: `1500ms` — adjust in `resolveTrick()`
+### REST API endpoints
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/auth/status` | Check if auth is configured |
+| `POST` | `/auth/google` | Verify Google credential, return session |
+| `POST` | `/auth/register` | Register new user with a game name |
+| `POST` | `/auth/session` | Validate an existing session token |
+| `POST` | `/auth/rename` | Rename your game name |
+| `POST` | `/friends/list` | Fetch friends list + pending requests |
+| `POST` | `/friends/request` | Send a friend request |
+| `POST` | `/friends/respond` | Accept or decline a friend request |
 
 ---
 
-## 🃏 TRUMP SUIT ORDER
-Round 1: ♠ Spades  
-Round 2: ♦ Diamonds  
-Round 3: ♣ Clubs  
-Round 4: ♥ Hearts  
-Round 5: ♠ Spades (loops)  
-…and so on
+## 🎮 How to Play
 
-## 📊 SCORING RULES
+1. **Create or Join** — One player creates a room and shares the 6-letter code. Others join with the code.
+2. **Lobby** — The host can set the number of rounds and click **Start Game** (min 2 players).
+3. **Bidding Phase** — Each player sees their hand and the trump suit, then privately bids how many tricks they expect to win. Bids are hidden until everyone submits.
+4. **Playing Phase** — Players take turns playing one card:
+   - You **must follow the led suit** if you have it.
+   - Otherwise play any card (trump or off-suit).
+5. **Trick Resolution** — The highest trump wins; if no trump, the highest card of the led suit wins.
+6. **Scoring** — Hit your bid exactly → earn that many points (bid 0 and win 0 → **1 point**). Miss your bid → **0 points**.
+7. **Next Round** — Rounds continue with one fewer card dealt each round.
+8. **Game Over** — After all rounds, final scores are shown. Players can vote to **Play Again**.
+
+---
+
+## 🃏 Trump Suit Order
+
+| Round | Trump |
+|-------|-------|
+| 1 | ♠ Spades |
+| 2 | ♦ Diamonds |
+| 3 | ♣ Clubs |
+| 4 | ♥ Hearts |
+| 5 | ♠ Spades *(loops)* |
+
+---
+
+## 📊 Scoring Rules
+
 | Bid | Tricks Won | Points |
 |-----|-----------|--------|
-| 0   | 0         | **1** (special rule!) |
-| 3   | 3         | **3** |
-| 5   | 4 or 6    | **0** (missed) |
-| 2   | 0         | **0** (missed) |
+| 0 | 0 | **1** *(special rule)* |
+| N | N | **N** |
+| N | ≠ N | **0** |
+
+---
+
+## ⚙️ Configuration
+
+Edit `server.js` or use environment variables to tweak:
+
+| Setting | Default | How to Change |
+|---------|---------|---------------|
+| Port | `3000` | `PORT` env var |
+| Max players | `7` | Limited by 52 cards / min deal |
+| Trick resolution delay | `1000ms` (play) + `2000ms` (animate) | `resolveTrick()` in `server.js` |
+| Round end delay | `4000ms` | `endRound()` in `server.js` |
+| Chat history length | 50 messages | `chatMessage` handler in `server.js` |
+| Socket ping timeout | `60s` | `Server` constructor options |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node.js ≥ 18 |
+| Web framework | Express 4 |
+| Real-time | Socket.io 4 |
+| Database | MongoDB 6 (via official driver) |
+| Auth | Google Identity Services + `google-auth-library` |
+| IDs | `uuid`, `crypto` (built-in) |
+| Frontend | Vanilla HTML + CSS + JS (single file) |
+| Fonts | Google Fonts — *Baloo 2*, *Rajdhani* |
+| Dev server | `nodemon` |
+
+---
+
+## 📝 License
+
+MIT — feel free to fork and host your own instance.
