@@ -11,9 +11,9 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     :root {
-      --bg: #000000;
-      --bg2: #000000;
-      --bg3: #000000;
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
       --border: #30363d;
       --gold: #f0c040;
       --gold2: #d4a017;
@@ -44,7 +44,7 @@
       content: '';
       position: fixed;
       inset: 0;
-      background: transparent;
+      background: radial-gradient(ellipse at 20% 20%, rgba(240, 192, 64, .06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(88, 166, 255, .05) 0%, transparent 50%);
       pointer-events: none;
       z-index: 0;
     }
@@ -2063,7 +2063,7 @@
     .invite-banner {
       position: fixed; bottom: 1.2rem; right: 1rem; left: 1rem;
       max-width: 360px; margin: 0 auto;
-      background: #000000;
+      background: linear-gradient(135deg, #1a1f2e, #21262d);
       border: 2px solid var(--gold);
       border-radius: 16px; padding: 1rem 1.2rem;
       z-index: 4000; box-shadow: 0 8px 40px rgba(240,192,64,.3);
