@@ -4,13 +4,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kachu Phul 🌸</title>
+  <title>Kachu Phul</title>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
+  <!-- SVG ICON SPRITE — hidden, referenced via <use href="#icon-*"> -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- people / friends -->
+    <symbol id="icon-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="7" r="3"/>
+      <path d="M3 20c0-3.314 2.686-6 6-6s6 2.686 6 6"/>
+      <path d="M16 3.5a3 3 0 0 1 0 5.5"/>
+      <path d="M21 20c0-2.761-2.239-5-5-5"/>
+    </symbol>
+    <!-- person-add / invite -->
+    <symbol id="icon-person-add" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="7" r="3"/>
+      <path d="M3 20c0-3.314 2.686-6 6-6s6 2.686 6 6"/>
+      <line x1="19" y1="8" x2="19" y2="14"/>
+      <line x1="16" y1="11" x2="22" y2="11"/>
+    </symbol>
+    <!-- exit / leave -->
+    <symbol id="icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10"/>
+      <polyline points="13 8 18 12 13 16"/>
+      <line x1="18" y1="12" x2="6" y2="12"/>
+    </symbol>
+    <!-- refresh / repeat -->
+    <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+    </symbol>
+    <!-- bar-chart / scores -->
+    <symbol id="icon-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+      <line x1="2" y1="20" x2="22" y2="20"/>
+    </symbol>
+    <!-- chat bubble -->
+    <symbol id="icon-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </symbol>
+    <!-- pencil / edit -->
+    <symbol id="icon-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </symbol>
+    <!-- eye / spectating -->
+    <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <!-- copy -->
+    <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </symbol>
+  </svg>
   <div id="root">
 
     <!-- HOME (login) -->
@@ -19,7 +73,7 @@
         <div class="lobby-card">
           <div class="logo">
             <div class="suits-row">♠ ♦ ♣ ♥</div>
-            <h1>Kachu Phul 🌸</h1>
+            <h1>Kachu Phul</h1>
             <p>The classic bidding card game — online with friends</p>
           </div>
           <div id="home-error" class="error-msg hidden"></div>
@@ -44,7 +98,7 @@
       <div class="lobby-wrap">
         <div class="lobby-card">
           <div class="logo">
-            <h1>Kachu Phul 🌸</h1>
+            <h1>Kachu Phul</h1>
             <p>Choose your game name</p>
           </div>
           <div id="name-error" class="error-msg hidden"></div>
@@ -61,19 +115,19 @@
     <!-- MAIN MENU -->
     <div id="menu-screen" class="screen">
       <div class="top-nav">
-        <div class="top-nav-brand">♠ Kachu Phul 🌸</div>
+        <div class="top-nav-brand">♠ Kachu Phul</div>
         <div class="top-nav-right">
           <img id="nav-avatar" class="nav-avatar hidden" src="" alt="">
           <span class="nav-name" id="nav-name" style="cursor:pointer;" onclick="showRenameModal()" title="Click to rename"></span>
-          <div class="notif-bell" onclick="toggleFriends()" title="Friends & Invites">
-            👥<div id="notif-dot" class="notif-dot hidden"></div>
+          <div class="notif-bell" onclick="toggleFriends()" title="Friends &amp; Invites" style="display:inline-flex;align-items:center;">
+            <svg width="20" height="20" style="display:block;"><use href="#icon-people"/></svg><div id="notif-dot" class="notif-dot hidden"></div>
           </div>
           <button class="sign-out-btn" onclick="signOut()">Sign out</button>
         </div>
       </div>
       <div class="main-menu">
         <div class="menu-card">
-          <h3>🎴 Play</h3>
+          <h3>Play</h3>
           <button class="btn btn-gold mb-1" onclick="createRoom()">Create New Room</button>
           <div class="divider">or join with room code</div>
           <div style="display:flex;flex-direction:column;gap:.5rem;">
@@ -88,11 +142,11 @@
 
         <div class="friends-card" id="friends-card">
           <div class="friends-header">
-            <h3>👥 Squad</h3>
+            <h3 style="display:flex;align-items:center;gap:.4rem;"><svg width="18" height="18" style="flex-shrink:0;"><use href="#icon-people"/></svg>Squad</h3>
             <div style="display:flex;gap:.5rem;align-items:center;">
               <span id="friends-online-count" style="font-size:.75rem;color:var(--green);font-weight:700;"></span>
               <button onclick="loadFriends()"
-                style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.82rem;font-family:'Baloo 2',cursive;">↻ Refresh</button>
+                style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.82rem;font-family:'Baloo 2',cursive;display:inline-flex;align-items:center;gap:.25rem;"><svg width="14" height="14" style="flex-shrink:0;"><use href="#icon-refresh"/></svg>Refresh</button>
             </div>
           </div>
           <div class="add-friend-row">
@@ -100,7 +154,7 @@
             <button onclick="sendFriendReq()">+ Add</button>
           </div>
           <div id="friend-requests-section"></div>
-          <div id="friends-list-section"><div class="empty-friends"><div style="font-size:1.4rem;margin-bottom:.3rem;">👥</div>No squad yet — add friends above</div></div>
+          <div id="friends-list-section"><div class="empty-friends"><svg width="32" height="32" style="color:var(--text2);margin-bottom:.3rem;display:block;margin-left:auto;margin-right:auto;"><use href="#icon-people"/></svg>No squad yet — add friends above</div></div>
         </div>
       </div>
     </div>
@@ -112,8 +166,8 @@
           <div class="room-code-label">Room Code — Share with friends</div>
           <div class="room-code" id="display-room-code">------</div>
           <div style="display:flex;gap:.5rem;justify-content:center;margin:.4rem 0 .8rem;">
-            <button class="btn btn-outline btn-sm" onclick="copyRoomCode()">📋 Copy Code</button>
-            <button class="btn btn-sm" id="lobby-invite-btn" onclick="toggleLobbyInvitePanel()" style="background:rgba(240,192,64,.15);border:1.5px solid var(--gold);color:var(--gold);border-radius:8px;padding:.4rem .9rem;font-family:'Baloo 2',cursive;font-weight:700;font-size:.85rem;cursor:pointer;">👥 Invite Friends</button>
+            <button class="btn btn-outline btn-sm" onclick="copyRoomCode()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="14" height="14" style="flex-shrink:0;"><use href="#icon-copy"/></svg>Copy Code</button>
+            <button class="btn btn-sm" id="lobby-invite-btn" onclick="toggleLobbyInvitePanel()" style="background:rgba(240,192,64,.15);border:1.5px solid var(--gold);color:var(--gold);border-radius:8px;padding:.4rem .9rem;font-family:'Baloo 2',cursive;font-weight:700;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-person-add"/></svg>Invite Friends</button>
           </div>
           <!-- Lobby invite panel -->
           <div id="lobby-invite-panel" class="hidden" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:.9rem;margin-bottom:.8rem;">
@@ -134,13 +188,13 @@
               <div class="rounds-hint" id="rounds-hint"></div>
               <div class="rounds-presets" id="rounds-presets"></div>
             </div>
-            <button class="btn btn-gold" style="margin-top:.8rem;" onclick="startGame()">🚀 Start Game</button>
+            <button class="btn btn-gold" style="margin-top:.8rem;" onclick="startGame()">Start Game</button>
             <p style="text-align:center;color:var(--text2);font-size:.8rem;margin-top:.4rem;">You are the host</p>
           </div>
           <div id="wait-msg" class="mt-2" style="text-align:center;color:var(--text2);font-size:.9rem;">Waiting for host to start…</div>
           <div class="mt-2">
             <button class="btn btn-outline" onclick="confirmLeave()"
-              style="border-color:rgba(224,80,80,.4);color:var(--red);font-size:.85rem;padding:.6rem;">🚪 Leave Room</button>
+              style="border-color:rgba(224,80,80,.4);color:var(--red);font-size:.85rem;padding:.6rem;display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-exit"/></svg>Leave Room</button>
           </div>
         </div>
       </div>
@@ -153,11 +207,11 @@
           <div class="trump-badge"><span id="top-trump-sym" class="trump-symbol">—</span><span id="top-trump-name">—</span><span style="font-size:.72rem;color:var(--text2);margin-left:.2rem;">TRUMP</span></div>
           <div class="round-badge">Round <span id="top-round">—</span>/<span id="top-total-rounds">—</span></div>
           <div class="cards-badge"><span id="top-cards">—</span> cards</div>
-          <div id="spec-badge" class="spec-badge hidden">👁 Spectating</div>
+          <div id="spec-badge" class="spec-badge hidden" style="display:inline-flex;align-items:center;gap:.25rem;"><svg width="13" height="13" style="flex-shrink:0;"><use href="#icon-eye"/></svg>Spectating</div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="showScoreboard()">📊 Scores</button>
+        <button class="btn btn-outline btn-sm" onclick="showScoreboard()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-bar-chart"/></svg>Scores</button>
         <button class="btn btn-sm" onclick="confirmLeave()"
-          style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">🚪 Leave</button>
+          style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;display:inline-flex;align-items:center;gap:.28rem;"><svg width="14" height="14" style="flex-shrink:0;"><use href="#icon-exit"/></svg>Leave</button>
       </div>
       <div class="seats-container" id="seats-container"></div>
       <div class="table-area">
@@ -170,7 +224,7 @@
       <div class="my-hand-section" id="my-hand-section">
         <div class="hand-top-row">
           <div style="display:flex;align-items:center;gap:.5rem;">
-            <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()">💬 Chat</button>
+            <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-chat"/></svg>Chat</button>
             <div id="hand-trump-badge"
               style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;letter-spacing:.04em;">
               Trump: <span id="hand-trump-sym"></span></div>
@@ -192,10 +246,10 @@
   <!-- ARRANGE BANNER -->
   <div class="arrange-banner hidden" id="arrange-banner">
     <div class="arrange-banner-left">
-      <div class="arrange-banner-title">🃏 Arrange your cards</div>
+      <div class="arrange-banner-title">Arrange your cards</div>
       <div class="arrange-banner-sub" id="arrange-banner-sub">Sort and rearrange, then place your bid</div>
     </div>
-    <button class="arrange-ready-btn" onclick="openBidPanel()">📝 Place Bid →</button>
+    <button class="arrange-ready-btn" onclick="openBidPanel()">Place Bid →</button>
   </div>
 
   <!-- BID OVERLAY -->
@@ -203,7 +257,7 @@
     <div class="bid-panel">
       <button onclick="closeBidPanel()"
         style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;">✕</button>
-      <h2>📝 Place Your Bid</h2>
+      <h2>Place Your Bid</h2>
       <p id="bid-subtitle">How many tricks will you win?</p>
       <div class="bid-buttons" id="bid-buttons"></div>
       <div class="players-bid-status" id="bid-status-chips"></div>
@@ -233,7 +287,7 @@
   <!-- SCOREBOARD -->
   <div class="score-overlay hidden" id="score-overlay">
     <div class="score-panel">
-      <h2>📊 Full Scoreboard</h2>
+      <h2 style="display:flex;align-items:center;gap:.4rem;"><svg width="20" height="20" style="flex-shrink:0;"><use href="#icon-bar-chart"/></svg>Full Scoreboard</h2>
       <div id="score-table-wrap" style="overflow-x:auto;"></div>
       <button class="btn btn-outline mt-2" onclick="hideScoreboard()">Close</button>
     </div>
@@ -242,13 +296,13 @@
   <!-- GAME OVER -->
   <div class="game-over-overlay hidden" id="game-over-overlay">
     <div class="game-over-panel">
-      <h1>🏆 Game Over!</h1>
+      <h1>Game Over!</h1>
       <div class="winner-name" id="winner-name"></div>
       <div class="podium-list" id="podium-list"></div>
       <div id="play-again-votes" class="play-again-votes"></div>
       <div style="display:flex;gap:.6rem;margin-top:.8rem;">
-        <button class="btn btn-gold" style="flex:1" onclick="votePlayAgain()">🔄 Play Again</button>
-        <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">🏠 Menu</button>
+        <button class="btn btn-gold" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;" onclick="votePlayAgain()"><svg width="16" height="16" style="flex-shrink:0;"><use href="#icon-refresh"/></svg>Play Again</button>
+        <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">Menu</button>
       </div>
     </div>
   </div>
@@ -256,7 +310,7 @@
   <!-- LEAVE CONFIRM -->
   <div class="leave-overlay hidden" id="leave-overlay">
     <div class="leave-panel">
-      <h3>🚪 Leave?</h3>
+      <h3 style="display:flex;align-items:center;gap:.4rem;"><svg width="18" height="18" style="flex-shrink:0;"><use href="#icon-exit"/></svg>Leave?</h3>
       <p>You'll be removed from the room.</p>
       <div class="leave-btns">
         <button class="btn btn-outline" onclick="cancelLeave()">Stay</button>
@@ -270,7 +324,7 @@
   <div class="chat-overlay hidden" id="chat-overlay" onclick="chatOverlayClick(event)">
     <div class="chat-panel" onclick="event.stopPropagation()">
       <div class="chat-header">
-        <h3>💬 Room Chat</h3>
+        <h3 style="display:flex;align-items:center;gap:.4rem;"><svg width="17" height="17" style="flex-shrink:0;"><use href="#icon-chat"/></svg>Room Chat</h3>
         <button class="chat-close" onclick="closeChat()">✕</button>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
@@ -285,7 +339,7 @@
   <div class="modal-overlay hidden" id="rename-modal" onclick="handleRenameOverlayClick(event)">
     <div class="modal-panel" style="position:relative;">
       <button class="modal-close" onclick="hideRenameModal()">✕</button>
-      <h3>✏️ Rename Yourself</h3>
+      <h3 style="display:flex;align-items:center;gap:.4rem;"><svg width="17" height="17" style="flex-shrink:0;"><use href="#icon-pencil"/></svg>Rename Yourself</h3>
       <p>Your squad name — shown to other players. You can change this anytime.</p>
       <div id="rename-error" class="error-msg hidden" style="margin-bottom:.8rem;"></div>
       <div class="input-group">

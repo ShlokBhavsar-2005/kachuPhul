@@ -290,7 +290,7 @@ function showInviteBanner(from, roomId, playerCount) {
   dismissInviteBanner();
   const DURATION = 25;
   const el = document.createElement('div'); el.className = 'invite-banner'; el.id = 'active-invite-banner';
-  el.innerHTML = `<div class="invite-banner-header"><div class="invite-banner-icon">🎴</div><div><div class="invite-banner-title">Game Invite</div><div class="invite-banner-from">${from}</div><div class="invite-banner-sub">${playerCount} player${playerCount !== 1 ? 's' : ''} in room &bull; Tap to join!</div></div></div><div class="invite-banner-timer"><div class="invite-banner-timer-bar" id="invite-timer-bar" style="width:100%"></div></div><div class="invite-banner-btns"><button class="invite-accept-btn" onclick="acceptInvite('${roomId}')"> 🎮 Join Room</button><button class="invite-decline-btn" onclick="dismissInviteBanner()">✕ Decline</button></div>`;
+  el.innerHTML = `<div class="invite-banner-header"><div class="invite-banner-icon"><svg width="24" height="24" style="color:var(--gold)"><use href="#icon-person-add"/></svg></div><div><div class="invite-banner-title">Game Invite</div><div class="invite-banner-from">${from}</div><div class="invite-banner-sub">${playerCount} player${playerCount !== 1 ? 's' : ''} in room &bull; Tap to join!</div></div></div><div class="invite-banner-timer"><div class="invite-banner-timer-bar" id="invite-timer-bar" style="width:100%"></div></div><div class="invite-banner-btns"><button class="invite-accept-btn" onclick="acceptInvite('${roomId}')">Join Room</button><button class="invite-decline-btn" onclick="dismissInviteBanner()">✕ Decline</button></div>`;
   document.body.appendChild(el);
   let remaining = DURATION;
   _inviteInterval = setInterval(() => { remaining--; const bar = $('invite-timer-bar'); if (bar) bar.style.width = (remaining / DURATION * 100) + '%'; if (remaining <= 0) dismissInviteBanner(); }, 1000);
@@ -338,7 +338,7 @@ function renderFriends(friends, pending) {
   const onlineCount = friends.filter(f => f.online).length;
   const oc = $('friends-online-count'); if (oc) oc.textContent = onlineCount > 0 ? `● ${onlineCount} online` : '';
 
-  if (!friends.length) { listEl.innerHTML = `<div class="empty-friends"><div style="font-size:1.4rem;margin-bottom:.3rem;">👥</div>No squad yet — add friends above</div>`; return; }
+  if (!friends.length) { listEl.innerHTML = `<div class="empty-friends"><svg width="32" height="32" style="color:var(--text2);margin-bottom:.3rem;display:block;margin-left:auto;margin-right:auto;"><use href="#icon-people"/></svg>No squad yet — add friends above</div>`; return; }
   listEl.innerHTML = friends.map(f => {
     let statusText = '○ Offline', statusCls = '';
     if (f.online && f.inGame) { statusText = '🎮 In Game'; statusCls = 'in-game'; }
@@ -346,7 +346,7 @@ function renderFriends(friends, pending) {
     const av = f.picture ? `<img src="${f.picture}" alt="${f.gameName}">` : f.gameName[0].toUpperCase();
     const canInvite = f.online && !f.inGame && myRoomId && !isSpectator;
     const canWatch = f.inGame && f.roomId;
-    return `<div class="friend-item"><div class="friend-av">${av}</div><div class="friend-info"><div class="friend-name">${f.gameName}</div><div class="friend-status ${statusCls}">${statusText}</div></div><div class="friend-btns">${canInvite ? `<button class="btn-invite" onclick="inviteFriend('${f.gameName}')">📨 Invite</button>` : ''}${canWatch ? `<button class="btn-watch" onclick="spectateRoom('${f.roomId}')">👁 Watch</button>` : ''}</div></div>`;
+    return `<div class="friend-item"><div class="friend-av">${av}</div><div class="friend-info"><div class="friend-name">${f.gameName}</div><div class="friend-status ${statusCls}">${statusText}</div></div><div class="friend-btns">${canInvite ? `<button class="btn-invite" onclick="inviteFriend('${f.gameName}')">Invite</button>` : ''}${canWatch ? `<button class="btn-watch" onclick="spectateRoom('${f.roomId}')" style="display:inline-flex;align-items:center;gap:.2rem;"><svg width='13' height='13'><use href='#icon-eye'/></svg>Watch</button>` : ''}</div></div>`;
   }).join('');
 }
 
@@ -438,7 +438,7 @@ function renderWaitingRoom(room) {
   $('player-list').innerHTML = room.players.map((p, i) => `<div class="player-item"><div class="player-avatar ${AVATAR_COLS[i % 7]}">${p.name[0].toUpperCase()}</div><div class="player-item-name">${p.name}</div>${p.isHost ? '<span class="badge">HOST</span>' : ''}${!p.connected ? '<span class="badge" style="background:var(--red)">OFFLINE</span>' : ''}${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}</div>`).join('');
 
   const si = $('spectator-info');
-  if (room.spectatorCount > 0) { si.textContent = `👁 ${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching`; si.classList.remove('hidden'); } else si.classList.add('hidden');
+  if (room.spectatorCount > 0) { si.innerHTML = `<span style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="13" height="13"><use href="#icon-eye"/></svg>${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching</span>`; si.classList.remove('hidden'); } else si.classList.add('hidden');
 
   const n = room.players.length, maxR = room.maxRounds || 0;
   if (!chosenRounds || chosenRounds > maxR) { chosenRounds = maxR; } maxRoundsAvailable = maxR;
@@ -537,7 +537,7 @@ function seatHTML(state, pIdx, myIdx) {
     if (kv) kickBar = `<div class="kick-vote-bar"><span class="kick-vote-count">⚡ Kick ${kv.votes}/${kv.needed}</span></div>`;
     else if (canKick) kickBar = `<div class="kick-vote-bar"><span style="font-size:.58rem;color:var(--red);">OFFLINE · tap to kick</span></div>`;
   }
-  return `<div class="${cls}" ${clickAttr}><div class="seat-avatar ${AVATAR_COLS[pIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div><div class="seat-info"><div class="seat-name">${p.name}${isMine ? ' ★' : ''}${p.isHost ? ' 👑' : ''}</div><div class="seat-meta">${meta}</div>${kickBar}</div></div>`;
+  return `<div class="${cls}" ${clickAttr}><div class="seat-avatar ${AVATAR_COLS[pIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div><div class="seat-info"><div class="seat-name">${p.name}${isMine ? ' ★' : ''}${p.isHost ? ' ♛' : ''}</div><div class="seat-meta">${meta}</div>${kickBar}</div></div>`;
 }
 
 function renderTrick(state) {
@@ -549,7 +549,7 @@ function renderTrick(state) {
     const pIdx = handOrder[i], playerName = state.players[pIdx]?.name || '?', played = state.currentTrick.find(t => t.playerIndex === pIdx);
     const isWinner = trickWinData && trickWinData.winnerIndex === pIdx, isLoser = trickWinData && trickWinData.winnerIndex !== pIdx && played;
     const slotCls = ['trick-card-slot', isWinner ? 'winner-highlight' : '', isLoser ? 'loser-dim' : ''].filter(Boolean).join(' ');
-    if (played) html += `<div class="${slotCls}" data-player="${pIdx}">${isWinner ? '<div class="winner-crown">👑</div>' : ''}<div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
+    if (played) html += `<div class="${slotCls}" data-player="${pIdx}">${isWinner ? '<div class="winner-crown">★</div>' : ''}<div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
     else html += `<div class="trick-card-slot" data-player="${pIdx}"><div class="card-empty"></div>${!isBidding ? `<div class="trick-player-name">${playerName}</div>` : ''}</div>`;
   }
   el.innerHTML = html; st.textContent = state.leadSuit ? `Lead: ${SUIT_SYM[state.leadSuit]} ${state.leadSuit}` : '';
@@ -569,7 +569,8 @@ function renderTurnIndicator(state) {
 function renderHand(state) {
   if (isSpectator) return;
   const hand = state.myHand || [], visibleHand = hand.filter(c => !playedCardIds.has(c.id));
-  const isMyTurn = state.state === 'playing' && state.currentTurnIndex === myPlayerIndex;
+  const trickComplete = state.currentTrick && state.currentTrick.length >= state.players.length;
+  const isMyTurn = state.state === 'playing' && state.currentTurnIndex === myPlayerIndex && !trickComplete;
   const hasLeadSuit = isMyTurn && state.currentTrick.length > 0 && visibleHand.some(c => c.suit === state.leadSuit);
   const sorted = getSortedHand(visibleHand, state.trumpSuit);
   $('my-hand').innerHTML = sorted.map((card, si) => {
@@ -582,6 +583,8 @@ function renderHand(state) {
 
 function canPlayCard(card, state) {
   if (state.state !== 'playing' || state.currentTurnIndex !== myPlayerIndex) return false;
+  const trickComplete = state.currentTrick && state.currentTrick.length >= state.players.length;
+  if (trickComplete) return false;
   if (!state.currentTrick.length) return true;
   const hasLead = state.myHand.some(c => c.suit === state.leadSuit);
   return !hasLead || card.suit === state.leadSuit;
@@ -675,15 +678,15 @@ function showScoreboard() {
     });
     tbody += `<tr>${row}</tr>`;
   }
-  let totalRow = `<td class="name-cell" style="font-weight:800">🏆 Total</td>`;
+  let totalRow = `<td class="name-cell" style="font-weight:800">Total</td>`;
   players.forEach((_, pi) => { const t = state.roundScores.reduce((s, rnd) => { const r = rnd?.find(x => x.playerIndex === pi); return s + (r ? r.points : 0); }, 0); totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${t}</td>`; });
   $('score-table-wrap').innerHTML = `<table class="score-table"><thead>${thead}</thead><tbody>${tbody}<tr class="total-row">${totalRow}</tr></tbody></table><p style="text-align:center;color:var(--text2);font-size:.75rem;margin-top:.7rem;">Green=hit · Red=missed · Gold=0bid0won=1pt</p>`;
 }
 function hideScoreboard() { $('score-overlay').classList.add('hidden'); }
 function showGameOver(fs) {
   $('round-end-overlay').classList.add('hidden'); $('game-over-overlay').classList.remove('hidden');
-  const paBtn = document.querySelector('[onclick="votePlayAgain()"]'); if (paBtn) { paBtn.disabled = false; paBtn.textContent = '🔄 Play Again'; }
-  $('winner-name').textContent = `👑 ${fs[0].name} wins with ${fs[0].score} pts!`;
+  const paBtn = document.querySelector('[onclick="votePlayAgain()"]'); if (paBtn) { paBtn.disabled = false; paBtn.innerHTML = '<svg width="16" height="16" style="flex-shrink:0;vertical-align:middle;"><use href="#icon-refresh"/></svg> Play Again'; }
+  $('winner-name').textContent = `★ ${fs[0].name} wins with ${fs[0].score} pts!`;
   $('podium-list').innerHTML = fs.map((p, i) => `<div class="podium-item"><div class="podium-rank">${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'}</div><div class="podium-name">${p.name}</div><div class="podium-score">${p.score} pts</div></div>`).join('');
 }
 
