@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kachu Phul</title>
+  <title>Kachu Phul 🌸</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
@@ -30,103 +30,14 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Rajdhani', sans-serif !important;
     }
 
     body {
-      font-family: 'Rajdhani', sans-serif !important;
+      font-family: 'Baloo 2', cursive;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
-    }
-
-    /* BRUTALIST GLOBAL OVERRIDES */
-    input[type="text"] {
-      width: 100% !important;
-      background: transparent !important;
-      border: none !important;
-      border-bottom: 2px solid var(--border) !important;
-      border-radius: 0 !important;
-      padding: 0.6rem 0 !important;
-      color: var(--text) !important;
-      font-family: 'Rajdhani', sans-serif !important;
-      font-size: 1.35rem !important;
-      font-weight: 700 !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.08em !important;
-      outline: none !important;
-      transition: border-color 0.2s !important;
-    }
-    input[type="text"]:focus {
-      border-color: #ffffff !important;
-      box-shadow: none !important;
-    }
-    input::placeholder {
-      color: var(--text2) !important;
-      opacity: 0.6 !important;
-      text-transform: uppercase !important;
-    }
-
-    button, .btn, .btn-gold, .btn-outline, .btn-sm, .btn-google, .arrange-ready-btn, .confirm-yes, .confirm-no, .sort-btn, .preset-btn, .invite-accept-btn, .chat-send-btn, .add-friend-row button, .rounds-arrow {
-      border-radius: 0 !important;
-      text-transform: uppercase !important;
-      font-family: 'Rajdhani', sans-serif !important;
-      letter-spacing: 0.12em !important;
-    }
-
-    .btn, .btn-gold, .btn-google, .arrange-ready-btn, .confirm-yes, .invite-accept-btn, .chat-send-btn, .add-friend-row button {
-      background: #ffffff !important;
-      color: #000000 !important;
-      border: 2px solid #ffffff !important;
-      font-weight: 800 !important;
-      box-shadow: none !important;
-      transition: all 0.2s ease-in-out !important;
-    }
-    .btn:hover, .btn-gold:hover, .btn-google:hover, .arrange-ready-btn:hover, .confirm-yes:hover, .invite-accept-btn:hover, .chat-send-btn:hover, .add-friend-row button:hover {
-      background: #000000 !important;
-      color: #ffffff !important;
-      border-color: #ffffff !important;
-    }
-    .btn:active, .btn-gold:active, .btn-google:active, .arrange-ready-btn:active, .confirm-yes:active, .invite-accept-btn:active, .chat-send-btn:active {
-      transform: scale(0.97) !important;
-    }
-
-    .btn-outline, .confirm-no, .invite-decline-btn, .btn-decline, .modal-close, .chat-close {
-      background: transparent !important;
-      color: var(--text) !important;
-      border: 2px solid var(--border) !important;
-      font-weight: 700 !important;
-      transition: all 0.2s ease-in-out !important;
-    }
-    .btn-outline:hover, .confirm-no:hover, .invite-decline-btn:hover, .btn-decline:hover, .modal-close:hover, .chat-close:hover {
-      background: #ffffff !important;
-      color: #000000 !important;
-      border-color: #ffffff !important;
-    }
-
-    .sort-btn, .preset-btn, .bid-btn {
-      border-radius: 0 !important;
-      font-family: 'Rajdhani', sans-serif !important;
-      text-transform: uppercase !important;
-    }
-    .sort-btn.active, .preset-btn.active, .bid-btn.selected {
-      background: #ffffff !important;
-      color: #000000 !important;
-      border-color: #ffffff !important;
-    }
-    .sort-btn:hover, .preset-btn:hover, .bid-btn:hover {
-      border-color: #ffffff !important;
-      color: #ffffff !important;
-    }
-
-    .brand-tag {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: 0.18em;
-      margin-bottom: 1.2rem;
-      text-transform: uppercase;
     }
 
     body::before {
@@ -240,18 +151,14 @@
     /* BUTTONS */
     .btn {
       width: 100%;
-      padding: .9rem 1rem;
-      border-radius: 0;
-      border: 2px solid #ffffff;
-      background: #ffffff;
-      color: #000000;
-      font-family: 'Rajdhani', sans-serif;
+      padding: .85rem;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Baloo 2', cursive;
       font-size: 1.05rem;
-      font-weight: 800;
+      font-weight: 700;
       cursor: pointer;
       transition: all .2s;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
     }
 
     .btn:active {
@@ -259,118 +166,109 @@
     }
 
     .btn-gold {
-      background: #ffffff;
-      color: #000000;
-      border: 2px solid #ffffff;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #1a1000;
+      box-shadow: 0 4px 20px rgba(240, 192, 64, .3);
     }
 
     .btn-gold:hover {
-      background: #000000;
-      color: #ffffff;
-      border-color: #ffffff;
+      box-shadow: 0 6px 28px rgba(240, 192, 64, .5);
+      transform: translateY(-1px);
     }
 
     .btn-outline {
       background: transparent;
-      border: 2px solid var(--border);
+      border: 1.5px solid var(--border);
       color: var(--text);
     }
 
     .btn-outline:hover {
-      background: #ffffff;
-      color: #000000;
-      border-color: #ffffff;
+      border-color: var(--gold);
+      color: var(--gold);
     }
 
     .btn-sm {
       width: auto;
-      padding: .45rem .9rem;
+      padding: .4rem .9rem;
       font-size: .85rem;
-      border-radius: 0;
+      border-radius: 8px;
     }
 
     .btn-google {
       width: 100%;
-      background: #ffffff;
-      color: #000000;
+      background: #fff;
+      color: #333;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: .8rem;
-      font-weight: 800;
-      border-radius: 0;
-      padding: 1rem;
-      border: 2px solid #ffffff;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: .9rem;
+      border: none;
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.05rem;
       cursor: pointer;
       transition: all .2s;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
     }
 
     .btn-google:hover {
-      background: #000000;
-      color: #ffffff;
-      border-color: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .5);
+      transform: translateY(-1px);
     }
 
     .btn-google svg {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
-      opacity: 0.7;
     }
 
     /* LOBBY */
     .lobby-wrap {
       min-height: 100vh;
       display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      padding: 2.5rem 1.5rem;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
       overflow: hidden;
     }
 
     .lobby-card {
-      background: transparent !important;
-      border: none !important;
-      border-radius: 0 !important;
-      padding: 2.5rem 1rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
       width: 100%;
       max-width: 440px;
-      box-shadow: none !important;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
     }
 
     .logo {
-      text-align: left;
+      text-align: center;
       margin-bottom: 2rem;
     }
 
     .logo h1 {
-      font-size: 3.5rem;
+      font-size: 2.8rem;
       font-weight: 800;
-      line-height: 1.0;
-      color: #ffffff;
-      background: none;
-      -webkit-text-fill-color: initial;
-      background-clip: initial;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: 0.8rem;
+      background: linear-gradient(135deg, var(--gold), #ff9a4a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
     }
 
     .logo p {
       color: var(--text2);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-top: 0.3rem;
+      font-size: .95rem;
+      margin-top: .3rem;
     }
 
     .suits-row {
-      display: none;
+      font-size: 1.8rem;
+      margin-bottom: .5rem;
+      letter-spacing: .2em;
     }
 
     .input-group {
@@ -381,18 +279,28 @@
       display: block;
       font-size: .85rem;
       color: var(--text2);
-      margin-bottom: .6rem;
-      font-weight: 700;
-      letter-spacing: .12em;
+      margin-bottom: .4rem;
+      font-weight: 600;
+      letter-spacing: .05em;
       text-transform: uppercase;
     }
 
     .input-group input {
       width: 100%;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      color: var(--text);
+      font-family: 'Baloo 2', cursive;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
     }
 
     .input-group input:focus {
-      border-color: #ffffff;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(240, 192, 64, .15);
     }
 
     .divider {
@@ -424,9 +332,9 @@
 
     /* TOP NAV */
     .top-nav {
-      background: #000000;
+      background: var(--bg2);
       border-bottom: 1px solid var(--border);
-      padding: .7rem 1rem;
+      padding: .6rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -436,11 +344,12 @@
     }
 
     .top-nav-brand {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 800;
-      color: #ffffff;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold), #ff9a4a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .top-nav-right {
@@ -450,11 +359,11 @@
     }
 
     .nav-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       object-fit: cover;
-      border: 1.5px solid var(--border);
+      border: 2px solid var(--border);
     }
 
     .nav-name {
@@ -466,10 +375,7 @@
     .notif-bell {
       position: relative;
       cursor: pointer;
-      font-size: .85rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      font-size: 1.4rem;
       line-height: 1;
     }
 
@@ -486,13 +392,11 @@
 
     .sign-out-btn {
       color: var(--text2);
-      font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
+      font-size: .8rem;
       cursor: pointer;
       background: none;
       border: none;
+      font-family: 'Baloo 2', cursive;
       padding: .3rem .5rem;
     }
 
@@ -504,20 +408,19 @@
     }
 
     .menu-card {
-      background: transparent;
-      border: none;
-      border-top: 1px solid var(--border);
-      border-radius: 0;
-      padding: 1.3rem 0;
-      margin-bottom: 0.5rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.3rem;
+      margin-bottom: 1rem;
     }
 
     .menu-card h3 {
-      font-size: 1rem;
+      font-size: .78rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: .1em;
       color: var(--text2);
-      font-weight: 800;
+      font-weight: 700;
       margin-bottom: .9rem;
     }
 
@@ -528,6 +431,22 @@
 
     .room-input-row input {
       flex: 1;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      color: var(--text);
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .room-input-row input:focus {
+      border-color: var(--gold);
     }
 
     .room-input-row .btn {
@@ -537,11 +456,10 @@
 
     /* FRIENDS */
     .friends-card {
-      background: transparent;
-      border: none;
-      border-top: 1px solid var(--border);
-      border-radius: 0;
-      padding: 1.3rem 0;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.3rem;
       margin-bottom: 1rem;
     }
 
@@ -553,11 +471,11 @@
     }
 
     .friends-header h3 {
-      font-size: 1rem;
+      font-size: .78rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: .1em;
       color: var(--text2);
-      font-weight: 800;
+      font-weight: 700;
     }
 
     .add-friend-row {
@@ -568,36 +486,43 @@
 
     .add-friend-row input {
       flex: 1;
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: .55rem .8rem;
+      color: var(--text);
+      font-family: 'Baloo 2', cursive;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
     }
 
     .add-friend-row input:focus {
-      border-color: #ffffff;
+      border-color: var(--blue);
     }
 
     .add-friend-row button {
-      background: #ffffff;
-      color: #000000;
-      border: 2px solid #ffffff;
-      border-radius: 0;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
       padding: .55rem 1rem;
-      font-weight: 800;
+      font-family: 'Baloo 2', cursive;
+      font-weight: 700;
       cursor: pointer;
       font-size: .88rem;
       white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     .friend-item {
       display: flex;
       align-items: center;
       gap: .7rem;
-      padding: .55rem 0;
-      border-radius: 0;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0;
+      padding: .55rem .7rem;
+      border-radius: 10px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      margin-bottom: .4rem;
     }
 
     .friend-av {
@@ -656,8 +581,9 @@
 
     .friend-btns button {
       border: none;
-      border-radius: 0;
+      border-radius: 7px;
       padding: .28rem .55rem;
+      font-family: 'Baloo 2', cursive;
       font-size: .75rem;
       font-weight: 700;
       cursor: pointer;
@@ -688,8 +614,9 @@
 
     .req-btns button {
       border: none;
-      border-radius: 0;
+      border-radius: 7px;
       padding: .28rem .6rem;
+      font-family: 'Baloo 2', cursive;
       font-size: .78rem;
       font-weight: 700;
       cursor: pointer;
@@ -765,8 +692,9 @@
     .toast-btns button {
       flex: 1;
       border: none;
-      border-radius: 0;
+      border-radius: 9px;
       padding: .5rem;
+      font-family: 'Baloo 2', cursive;
       font-weight: 700;
       font-size: .9rem;
       cursor: pointer;
@@ -950,23 +878,24 @@
     .preset-btn {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 0;
+      border-radius: 6px;
       color: var(--text2);
-      font-size: .8rem;
+      font-family: 'Baloo 2', cursive;
+      font-size: .75rem;
       padding: .3rem .65rem;
       cursor: pointer;
       transition: all .15s;
     }
 
     .preset-btn:hover {
-      border-color: #ffffff;
-      color: #ffffff;
+      border-color: var(--gold);
+      color: var(--gold);
     }
 
     .preset-btn.active {
-      background: #ffffff;
-      border-color: #ffffff;
-      color: #000000;
+      background: rgba(240, 192, 64, .15);
+      border-color: var(--gold);
+      color: var(--gold);
       font-weight: 700;
     }
 
@@ -1092,7 +1021,7 @@
     .seat.disconnected.kickable { cursor: pointer; border-color: var(--red); border-style: dashed; }
     .seat.disconnected.kickable:hover { background: rgba(224,80,80,.1); }
     .kick-vote-bar { display:flex; align-items:center; gap:.3rem; margin-top:.15rem; }
-    .kick-vote-btn { font-size:.6rem; background:rgba(224,80,80,.2); border:1px solid var(--red); color:var(--red); border-radius:0; padding:.1rem .35rem; cursor:pointer; font-weight:700; }
+    .kick-vote-btn { font-size:.6rem; background:rgba(224,80,80,.2); border:1px solid var(--red); color:var(--red); border-radius:5px; padding:.1rem .35rem; cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; }
     .kick-vote-btn:hover { background:rgba(224,80,80,.35); }
     .kick-vote-btn.voted { background:var(--red); color:#fff; cursor:default; }
     .kick-vote-count { font-size:.58rem; color:var(--red); font-weight:600; }
@@ -1102,16 +1031,16 @@
       backdrop-filter:blur(4px); animation:modal-in .2s ease-out;
     }
     .kick-confirm-panel {
-      background:var(--bg2); border:1.5px solid var(--red); border-radius:0;
+      background:var(--bg2); border:1.5px solid var(--red); border-radius:16px;
       padding:1.5rem 1.3rem; width:100%; max-width:320px; text-align:center;
-      box-shadow:none;
+      box-shadow:0 12px 40px rgba(224,80,80,.3);
     }
     .kick-confirm-panel h3 { font-size:1.15rem; font-weight:800; color:var(--red); margin-bottom:.3rem; }
     .kick-confirm-panel p { color:var(--text2); font-size:.85rem; margin-bottom:1.2rem; line-height:1.5; }
     .kick-confirm-btns { display:flex; gap:.6rem; }
     .kick-confirm-btns button {
-      flex:1; border:none; border-radius:0; padding:.6rem;
-      font-weight:700; font-size:.95rem; cursor:pointer;
+      flex:1; border:none; border-radius:10px; padding:.6rem;
+      font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; cursor:pointer;
     }
     .kick-confirm-yes { background:var(--red); color:#fff; }
     .kick-confirm-no { background:var(--bg3); border:1.5px solid var(--border) !important; color:var(--text2); }
@@ -1124,7 +1053,7 @@
     .seat-avatar {
       width: 28px;
       height: 28px;
-      border-radius: 0;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1445,8 +1374,9 @@
     .sort-btn {
       background: var(--bg3);
       border: 1px solid var(--border);
-      border-radius: 0;
+      border-radius: 6px;
       color: var(--text2);
+      font-family: 'Baloo 2', cursive;
       font-size: .72rem;
       padding: .25rem .55rem;
       cursor: pointer;
@@ -1454,14 +1384,14 @@
     }
 
     .sort-btn:hover {
-      border-color: #ffffff;
-      color: #ffffff;
+      border-color: var(--gold);
+      color: var(--gold);
     }
 
     .sort-btn.active {
-      background: #ffffff;
-      border-color: #ffffff;
-      color: #000000;
+      background: rgba(240, 192, 64, .15);
+      border-color: var(--gold);
+      color: var(--gold);
     }
 
     .hand-cards {
@@ -1551,8 +1481,9 @@
       background: var(--green);
       color: #fff;
       border: none;
-      border-radius: 0;
+      border-radius: 10px;
       padding: .5rem 1.1rem;
+      font-family: 'Baloo 2', cursive;
       font-weight: 700;
       font-size: .95rem;
       cursor: pointer;
@@ -1562,8 +1493,9 @@
       background: var(--red);
       color: #fff;
       border: none;
-      border-radius: 0;
+      border-radius: 10px;
       padding: .5rem 1rem;
+      font-family: 'Baloo 2', cursive;
       font-weight: 700;
       font-size: .95rem;
       cursor: pointer;
@@ -1602,17 +1534,18 @@
     }
 
     .arrange-ready-btn {
-      background: #ffffff;
-      color: #000000;
-      border: 2px solid #ffffff;
-      border-radius: 0;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #1a1000;
+      border: none;
+      border-radius: 12px;
       padding: .65rem 1.3rem;
+      font-family: 'Baloo 2', cursive;
       font-size: .95rem;
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
-      box-shadow: none;
+      box-shadow: 0 4px 16px rgba(240, 192, 64, .35);
     }
 
     /* BID */
@@ -1655,10 +1588,11 @@
     .bid-btn {
       width: 48px;
       height: 48px;
-      border-radius: 0;
+      border-radius: 10px;
       border: 1.5px solid var(--border);
       background: var(--bg3);
       color: var(--text);
+      font-family: 'Baloo 2', cursive;
       font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
@@ -1666,16 +1600,16 @@
     }
 
     .bid-btn:hover {
-      border-color: #ffffff;
-      color: #ffffff;
-      background: rgba(255, 255, 255, .1);
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(240, 192, 64, .1);
       transform: scale(1.08);
     }
 
     .bid-btn.selected {
-      background: #ffffff;
-      color: #000000;
-      border-color: #ffffff;
+      background: var(--gold);
+      color: #1a1000;
+      border-color: var(--gold);
     }
 
     .players-bid-status {
@@ -2146,36 +2080,37 @@
     .invite-banner-from { font-size:1.05rem; font-weight:800; color:var(--text); }
     .invite-banner-sub { font-size:.82rem; color:var(--text2); }
     .invite-banner-timer {
-      height: 3px; background: var(--border); border-radius: 0; overflow:hidden;
+      height: 3px; background: var(--border); border-radius: 99px; overflow:hidden;
     }
     .invite-banner-timer-bar {
-      height: 100%; background: #ffffff; border-radius: 0;
+      height: 100%; background: var(--gold); border-radius: 99px;
       transition: width 1s linear;
     }
     .invite-banner-btns { display:flex; gap:.5rem; }
     .invite-banner-btns button {
-      flex:1; border:none; border-radius:0; padding:.6rem;
-      font-weight:700; font-size:.95rem; cursor:pointer;
+      flex:1; border:none; border-radius:10px; padding:.6rem;
+      font-family:'Baloo 2',cursive; font-weight:700; font-size:.95rem; cursor:pointer;
     }
-    .invite-accept-btn { background:#ffffff; color:#000000; }
+    .invite-accept-btn { background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#1a1000; }
     .invite-decline-btn { background:var(--bg3); border:1.5px solid var(--border)!important; color:var(--text2); }
 
     /* Lobby invite list items */
     .lobby-invite-item {
       display:flex; align-items:center; gap:.7rem;
-      padding:.5rem 0; border-radius:0;
-      background:transparent; border-bottom:1px solid var(--border);
-      margin-bottom:0;
+      padding:.5rem .6rem; border-radius:9px;
+      background:var(--bg2); border:1px solid var(--border);
+      margin-bottom:.35rem;
     }
     .lobby-invite-item:last-child { margin-bottom:0; }
 
     /* ═══ CHAT ═══ */
     .chat-inline-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 0;
+      background: rgba(240,192,64,.1);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      border-radius: 6px;
       padding: .2rem .55rem;
+      font-family: 'Baloo 2', cursive;
       font-size: .78rem;
       font-weight: 700;
       cursor: pointer;
@@ -2186,9 +2121,7 @@
       letter-spacing: .04em;
     }
     .chat-inline-btn:hover {
-      background: #ffffff;
-      color: #000000;
-      border-color: #ffffff;
+      background: rgba(240,192,64,.2);
     }
     .chat-inline-btn:active {
       transform: scale(.95);
@@ -2369,9 +2302,9 @@
       <div class="lobby-wrap">
         <div class="lobby-card">
           <div class="logo">
-            <div class="brand-tag">[ KP ]</div>
-            <h1>Kachu<br>Phul</h1>
-            <p>ONLINE MULTIPLAYER</p>
+            <div class="suits-row">♠ ♦ ♣ ♥</div>
+            <h1>Kachu Phul 🌸</h1>
+            <p>The classic bidding card game — online with friends</p>
           </div>
           <div id="home-error" class="error-msg hidden"></div>
           <button class="btn-google" onclick="startGoogleLogin()">
@@ -2399,17 +2332,16 @@
       <div class="lobby-wrap">
         <div class="lobby-card">
           <div class="logo">
-            <div class="brand-tag">[ KP ]</div>
-            <h1>Kachu<br>Phul</h1>
-            <p>CHOOSE DISPLAY NAME</p>
+            <h1>Kachu Phul 🌸</h1>
+            <p>Choose your game name</p>
           </div>
           <div id="name-error" class="error-msg hidden"></div>
           <div class="input-group">
-            <label>Display Name</label>
-            <input type="text" id="game-name-input" placeholder="ENTER NAME..." maxlength="16" autocomplete="off">
+            <label>Choose Your Game Name</label>
+            <input type="text" id="game-name-input" placeholder="e.g. KingAce007" maxlength="16" autocomplete="off">
           </div>
           <p style="color:var(--text2);font-size:.82rem;margin-bottom:1rem;">3–16 chars · letters, numbers and _ only · shown to other players · <em>can be changed later</em></p>
-          <button class="btn btn-gold" id="name-submit-btn" onclick="submitGameName()">Enter</button>
+          <button class="btn btn-gold" id="name-submit-btn" onclick="submitGameName()">Claim My Name →</button>
         </div>
       </div>
     </div>
@@ -2417,36 +2349,38 @@
     <!-- MAIN MENU -->
     <div id="menu-screen" class="screen">
       <div class="top-nav">
-        <div class="top-nav-brand">[ KP ] KACHU PHUL</div>
+        <div class="top-nav-brand">♠ Kachu Phul 🌸</div>
         <div class="top-nav-right">
           <img id="nav-avatar" class="nav-avatar hidden" src="" alt="">
           <span class="nav-name" id="nav-name" style="cursor:pointer;" onclick="showRenameModal()" title="Click to rename"></span>
-          <div class="notif-bell" onclick="toggleFriends()" title="Friends & Invites" style="font-weight: 700; font-size: 0.95rem; letter-spacing: 0.05em;">
-            [ SQUAD ]<div id="notif-dot" class="notif-dot hidden"></div>
+          <div class="notif-bell" onclick="toggleFriends()" title="Friends & Invites">
+            👥<div id="notif-dot" class="notif-dot hidden"></div>
           </div>
           <button class="sign-out-btn" onclick="signOut()">Sign out</button>
         </div>
       </div>
       <div class="main-menu">
         <div class="menu-card">
-          <h3>Play</h3>
+          <h3>🎴 Play</h3>
           <button class="btn btn-gold mb-1" onclick="createRoom()">Create New Room</button>
           <div class="divider">or join with room code</div>
           <div style="display:flex;flex-direction:column;gap:.5rem;">
             <input type="text" id="room-code-input" placeholder="Room Code (e.g. XK9A2B)" maxlength="6"
-              autocomplete="off">
-            <button class="btn btn-outline" onclick="joinRoom()">Join</button>
+              autocomplete="off"
+              style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:.75rem 1rem;color:var(--text);font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+            <button class="btn btn-outline" onclick="joinRoom()">Join →</button>
           </div>
           <div id="menu-error" class="error-msg hidden mt-1"></div>
         </div>
 
         <div class="friends-card" id="friends-card">
           <div class="friends-header">
-            <h3>Squad</h3>
+            <h3>👥 Squad</h3>
             <div style="display:flex;gap:.5rem;align-items:center;">
               <span id="friends-online-count" style="font-size:.75rem;color:var(--green);font-weight:700;"></span>
               <button onclick="loadFriends()"
-                style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.82rem;font-weight:700;text-transform:uppercase;">Refresh</button>
+                style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:.82rem;font-family:'Baloo 2',cursive;">↻ Refresh</button>
             </div>
           </div>
           <div class="add-friend-row">
@@ -2455,7 +2389,7 @@
             <button onclick="sendFriendReq()">+ Add</button>
           </div>
           <div id="friend-requests-section"></div>
-          <div id="friends-list-section"><div class="empty-friends"><div style="font-size:1.1rem;font-weight:700;margin-bottom:.3rem;">[ NO SQUAD ]</div>No squad yet — add friends above</div></div>
+          <div id="friends-list-section"><div class="empty-friends"><div style="font-size:1.4rem;margin-bottom:.3rem;">👥</div>No squad yet — add friends above</div></div>
         </div>
       </div>
     </div>
@@ -2467,11 +2401,11 @@
           <div class="room-code-label">Room Code — Share with friends</div>
           <div class="room-code" id="display-room-code">------</div>
           <div style="display:flex;gap:.5rem;justify-content:center;margin:.4rem 0 .8rem;">
-            <button class="btn btn-outline btn-sm" onclick="copyRoomCode()">Copy Code</button>
-            <button class="btn btn-sm" id="lobby-invite-btn" onclick="toggleLobbyInvitePanel()">Invite Friends</button>
+            <button class="btn btn-outline btn-sm" onclick="copyRoomCode()">📋 Copy Code</button>
+            <button class="btn btn-sm" id="lobby-invite-btn" onclick="toggleLobbyInvitePanel()" style="background:rgba(240,192,64,.15);border:1.5px solid var(--gold);color:var(--gold);border-radius:8px;padding:.4rem .9rem;font-family:'Baloo 2',cursive;font-weight:700;font-size:.85rem;cursor:pointer;">👥 Invite Friends</button>
           </div>
           <!-- Lobby invite panel -->
-          <div id="lobby-invite-panel" class="hidden" style="background:var(--bg3);border:1px solid var(--border);border-radius:0;padding:.9rem;margin-bottom:.8rem;">
+          <div id="lobby-invite-panel" class="hidden" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:.9rem;margin-bottom:.8rem;">
             <div style="font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:.6rem;">Invite Online Friends</div>
             <div id="lobby-invite-list"><div style="color:var(--text2);font-size:.85rem;text-align:center;padding:.5rem;">Loading friends…</div></div>
           </div>
@@ -2490,13 +2424,13 @@
               <div class="rounds-hint" id="rounds-hint"></div>
               <div class="rounds-presets" id="rounds-presets"></div>
             </div>
-            <button class="btn btn-gold" style="margin-top:.8rem;" onclick="startGame()">Start Game</button>
+            <button class="btn btn-gold" style="margin-top:.8rem;" onclick="startGame()">🚀 Start Game</button>
             <p style="text-align:center;color:var(--text2);font-size:.8rem;margin-top:.4rem;">You are the host</p>
           </div>
           <div id="wait-msg" class="mt-2" style="text-align:center;color:var(--text2);font-size:.9rem;">Waiting for host to start…</div>
           <div class="mt-2">
             <button class="btn btn-outline" onclick="confirmLeave()"
-              style="border-color:var(--red) !important;color:var(--red) !important;">Leave Room</button>
+              style="border-color:rgba(224,80,80,.4);color:var(--red);font-size:.85rem;padding:.6rem;">🚪 Leave Room</button>
           </div>
         </div>
       </div>
@@ -2511,11 +2445,12 @@
               style="font-size:.72rem;color:var(--text2);margin-left:.2rem;">TRUMP</span></div>
           <div class="round-badge">Round <span id="top-round">—</span>/<span id="top-total-rounds">—</span></div>
           <div class="cards-badge"><span id="top-cards">—</span> cards</div>
-          <div id="spec-badge" class="spec-badge hidden">Spectating</div>
+          <div id="spec-badge" class="spec-badge hidden">👁 Spectating</div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="showScoreboard()">Scores</button>
+        <button class="btn btn-outline btn-sm" onclick="showScoreboard()">📊 Scores</button>
         <button class="btn btn-sm" onclick="confirmLeave()"
-          style="border-color:var(--red) !important;color:var(--red) !important;background:transparent !important;">Leave</button>
+          style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">🚪
+          Leave</button>
       </div>
       <div class="seats-container" id="seats-container"></div>
       <div class="table-area">
@@ -2528,9 +2463,9 @@
       <div class="my-hand-section" id="my-hand-section">
         <div class="hand-top-row">
           <div style="display:flex;align-items:center;gap:.5rem;">
-            <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()">Chat</button>
+            <button id="chat-fab" class="chat-inline-btn hidden" onclick="openChat()">💬 Chat</button>
             <div id="hand-trump-badge"
-              style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:0;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--text);display:none;letter-spacing:.04em;">
+              style="font-size:.78rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(240,192,64,.12);border:1px solid var(--gold);color:var(--gold);display:none;letter-spacing:.04em;">
               Trump: <span id="hand-trump-sym"></span></div>
           </div>
           <div class="hand-sort-btns">
@@ -2550,18 +2485,18 @@
   <!-- ARRANGE BANNER -->
   <div class="arrange-banner hidden" id="arrange-banner">
     <div class="arrange-banner-left">
-      <div class="arrange-banner-title">Arrange your cards</div>
+      <div class="arrange-banner-title">🃏 Arrange your cards</div>
       <div class="arrange-banner-sub" id="arrange-banner-sub">Sort and rearrange, then place your bid</div>
     </div>
-    <button class="arrange-ready-btn" onclick="openBidPanel()">Place Bid</button>
+    <button class="arrange-ready-btn" onclick="openBidPanel()">📝 Place Bid →</button>
   </div>
 
   <!-- BID OVERLAY -->
   <div class="bid-overlay hidden" id="bid-overlay">
     <div class="bid-panel">
       <button onclick="closeBidPanel()"
-        style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:0;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;">✕</button>
-      <h2>Place Your Bid</h2>
+        style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;">✕</button>
+      <h2>📝 Place Your Bid</h2>
       <p id="bid-subtitle">How many tricks will you win?</p>
       <div class="bid-buttons" id="bid-buttons"></div>
       <div class="players-bid-status" id="bid-status-chips"></div>
@@ -2574,8 +2509,8 @@
     <div class="confirm-banner-text" id="confirm-banner-text">Play this card?</div>
     <div id="confirm-banner-card"></div>
     <div class="confirm-btns">
-      <button class="confirm-yes" onclick="confirmPlay()">Play</button>
-      <button class="confirm-no" onclick="cancelPlay()">Cancel</button>
+      <button class="confirm-yes" onclick="confirmPlay()">✓ Play</button>
+      <button class="confirm-no" onclick="cancelPlay()">✕ Cancel</button>
     </div>
   </div>
 
@@ -2591,7 +2526,7 @@
   <!-- SCOREBOARD -->
   <div class="score-overlay hidden" id="score-overlay">
     <div class="score-panel">
-      <h2>Full Scoreboard</h2>
+      <h2>📊 Full Scoreboard</h2>
       <div id="score-table-wrap" style="overflow-x:auto;"></div>
       <button class="btn btn-outline mt-2" onclick="hideScoreboard()">Close</button>
     </div>
@@ -2600,13 +2535,13 @@
   <!-- GAME OVER -->
   <div class="game-over-overlay hidden" id="game-over-overlay">
     <div class="game-over-panel">
-      <h1>Game Over</h1>
+      <h1>🏆 Game Over!</h1>
       <div class="winner-name" id="winner-name"></div>
       <div class="podium-list" id="podium-list"></div>
       <div id="play-again-votes" class="play-again-votes"></div>
       <div style="display:flex;gap:.6rem;margin-top:.8rem;">
-        <button class="btn btn-gold" style="flex:1" onclick="votePlayAgain()">Play Again</button>
-        <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">Menu</button>
+        <button class="btn btn-gold" style="flex:1" onclick="votePlayAgain()">🔄 Play Again</button>
+        <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">🏠 Menu</button>
       </div>
     </div>
   </div>
@@ -2614,12 +2549,12 @@
   <!-- LEAVE CONFIRM -->
   <div class="leave-overlay hidden" id="leave-overlay">
     <div class="leave-panel">
-      <h3>Leave?</h3>
+      <h3>🚪 Leave?</h3>
       <p>You'll be removed from the room.</p>
       <div class="leave-btns">
         <button class="btn btn-outline" onclick="cancelLeave()">Stay</button>
         <button class="btn" onclick="doLeave()"
-          style="background:var(--red) !important;color:#fff !important;border-color:var(--red) !important;">Leave</button>
+          style="background:linear-gradient(135deg,var(--red),#b03030);color:#fff;">Leave</button>
       </div>
     </div>
   </div>
@@ -2629,7 +2564,7 @@
   <div class="chat-overlay hidden" id="chat-overlay" onclick="chatOverlayClick(event)">
     <div class="chat-panel" onclick="event.stopPropagation()">
       <div class="chat-header">
-        <h3>Room Chat</h3>
+        <h3>💬 Room Chat</h3>
         <button class="chat-close" onclick="closeChat()">✕</button>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
@@ -2644,15 +2579,15 @@
   <div class="modal-overlay hidden" id="rename-modal" onclick="handleRenameOverlayClick(event)">
     <div class="modal-panel" style="position:relative;">
       <button class="modal-close" onclick="hideRenameModal()">✕</button>
-      <h3>Rename Yourself</h3>
+      <h3>✏️ Rename Yourself</h3>
       <p>Your squad name — shown to other players. You can change this anytime.</p>
       <div id="rename-error" class="error-msg hidden" style="margin-bottom:.8rem;"></div>
       <div class="input-group">
-        <label>New Display Name</label>
+        <label>New Game Name</label>
         <input type="text" id="rename-input" placeholder="e.g. AceKiller99" maxlength="16" autocomplete="off">
       </div>
       <p style="color:var(--text2);font-size:.78rem;margin-bottom:1rem;">3–16 chars · letters, numbers and _ only</p>
-      <button class="btn btn-gold" id="rename-submit-btn" onclick="submitRename()">Save Name</button>
+      <button class="btn btn-gold" id="rename-submit-btn" onclick="submitRename()">Save Name →</button>
     </div>
   </div>
 
@@ -2791,7 +2726,7 @@
     async function submitGameName() {
       const name = $('game-name-input').value.trim();
       if (!name) return;
-      const btn = $('name-submit-btn'); btn.disabled = true; btn.textContent = 'Entering…';
+      const btn = $('name-submit-btn'); btn.disabled = true; btn.textContent = 'Claiming…';
       try {
         const res = await fetch('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ googleId: pendingGoogleId, gameName: name, credential: pendingCredential, picture: pendingPicture }) });
         const data = await res.json();
@@ -2800,9 +2735,9 @@
           saveAuth({ sessionToken: data.sessionToken, gameName: data.gameName, googleId: data.googleId, picture: myPicture });
           connectSocket();
         } else {
-          showErr('name-error', data.error || 'Error'); btn.disabled = false; btn.textContent = 'Enter';
+          showErr('name-error', data.error || 'Error'); btn.disabled = false; btn.textContent = 'Claim My Name →';
         }
-      } catch (e) { showErr('name-error', 'Network error'); btn.disabled = false; btn.textContent = 'Enter'; }
+      } catch (e) { showErr('name-error', 'Network error'); btn.disabled = false; btn.textContent = 'Claim My Name →'; }
     }
 
     function signOut() {
@@ -2962,14 +2897,14 @@
 
       // Friends socket events
       socket.on('friendRequest', ({ from, picture }) => {
-        showToast('Friend Request', `<strong>${from}</strong> wants to be friends`,
-          [{ label: 'Accept', color: COLORS.green, fn: `acceptFriendReq('${from}')` }, { label: 'Dismiss', color: '', fn: 'dismissToast()' }], 15000);
+        showToast('👥 Friend Request', `<strong>${from}</strong> wants to be friends`,
+          [{ label: '✓ Accept', color: COLORS.green, fn: `acceptFriendReq('${from}')` }, { label: '✕ Dismiss', color: '', fn: 'dismissToast()' }], 15000);
         showNotifDot(); loadFriends();
       });
 
-      socket.on('friendAccepted', ({ gameName }) => { notify(`${gameName} accepted your request!`, 'win'); loadFriends(); });
+      socket.on('friendAccepted', ({ gameName }) => { notify(`${gameName} accepted your request! 🎉`, 'win'); loadFriends(); });
       socket.on('friendStatusUpdate', () => { loadFriends(); refreshLobbyInvitePanel(); });
-      socket.on('inviteSent', ({ to }) => notify(`Invite sent to ${to}`, 'win'));
+      socket.on('inviteSent', ({ to }) => notify(`Invite sent to ${to} 📨`, 'win'));
 
       // ── Chat events ──
       socket.on('chatMessage', (entry) => onChatMessage(entry));
@@ -3102,13 +3037,13 @@
       if (oc) oc.textContent = onlineCount > 0 ? `\u25cf ${onlineCount} online` : '';
 
       if (!friends.length) {
-        listEl.innerHTML = `<div class="empty-friends"><div style="font-size:1.1rem;font-weight:700;margin-bottom:.3rem;">[ NO SQUAD ]</div>No squad yet — add friends above</div>`;
+        listEl.innerHTML = `<div class="empty-friends"><div style="font-size:1.4rem;margin-bottom:.3rem;">👥</div>No squad yet — add friends above</div>`;
         return;
       }
       listEl.innerHTML = friends.map(f => {
-        let statusText = 'Offline', statusCls = '';
-        if (f.online && f.inGame) { statusText = 'In Game'; statusCls = 'in-game'; }
-        else if (f.online) { statusText = 'Online'; statusCls = 'online'; }
+        let statusText = '\u25cb Offline', statusCls = '';
+        if (f.online && f.inGame) { statusText = '\ud83c\udfae In Game'; statusCls = 'in-game'; }
+        else if (f.online) { statusText = '\u25cf Online'; statusCls = 'online'; }
         const av = f.picture ? `<img src="${f.picture}" alt="${f.gameName}">` : f.gameName[0].toUpperCase();
         const canInvite = f.online && !f.inGame && myRoomId && !isSpectator;
         const canWatch = f.inGame && f.roomId;
@@ -3116,8 +3051,8 @@
       <div class="friend-av">${av}</div>
       <div class="friend-info"><div class="friend-name">${f.gameName}</div><div class="friend-status ${statusCls}">${statusText}</div></div>
       <div class="friend-btns">
-        ${canInvite ? `<button class="btn-invite" onclick="inviteFriend('${f.gameName}')">Invite</button>` : ''}
-        ${canWatch ? `<button class="btn-watch" onclick="spectateRoom('${f.roomId}')">Watch</button>` : ''}
+        ${canInvite ? `<button class="btn-invite" onclick="inviteFriend('${f.gameName}')">\ud83d\udce8 Invite</button>` : ''}
+        ${canWatch ? `<button class="btn-watch" onclick="spectateRoom('${f.roomId}')">👁 Watch</button>` : ''}
       </div>
     </div>`;
       }).join('');
@@ -3137,7 +3072,7 @@
     async function respondFriend(from, action) {
       try {
         await fetch('/friends/respond', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken: mySessionToken, from, action }) });
-        if (action === 'accept') notify(`You and ${from} are now friends!`, 'win');
+        if (action === 'accept') notify(`You and ${from} are now friends! 🎉`, 'win');
         loadFriends();
       } catch (e) { }
     }
@@ -3177,12 +3112,12 @@
           $('nav-name').textContent = data.gameName;
           const auth = loadAuth(); if (auth) { auth.gameName = data.gameName; saveAuth(auth); }
           hideRenameModal();
-          notify(`Name changed to ${data.gameName}`, 'win');
+          notify(`Name changed to ${data.gameName} ✓`, 'win');
         } else {
           const err = $('rename-error'); err.textContent = data.error || 'Error'; err.classList.remove('hidden');
         }
       } catch (e) { const err = $('rename-error'); err.textContent = 'Network error'; err.classList.remove('hidden'); }
-      btn.disabled = false; btn.textContent = 'Save Name';
+      btn.disabled = false; btn.textContent = 'Save Name \u2192';
     }
 
     // ═══════════════════════════════════════════════
@@ -3232,11 +3167,11 @@
           return;
         }
         el.innerHTML = available.map(f => {
-          const av = f.picture ? `<img src="${f.picture}" alt="" style="width:28px;height:28px;border-radius:0;object-fit:cover;">` : `<div style="width:28px;height:28px;border-radius:0;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;">${f.gameName[0].toUpperCase()}</div>`;
+          const av = f.picture ? `<img src="${f.picture}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;">${f.gameName[0].toUpperCase()}</div>`;
           return `<div class="lobby-invite-item">
             ${av}
             <div style="flex:1;font-weight:700;font-size:.88rem;">${f.gameName}</div>
-            <button onclick="inviteFriend('${f.gameName}')" class="btn btn-sm">Invite</button>
+            <button onclick="inviteFriend('${f.gameName}')" style="background:rgba(240,192,64,.15);border:1.5px solid var(--gold);color:var(--gold);border-radius:7px;padding:.28rem .65rem;font-family:'Baloo 2',cursive;font-size:.8rem;font-weight:700;cursor:pointer;">📨 Invite</button>
           </div>`;
         }).join('');
       } catch (e) { }
@@ -3252,11 +3187,11 @@
       <div class="player-item-name">${p.name}</div>
       ${p.isHost ? '<span class="badge">HOST</span>' : ''}
       ${!p.connected ? '<span class="badge" style="background:var(--red)">OFFLINE</span>' : ''}
-      ${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:0;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Kick</button>` : ''}
+      ${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}
     </div>`).join('');
 
       const si = $('spectator-info');
-      if (room.spectatorCount > 0) { si.textContent = `[ ${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching ]`; si.classList.remove('hidden'); }
+      if (room.spectatorCount > 0) { si.textContent = `👁 ${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching`; si.classList.remove('hidden'); }
       else si.classList.add('hidden');
 
       const n = room.players.length, maxR = room.maxRounds || Math.floor(52 / n);
@@ -3400,7 +3335,7 @@
         const kv = kickVoteState[pIdx];
         const myVoted = kv && kv.voters && kv.voters.includes(myGameName);
         if (kv) {
-          kickBar = `<div class="kick-vote-bar"><span class="kick-vote-count">[ KICK ${kv.votes}/${kv.needed} ]</span></div>`;
+          kickBar = `<div class="kick-vote-bar"><span class="kick-vote-count">⚡ Kick ${kv.votes}/${kv.needed}</span></div>`;
         } else if (canKick) {
           kickBar = `<div class="kick-vote-bar"><span style="font-size:.58rem;color:var(--red);">OFFLINE · tap to kick</span></div>`;
         }
@@ -3409,7 +3344,7 @@
       return `<div class="${cls}" ${clickAttr}>
         <div class="seat-avatar ${AVATAR_COLS[pIdx % 7]}">${p.name[0].toUpperCase()}${isTurn ? '<div class="turn-dot"></div>' : ''}</div>
         <div class="seat-info">
-          <div class="seat-name">${p.name}${isMine ? ' ·' : ''}${p.isHost ? ' [HOST]' : ''}</div>
+          <div class="seat-name">${p.name}${isMine ? ' ★' : ''}${p.isHost ? ' 👑' : ''}</div>
           <div class="seat-meta">${meta}</div>
           ${kickBar}
         </div>
@@ -3434,7 +3369,7 @@
         const isLoser = trickWinData && trickWinData.winnerIndex !== pIdx && played;
         const slotCls = ['trick-card-slot', isWinner ? 'winner-highlight' : '', isLoser ? 'loser-dim' : ''].filter(Boolean).join(' ');
         if (played) {
-          const crownEl = isWinner ? `<div class="winner-crown">★</div>` : '';
+          const crownEl = isWinner ? `<div class="winner-crown">👑</div>` : '';
           // Name is repositioned above card via CSS `order:-1` on winner-highlight
           html += `<div class="${slotCls}" data-player="${pIdx}">${crownEl}<div class="trick-player-name">${playerName}</div>${cardHTML(played.card, 'size-md', state.trumpSuit, false, false)}</div>`;
         } else {
@@ -3454,7 +3389,7 @@
       const trickComplete = state.currentTrick && state.currentTrick.length >= state.players.length;
       if (trickComplete) { el.textContent = 'Resolving hand…'; el.className = 'turn-indicator other-turn'; return; }
       const myIdx = isSpectator ? -1 : myPlayerIndex;
-      if (ti === myIdx) { el.textContent = '[ YOUR TURN — PLAY A CARD ]'; el.className = 'turn-indicator my-turn'; }
+      if (ti === myIdx) { el.textContent = '⚡ Your turn — play a card!'; el.className = 'turn-indicator my-turn'; }
       else { el.textContent = `Waiting for ${state.players[ti]?.name || '?'}…`; el.className = 'turn-indicator other-turn'; }
     }
 
@@ -3594,7 +3529,7 @@
         });
         tbody += `<tr>${row}</tr>`;
       }
-      let totalRow = `<td class="name-cell" style="font-weight:800">TOTAL</td>`;
+      let totalRow = `<td class="name-cell" style="font-weight:800">🏆 Total</td>`;
       players.forEach((_, pi) => { const t = state.roundScores.reduce((s, rnd) => { const r = rnd?.find(x => x.playerIndex === pi); return s + (r ? r.points : 0); }, 0); totalRow += `<td style="font-weight:800;color:var(--gold);font-size:1rem;text-align:center">${t}</td>`; });
       $('score-table-wrap').innerHTML = `<table class="score-table"><thead>${thead}</thead><tbody>${tbody}<tr class="total-row">${totalRow}</tr></tbody></table><p style="text-align:center;color:var(--text2);font-size:.75rem;margin-top:.7rem;">Green=hit · Red=missed · Gold=0bid0won=1pt</p>`;
     }
@@ -3604,9 +3539,9 @@
       $('game-over-overlay').classList.remove('hidden');
       // Reset Play Again button state (may be disabled from previous game)
       const paBtn = document.querySelector('[onclick="votePlayAgain()"]');
-      if (paBtn) { paBtn.disabled = false; paBtn.textContent = 'Play Again'; }
-      $('winner-name').textContent = `★ ${fs[0].name} wins with ${fs[0].score} pts!`;
-      $('podium-list').innerHTML = fs.map((p, i) => `<div class="podium-item"><div class="podium-rank">${['1st', '2nd', '3rd'][i] || (i + 1) + 'th'}</div><div class="podium-name">${p.name}</div><div class="podium-score">${p.score} pts</div></div>`).join('');
+      if (paBtn) { paBtn.disabled = false; paBtn.textContent = '🔄 Play Again'; }
+      $('winner-name').textContent = `👑 ${fs[0].name} wins with ${fs[0].score} pts!`;
+      $('podium-list').innerHTML = fs.map((p, i) => `<div class="podium-item"><div class="podium-rank">${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'}</div><div class="podium-name">${p.name}</div><div class="podium-score">${p.score} pts</div></div>`).join('');
     }
 
     // ═══════════════════════════════════════════════
@@ -3626,7 +3561,7 @@
       el.className = 'kick-confirm-overlay'; el.id = 'kick-confirm-overlay';
       el.onclick = (e) => { if (e.target === el) dismissKickConfirm(); };
       el.innerHTML = `<div class="kick-confirm-panel">
-        <h3>Vote to Kick?</h3>
+        <h3>👢 Vote to Kick?</h3>
         <p><strong>${targetName}</strong> is offline.<br>Vote to remove them from the game?</p>
         <div class="kick-confirm-btns">
           <button class="kick-confirm-yes" onclick="confirmKickVote(${targetIndex})">Yes, Kick</button>
@@ -3641,7 +3576,7 @@
       if (!socket) return;
       socket.emit('voteKickPlayer', { targetIndex });
     }
-    function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = 'Voted!'; } }
+    function votePlayAgain() { socket?.emit('playAgain'); const b = document.querySelector('[onclick="votePlayAgain()"]'); if (b) { b.disabled = true; b.textContent = '✓ Voted!'; } }
     function doEndGame() { clearGameSession(); if (socket) socket.emit('leaveRoom'); myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1; matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge(); $('chat-fab').classList.add('hidden');['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden')); showMenuAndLoad(); }
     function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
     function cancelLeave() { $('leave-overlay').classList.add('hidden'); }
@@ -3705,7 +3640,7 @@
     }
     function renderChatMessages() {
       const el = $('chat-messages');
-      if (!chatMessages.length) { el.innerHTML = '<div class="chat-empty">No messages yet. Start talking.</div>'; return; }
+      if (!chatMessages.length) { el.innerHTML = '<div class="chat-empty">No messages yet. Say hi! 👋</div>'; return; }
       el.innerHTML = chatMessages.map(m => {
         const pIdx = m.playerIndex ?? 0;
         const col = AVATAR_COLS[Math.abs(pIdx) % 7];
