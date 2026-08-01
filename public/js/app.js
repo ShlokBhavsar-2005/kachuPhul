@@ -371,7 +371,6 @@ async function respondFriend(from, action) {
 function inviteFriend(gameName) {
   if (!myRoomId) return notify('Create or join a room first', 'err');
   if (isThrottled(`invite_${gameName}`, 1000)) return;
-  notify(`Invite sent to ${gameName} 📨`, 'win');
   socket.emit('inviteFriend', { targetGameName: gameName });
 }
 function spectateRoom(roomId) { isSpectator = true; clearGameSession(); socket.emit('spectateRoom', { roomId }); }

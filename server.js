@@ -94,9 +94,15 @@ const onlineUsers = {};   // googleId → { socketId, gameName, roomId, status }
 const gameNameIndex = new Map(); // lowercase gameName → googleId
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+function escapeRegex(str) { return (str || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
 async function findUserByGameName(nameInput) {
   if (!db || !nameInput) return null;
-  const targetLower = nameInput.toLowerCase();
+  const cleanName = (nameInput || '').trim();
+  if (!cleanName) return null;
+  const targetLower = cleanName.toLowerCase();
+
+  // 1. Check in-memory gameNameIndex (cache hit)
   const cachedGoogleId = gameNameIndex.get(targetLower);
   if (cachedGoogleId) {
     const cachedUser = await timeQuery(`findOne user by googleId cacheHit (${cachedGoogleId})`, () =>
@@ -104,13 +110,31 @@ async function findUserByGameName(nameInput) {
     );
     if (cachedUser) return cachedUser;
   }
-  // Fallback to indexed gameNameLower
-  const dbUser = await timeQuery(`findOne user by gameNameLower cacheMiss (${targetLower})`, () =>
+
+  // 2. Check by gameNameLower index
+  let dbUser = await timeQuery(`findOne user by gameNameLower (${targetLower})`, () =>
     db.collection('users').findOne({ gameNameLower: targetLower })
   );
   if (dbUser) {
     gameNameIndex.set(targetLower, dbUser.googleId);
+    return dbUser;
   }
+
+  // 3. Fallback for existing users missing gameNameLower: case-insensitive query & self-heal
+  dbUser = await timeQuery(`findOne user by gameName fallback (${targetLower})`, () =>
+    db.collection('users').findOne({
+      $or: [
+        { gameName: cleanName },
+        { gameName: { $regex: `^${escapeRegex(cleanName)}$`, $options: 'i' } }
+      ]
+    })
+  );
+
+  if (dbUser) {
+    gameNameIndex.set(targetLower, dbUser.googleId);
+    db.collection('users').updateOne({ _id: dbUser._id }, { $set: { gameNameLower: targetLower } }).catch(() => {});
+  }
+
   return dbUser;
 }
 
@@ -492,6 +516,9 @@ io.on('connection', socket => {
     socket.data.gameName = user.gameName;
     socket.data.sessionToken = sessionToken;
     onlineUsers[user.googleId] = { socketId: socket.id, gameName: user.gameName, roomId: null, status: 'online' };
+    if (user.gameName) {
+      gameNameIndex.set(user.gameName.toLowerCase(), user.googleId);
+    }
     broadcastFriendStatus(user.gameName);
     socket.emit('authenticated', { gameName: user.gameName });
   });
@@ -505,14 +532,30 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room || room.state !== 'lobby') return socket.emit('error', 'Room not in lobby state');
 
-    const targetUser = await findUserByGameName(targetGameName);
+    const cleanTarget = (targetGameName || '').trim();
+    if (!cleanTarget) return socket.emit('error', 'Player name required');
+    const targetLower = cleanTarget.toLowerCase();
+
+    // 1. Direct memory check in onlineUsers (instant, 0 DB overhead)
+    let targetOnline = Object.values(onlineUsers).find(u => u.gameName && u.gameName.toLowerCase() === targetLower);
+    let targetUser = null;
+
+    if (targetOnline) {
+      const targetGId = Object.keys(onlineUsers).find(gid => onlineUsers[gid] === targetOnline);
+      targetUser = { googleId: targetGId, gameName: targetOnline.gameName };
+    } else {
+      targetUser = await findUserByGameName(cleanTarget);
+      if (targetUser) {
+        targetOnline = onlineUsers[targetUser.googleId];
+      }
+    }
+
     if (!targetUser) return socket.emit('error', 'Player not found');
-    const targetOnline = onlineUsers[targetUser.googleId];
-    if (!targetOnline) return socket.emit('error', `${targetGameName} is offline`);
-    if (targetOnline.roomId) return socket.emit('error', `${targetGameName} is already in a room`);
+    if (!targetOnline) return socket.emit('error', `${targetUser.gameName || cleanTarget} is offline`);
+    if (targetOnline.roomId) return socket.emit('error', `${targetUser.gameName || cleanTarget} is already in a room`);
 
     io.to(targetOnline.socketId).emit('gameInvite', { from: gameName, roomId, roomPlayerCount: room.players.length });
-    socket.emit('inviteSent', { to: targetGameName });
+    socket.emit('inviteSent', { to: targetOnline.gameName || targetUser.gameName || cleanTarget });
   });
 
   // ── CREATE ROOM ───────────────────────────────────────────────────────────────
