@@ -33,8 +33,29 @@ function notify(msg, type = 'info') {
   const el = document.createElement('div'); el.className = `notif ${type}`; el.textContent = msg;
   document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
 }
-function hideLoading() { $('loading-screen').classList.add('hidden'); }
-function setLoading(msg) { $('loading-text').textContent = msg || 'Connecting…'; $('loading-screen').classList.remove('hidden'); }
+
+let _coldStartTimer = null;
+function hideLoading() { clearTimeout(_coldStartTimer); $('loading-screen').classList.add('hidden'); }
+function setLoading(msg) {
+  $('loading-text').textContent = msg || 'Connecting…';
+  $('loading-screen').classList.remove('hidden');
+  clearTimeout(_coldStartTimer);
+  _coldStartTimer = setTimeout(() => {
+    const ls = $('loading-screen');
+    if (ls && !ls.classList.contains('hidden')) {
+      $('loading-text').textContent = 'Waking up server… (free tier spin up)';
+    }
+  }, 2000);
+}
+
+const _actionLocks = new Map();
+function isThrottled(actionKey, delayMs = 1000) {
+  const now = Date.now();
+  const last = _actionLocks.get(actionKey) || 0;
+  if (now - last < delayMs) return true;
+  _actionLocks.set(actionKey, now);
+  return false;
+}
 
 // ═══════════════════════════════════════════════
 // SESSION (localStorage)
@@ -119,7 +140,14 @@ function signOut() {
 // ═══════════════════════════════════════════════
 function connectSocket() {
   if (socket) { socket.off(); socket.disconnect(); socket = null; }
-  socket = io({ reconnection: true, reconnectionAttempts: Infinity, reconnectionDelay: 1000, reconnectionDelayMax: 5000, timeout: 20000 });
+  socket = io({
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
+  });
 
   socket.on('connect', () => {
     console.log('socket connected', socket.id);
@@ -139,7 +167,11 @@ function connectSocket() {
 
   socket.on('connect_error', () => { hideLoading(); notify('Connection lost — retrying…', 'err'); });
   socket.on('error', msg => notify(msg, 'err'));
-  socket.on('authenticated', ({ gameName }) => { myGameName = gameName; $('nav-name').textContent = gameName; });
+  socket.on('authenticated', ({ gameName }) => {
+    myGameName = gameName;
+    $('nav-name').textContent = gameName;
+    loadFriends();
+  });
 
   socket.on('joinedRoom', ({ roomId, playerIndex, playerToken, playerName, isRejoin }) => {
     myRoomId = roomId; myPlayerIndex = playerIndex; myGameName = playerName; isSpectator = false;
@@ -236,14 +268,13 @@ function connectSocket() {
 }
 
 // ═══════════════════════════════════════════════
-// AUTO-REFRESH POLLING
+// AUTO-REFRESH POLLING (Event-driven, no recurring timers)
 // ═══════════════════════════════════════════════
-let _friendsPollTimer = null, _lobbyPollTimer = null;
-function startFriendsPoll() { stopFriendsPoll(); _friendsPollTimer = setInterval(() => { if (mySessionToken) loadFriends(); }, 30000); }
-function stopFriendsPoll() { clearInterval(_friendsPollTimer); _friendsPollTimer = null; }
-function startLobbyPoll() { stopLobbyPoll(); _lobbyPollTimer = setInterval(() => { refreshLobbyInvitePanel(); }, 10000); }
-function stopLobbyPoll() { clearInterval(_lobbyPollTimer); _lobbyPollTimer = null; }
-function stopPolling() { stopFriendsPoll(); stopLobbyPoll(); }
+function startFriendsPoll() { }
+function stopFriendsPoll() { }
+function startLobbyPoll() { }
+function stopLobbyPoll() { }
+function stopPolling() { }
 
 function showMenuAndLoad() {
   $('nav-name').textContent = myGameName;
@@ -337,7 +368,12 @@ async function respondFriend(from, action) {
   } catch (e) { }
 }
 
-function inviteFriend(gameName) { if (!myRoomId) return notify('Create or join a room first', 'err'); socket.emit('inviteFriend', { targetGameName: gameName }); }
+function inviteFriend(gameName) {
+  if (!myRoomId) return notify('Create or join a room first', 'err');
+  if (isThrottled(`invite_${gameName}`, 1000)) return;
+  notify(`Invite sent to ${gameName} 📨`, 'win');
+  socket.emit('inviteFriend', { targetGameName: gameName });
+}
 function spectateRoom(roomId) { isSpectator = true; clearGameSession(); socket.emit('spectateRoom', { roomId }); }
 
 // ═══════════════════════════════════════════════
@@ -655,7 +691,15 @@ function showGameOver(fs) {
 // ═══════════════════════════════════════════════
 // MISC ACTIONS
 // ═══════════════════════════════════════════════
-function kickPlayer(idx) { socket?.emit('kickPlayer', { playerIndex: idx }); }
+function kickPlayer(idx) {
+  if (isThrottled(`kick_${idx}`, 1000)) return;
+  const playerItems = document.querySelectorAll('#player-list .player-item');
+  if (playerItems[idx]) {
+    playerItems[idx].style.opacity = '0.35';
+    playerItems[idx].style.pointerEvents = 'none';
+  }
+  socket?.emit('kickPlayer', { playerIndex: idx });
+}
 function voteKickOffline(targetIndex) {
   if (!socket || !currentGameState) return;
   const target = currentGameState.players[targetIndex];
@@ -682,11 +726,12 @@ function doEndGame() {
 function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
 function cancelLeave() { $('leave-overlay').classList.add('hidden'); }
 function doLeave() {
+  if (isThrottled('leave_room', 1000)) return;
   clearGameSession(); if (socket) socket.emit('leaveRoom');
   isSpectator = false; myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
   matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); kickVoteState = {};
   chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');
-  $('leave-overlay').classList.add('hidden');
+  $('leave-overlay')?.classList.add('hidden');
   ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay'].forEach(id => $(id)?.classList.add('hidden'));
   showMenuAndLoad();
 }

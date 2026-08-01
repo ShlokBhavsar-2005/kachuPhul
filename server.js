@@ -13,15 +13,34 @@ const io = new Server(server, {
   cors: { origin: '*' },
   pingTimeout: 60000,   // 60s — keeps mobile connections alive
   pingInterval: 25000,
+  perMessageDeflate: false,
+  connectionStateRecovery: {},
 });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── ENV ──────────────────────────────────────────────────────────────────────
+// ─── ENV & TIMING ─────────────────────────────────────────────────────────────
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || '';
 const PORT = process.env.PORT || 3000;
+const DEBUG_TIMING = process.env.DEBUG_TIMING === 'true';
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+function debugLog(...args) {
+  if (!IS_PROD) console.log(...args);
+}
+
+async function timeQuery(label, fn) {
+  if (!DEBUG_TIMING) return fn();
+  const start = process.hrtime.bigint();
+  try {
+    return await fn();
+  } finally {
+    const end = process.hrtime.bigint();
+    console.log(`[DB Timing] ${label}: ${(Number(end - start) / 1e6).toFixed(2)}ms`);
+  }
+}
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -35,13 +54,32 @@ async function connectDB() {
     db = client.db('kachuphul');
     await db.collection('users').createIndex({ googleId: 1 }, { unique: true });
     await db.collection('users').createIndex({ gameName: 1 }, { unique: true });
+    await db.collection('users').createIndex({ gameNameLower: 1 }, { unique: true }, { sparse: true });
     await db.collection('friendRequests').createIndex({ from: 1, to: 1 }, { unique: true });
-    console.log('✅ MongoDB connected');
+
+    // Task 3: Backfill gameNameLower for existing users missing it
+    const unindexedUsers = await db.collection('users').find({ gameNameLower: { $exists: false } }).toArray();
+    for (const u of unindexedUsers) {
+      if (u.gameName) {
+        await db.collection('users').updateOne({ _id: u._id }, { $set: { gameNameLower: u.gameName.toLowerCase() } });
+      }
+    }
+
+    // Task 2: Populate in-memory gameNameIndex
+    const allUsers = await db.collection('users').find({}, { projection: { gameName: 1, googleId: 1, gameNameLower: 1 } }).toArray();
+    gameNameIndex.clear();
+    for (const u of allUsers) {
+      if (u.gameName) {
+        const lowerKey = (u.gameNameLower || u.gameName).toLowerCase();
+        gameNameIndex.set(lowerKey, u.googleId);
+      }
+    }
+
+    console.log(`✅ MongoDB connected — indexed ${gameNameIndex.size} users`);
   } catch (e) {
     console.error('❌ MongoDB error:', e.message);
   }
 }
-connectDB();
 
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 const SUITS = ['spades', 'diamonds', 'clubs', 'hearts'];
@@ -53,6 +91,30 @@ const RANK_VALUE = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9'
 // ─── IN-MEMORY ────────────────────────────────────────────────────────────────
 const rooms = {};   // roomId → room
 const onlineUsers = {};   // googleId → { socketId, gameName, roomId, status }
+const gameNameIndex = new Map(); // lowercase gameName → googleId
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+async function findUserByGameName(nameInput) {
+  if (!db || !nameInput) return null;
+  const targetLower = nameInput.toLowerCase();
+  const cachedGoogleId = gameNameIndex.get(targetLower);
+  if (cachedGoogleId) {
+    const cachedUser = await timeQuery(`findOne user by googleId cacheHit (${cachedGoogleId})`, () =>
+      db.collection('users').findOne({ googleId: cachedGoogleId })
+    );
+    if (cachedUser) return cachedUser;
+  }
+  // Fallback to indexed gameNameLower
+  const dbUser = await timeQuery(`findOne user by gameNameLower cacheMiss (${targetLower})`, () =>
+    db.collection('users').findOne({ gameNameLower: targetLower })
+  );
+  if (dbUser) {
+    gameNameIndex.set(targetLower, dbUser.googleId);
+  }
+  return dbUser;
+}
+
+connectDB();
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function genId(len = 6) { return Math.random().toString(36).substring(2, 2 + len).toUpperCase(); }
@@ -237,15 +299,15 @@ app.post('/auth/google', async (req, res) => {
     const picture = payload.picture || '';
     const name = payload.name || '';
 
-    let user = await db.collection('users').findOne({ googleId });
+    let user = await timeQuery('findOne user by googleId', () => db.collection('users').findOne({ googleId }));
     if (!user) {
       return res.json({ status: 'new', googleId, picture, name });
     }
 
     const sessionToken = crypto.randomBytes(24).toString('hex');
-    await db.collection('users').updateOne({ googleId }, {
+    await timeQuery('updateOne auth sessionToken', () => db.collection('users').updateOne({ googleId }, {
       $set: { sessionToken, lastSeen: new Date(), picture }
-    });
+    }));
     return res.json({ status: 'ok', sessionToken, gameName: user.gameName, googleId, picture });
   } catch (e) {
     console.error('Auth error:', e.message);
@@ -268,10 +330,12 @@ app.post('/auth/register', async (req, res) => {
     if (payload.sub !== googleId) return res.status(401).json({ error: 'Token mismatch' });
 
     const sessionToken = crypto.randomBytes(24).toString('hex');
-    await db.collection('users').insertOne({
-      googleId, gameName: name, picture: picture || '',
+    const nameLower = name.toLowerCase();
+    await timeQuery('insertOne register user', () => db.collection('users').insertOne({
+      googleId, gameName: name, gameNameLower: nameLower, picture: picture || '',
       sessionToken, friends: [], createdAt: new Date(), lastSeen: new Date(),
-    });
+    }));
+    gameNameIndex.set(nameLower, googleId);
     return res.json({ status: 'ok', sessionToken, gameName: name, googleId });
   } catch (e) {
     if (e.code === 11000) return res.status(409).json({ error: 'Name already taken — try another' });
@@ -284,9 +348,9 @@ app.post('/auth/session', async (req, res) => {
   if (!db) return res.status(503).json({ error: 'DB not available' });
   const { sessionToken } = req.body;
   if (!sessionToken) return res.status(400).json({ error: 'No token' });
-  const user = await db.collection('users').findOne({ sessionToken });
+  const user = await timeQuery('findOne user by sessionToken', () => db.collection('users').findOne({ sessionToken }));
   if (!user) return res.status(401).json({ error: 'Invalid session' });
-  await db.collection('users').updateOne({ sessionToken }, { $set: { lastSeen: new Date() } });
+  await timeQuery('updateOne user lastSeen', () => db.collection('users').updateOne({ sessionToken }, { $set: { lastSeen: new Date() } }));
   return res.json({ status: 'ok', gameName: user.gameName, googleId: user.googleId, picture: user.picture });
 });
 
@@ -303,12 +367,17 @@ app.post('/auth/rename', async (req, res) => {
   if (newName === user.gameName) return res.status(400).json({ error: 'That is already your name' });
   try {
     const oldName = user.gameName;
-    await db.collection('users').updateOne({ sessionToken: req.body.sessionToken }, { $set: { gameName: newName } });
+    const oldNameLower = oldName.toLowerCase();
+    const newNameLower = newName.toLowerCase();
+    await timeQuery('updateOne rename user', () => db.collection('users').updateOne({ sessionToken: req.body.sessionToken }, { $set: { gameName: newName, gameNameLower: newNameLower } }));
+    gameNameIndex.delete(oldNameLower);
+    gameNameIndex.set(newNameLower, user.googleId);
+
     // Update friends lists that reference old name
-    await db.collection('users').updateMany({ friends: oldName }, { $set: { 'friends.$': newName } });
+    await timeQuery('updateMany friends rename', () => db.collection('users').updateMany({ friends: oldName }, { $set: { 'friends.$': newName } }));
     // Update pending friend requests
-    await db.collection('friendRequests').updateMany({ from: oldName }, { $set: { from: newName } });
-    await db.collection('friendRequests').updateMany({ to: oldName }, { $set: { to: newName } });
+    await timeQuery('updateMany friendRequests from rename', () => db.collection('friendRequests').updateMany({ from: oldName }, { $set: { from: newName } }));
+    await timeQuery('updateMany friendRequests to rename', () => db.collection('friendRequests').updateMany({ to: oldName }, { $set: { to: newName } }));
     // Update onlineUsers map
     if (onlineUsers[user.googleId]) {
       onlineUsers[user.googleId].gameName = newName;
@@ -325,14 +394,14 @@ app.post('/auth/rename', async (req, res) => {
 // ─── FRIENDS API ──────────────────────────────────────────────────────────────
 async function userFromSession(token) {
   if (!db || !token) return null;
-  return db.collection('users').findOne({ sessionToken: token });
+  return timeQuery('findOne userFromSession', () => db.collection('users').findOne({ sessionToken: token }));
 }
 
 app.post('/friends/list', async (req, res) => {
   const user = await userFromSession(req.body.sessionToken);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const friendDocs = await db.collection('users').find({ gameName: { $in: user.friends || [] } }).toArray();
+  const friendDocs = await timeQuery('find friendDocs batch', () => db.collection('users').find({ gameName: { $in: user.friends || [] } }).toArray());
   const list = friendDocs.map(f => {
     const online = onlineUsers[f.googleId];
     return {
@@ -348,9 +417,9 @@ app.post('/friends/list', async (req, res) => {
     return a.gameName.localeCompare(b.gameName);
   });
 
-  const pending = await db.collection('friendRequests').find({
+  const pending = await timeQuery('find pending friendRequests', () => db.collection('friendRequests').find({
     $or: [{ from: user.gameName }, { to: user.gameName }], status: 'pending'
-  }).toArray();
+  }).toArray());
 
   res.json({ friends: list, pending });
 });
@@ -359,16 +428,16 @@ app.post('/friends/request', async (req, res) => {
   const user = await userFromSession(req.body.sessionToken);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   const target = (req.body.gameName || '').trim();
-  if (!target || target === user.gameName) return res.status(400).json({ error: 'Invalid target' });
+  if (!target || target.toLowerCase() === user.gameName.toLowerCase()) return res.status(400).json({ error: 'Invalid target' });
 
-  const targetUser = await db.collection('users').findOne({ gameName: { $regex: `^${target}$`, $options: 'i' } });
+  const targetUser = await findUserByGameName(target);
   if (!targetUser) return res.status(404).json({ error: 'Player not found' });
   if ((user.friends || []).includes(targetUser.gameName)) return res.status(409).json({ error: 'Already friends' });
 
   try {
-    await db.collection('friendRequests').insertOne({
+    await timeQuery('insertOne friendRequest', () => db.collection('friendRequests').insertOne({
       from: user.gameName, to: targetUser.gameName, status: 'pending', createdAt: new Date()
-    });
+    }));
   } catch (e) {
     if (e.code === 11000) return res.status(409).json({ error: 'Request already sent' });
     return res.status(500).json({ error: e.message });
@@ -383,14 +452,14 @@ app.post('/friends/respond', async (req, res) => {
   const user = await userFromSession(req.body.sessionToken);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   const { from, action } = req.body;
-  const request = await db.collection('friendRequests').findOne({ from, to: user.gameName, status: 'pending' });
+  const request = await timeQuery('findOne friendRequest pending', () => db.collection('friendRequests').findOne({ from, to: user.gameName, status: 'pending' }));
   if (!request) return res.status(404).json({ error: 'Request not found' });
 
-  await db.collection('friendRequests').updateOne({ _id: request._id }, { $set: { status: action } });
+  await timeQuery('updateOne friendRequest status', () => db.collection('friendRequests').updateOne({ _id: request._id }, { $set: { status: action } }));
   if (action === 'accept') {
-    await db.collection('users').updateOne({ gameName: user.gameName }, { $addToSet: { friends: from } });
-    await db.collection('users').updateOne({ gameName: from }, { $addToSet: { friends: user.gameName } });
-    const fromUser = await db.collection('users').findOne({ gameName: from });
+    await timeQuery('updateOne user friends accept 1', () => db.collection('users').updateOne({ gameName: user.gameName }, { $addToSet: { friends: from } }));
+    await timeQuery('updateOne user friends accept 2', () => db.collection('users').updateOne({ gameName: from }, { $addToSet: { friends: user.gameName } }));
+    const fromUser = await findUserByGameName(from);
     const fromOnline = fromUser ? onlineUsers[fromUser.googleId] : null;
     if (fromOnline) io.to(fromOnline.socketId).emit('friendAccepted', { gameName: user.gameName, picture: user.picture || '' });
   }
@@ -398,13 +467,26 @@ app.post('/friends/respond', async (req, res) => {
 });
 
 // ─── SOCKET ───────────────────────────────────────────────────────────────────
+function onTimed(socket, eventName, handler) {
+  socket.on(eventName, async (...args) => {
+    if (!DEBUG_TIMING) return handler(...args);
+    const start = process.hrtime.bigint();
+    try {
+      await handler(...args);
+    } finally {
+      const end = process.hrtime.bigint();
+      console.log(`[Socket Timing] ${eventName} (${socket.id}): ${(Number(end - start) / 1e6).toFixed(2)}ms`);
+    }
+  });
+}
+
 io.on('connection', socket => {
-  console.log('connect', socket.id);
+  debugLog('connect', socket.id);
 
   // ── AUTH ─────────────────────────────────────────────────────────────────────
   socket.on('authenticate', async ({ sessionToken }) => {
     if (!db || !sessionToken) return;
-    const user = await db.collection('users').findOne({ sessionToken });
+    const user = await timeQuery('findOne user authenticate', () => db.collection('users').findOne({ sessionToken }));
     if (!user) return;
     socket.data.googleId = user.googleId;
     socket.data.gameName = user.gameName;
@@ -415,7 +497,7 @@ io.on('connection', socket => {
   });
 
   // ── INVITE FRIEND ─────────────────────────────────────────────────────────────
-  socket.on('inviteFriend', async ({ targetGameName }) => {
+  onTimed(socket, 'inviteFriend', async ({ targetGameName }) => {
     const roomId = socket.data.roomId;
     const gameName = socket.data.gameName;
     if (!gameName || !db) return socket.emit('error', 'Not authenticated');
@@ -423,7 +505,7 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room || room.state !== 'lobby') return socket.emit('error', 'Room not in lobby state');
 
-    const targetUser = await db.collection('users').findOne({ gameName: { $regex: `^${targetGameName}$`, $options: 'i' } });
+    const targetUser = await findUserByGameName(targetGameName);
     if (!targetUser) return socket.emit('error', 'Player not found');
     const targetOnline = onlineUsers[targetUser.googleId];
     if (!targetOnline) return socket.emit('error', `${targetGameName} is offline`);
@@ -457,7 +539,7 @@ io.on('connection', socket => {
   });
 
   // ── JOIN ROOM ─────────────────────────────────────────────────────────────────
-  socket.on('joinRoom', ({ roomId, playerName }) => {
+  onTimed(socket, 'joinRoom', ({ roomId, playerName }) => {
     const code = (roomId || '').trim().toUpperCase();
     const name = socket.data.gameName || (playerName || '').trim();
     if (!code) return socket.emit('error', 'Room code required');
@@ -497,11 +579,11 @@ io.on('connection', socket => {
     socket.emit('joinedRoom', { roomId: code, playerIndex, playerToken: token, playerName: name });
     if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     broadcastRoomUpdate(room);
-    console.log(`${name} joined ${code}`);
+    debugLog(`${name} joined ${code}`);
   });
 
   // ── REJOIN ROOM ───────────────────────────────────────────────────────────────
-  socket.on('rejoinRoom', ({ roomId, playerToken }) => {
+  onTimed(socket, 'rejoinRoom', ({ roomId, playerToken }) => {
     const room = rooms[roomId];
     if (!room) return socket.emit('rejoinFailed', 'Room no longer exists');
 
@@ -528,7 +610,7 @@ io.on('connection', socket => {
     if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     if (room.state === 'lobby') broadcastRoomUpdate(room);
     else { socket.emit('gameState', buildPlayerState(room, playerIndex)); io.to(roomId).emit('playerRejoined', { playerIndex, name: player.name }); }
-    console.log(`${player.name} rejoined ${roomId}`);
+    debugLog(`${player.name} rejoined ${roomId}`);
   });
 
   // ── SPECTATE ──────────────────────────────────────────────────────────────────
@@ -550,7 +632,7 @@ io.on('connection', socket => {
   });
 
   // ── KICK ──────────────────────────────────────────────────────────────────────
-  socket.on('kickPlayer', ({ playerIndex }) => {
+  onTimed(socket, 'kickPlayer', ({ playerIndex }) => {
     const room = rooms[socket.data.roomId];
     if (!room || room.state !== 'lobby') return;
     if (room.hostSocketId !== socket.id) return socket.emit('error', 'Only host can kick');
@@ -562,7 +644,7 @@ io.on('connection', socket => {
   });
 
   // ── VOTE KICK OFFLINE PLAYER ──────────────────────────────────────────────────
-  socket.on('voteKickPlayer', ({ targetIndex }) => {
+  onTimed(socket, 'voteKickPlayer', ({ targetIndex }) => {
     const room = rooms[socket.data.roomId];
     if (!room || room.state === 'lobby') return;
     const pIdx = socket.data.playerIndex;
@@ -585,7 +667,7 @@ io.on('connection', socket => {
     });
 
     if (votes >= connectedCount) {
-      console.log(`Vote kick passed for ${target.name} in ${room.id}`);
+      debugLog(`Vote kick passed for ${target.name} in ${room.id}`);
       removePlayerFromGame(room, targetIndex);
     }
   });
@@ -610,7 +692,7 @@ io.on('connection', socket => {
     room.players.forEach(p => { if (p.googleId && onlineUsers[p.googleId]) { onlineUsers[p.googleId].status = 'in-game'; } });
     broadcastFriendStatuses();
     startRound(room);
-    console.log(`game started ${room.id}: ${totalRounds} rounds`);
+    debugLog(`game started ${room.id}: ${totalRounds} rounds`);
   });
 
   // ── BID ───────────────────────────────────────────────────────────────────────
@@ -709,7 +791,7 @@ io.on('connection', socket => {
   });
 
   // ── LEAVE ROOM ────────────────────────────────────────────────────────────────
-  socket.on('leaveRoom', () => {
+  onTimed(socket, 'leaveRoom', () => {
     const roomId = socket.data.roomId;
     if (!roomId || !rooms[roomId]) {
       if (socket.data.googleId && onlineUsers[socket.data.googleId]) {
@@ -804,11 +886,16 @@ function broadcastGameState(room) {
 async function broadcastFriendStatus(gameName) {
   if (!db || !gameName) return;
   try {
-    const user = await db.collection('users').findOne({ gameName });
-    if (!user) return;
-    for (const friendName of (user.friends || [])) {
-      const fd = await db.collection('users').findOne({ gameName: friendName });
-      if (!fd) continue;
+    const user = await timeQuery(`findOne broadcast target (${gameName})`, () =>
+      findUserByGameName(gameName)
+    );
+    if (!user || !user.friends || user.friends.length === 0) return;
+
+    const friendDocs = await timeQuery(`find friends batch (${user.friends.length})`, () =>
+      db.collection('users').find({ gameName: { $in: user.friends } }).toArray()
+    );
+
+    for (const fd of friendDocs) {
       const fo = onlineUsers[fd.googleId];
       if (fo) {
         const mine = onlineUsers[user.googleId];
