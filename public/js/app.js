@@ -512,15 +512,28 @@ function updateTopBar(state) {
 function renderSeats(state) {
   const myIdx = isSpectator ? -1 : myPlayerIndex, playerCount = state.players.length;
   const po = state.playerOrder || state.players.map((_, i) => i), sc = $('seats-container');
-  const topCount = Math.ceil(playerCount / 2), topPlayers = po.slice(0, topCount), bottomPlayers = po.slice(topCount).reverse();
-  let html = '<div class="seats-row">';
-  topPlayers.forEach((pIdx, i) => { html += seatHTML(state, pIdx, myIdx); if (i < topPlayers.length - 1) html += '<div class="loop-arrow">→</div>'; });
-  html += '</div>';
-  if (bottomPlayers.length > 0) {
-    html += '<div class="loop-sides"><div class="loop-arrow">↑</div><div class="loop-arrow">↓</div></div><div class="seats-row">';
-    bottomPlayers.forEach((pIdx, i) => { html += seatHTML(state, pIdx, myIdx); if (i < bottomPlayers.length - 1) html += '<div class="loop-arrow">←</div>'; });
-    html += '</div>';
+  const rawRows = [];
+  for (let i = 0; i < playerCount; i += 2) {
+    rawRows.push(po.slice(i, i + 2));
   }
+  let html = '';
+  rawRows.forEach((chunk, rIdx) => {
+    if (rIdx > 0) {
+      html += '<div class="loop-sides"><div class="loop-arrow">↑</div><div class="loop-arrow">↓</div></div>';
+    }
+    const isOddRow = rIdx % 2 === 1;
+    const rowPlayers = (isOddRow && chunk.length === 2) ? [chunk[1], chunk[0]] : chunk;
+    const arrowSym = isOddRow ? '←' : '→';
+    const isSingle = rowPlayers.length === 1;
+    html += `<div class="seats-row ${isSingle ? 'single-seat-row' : ''}">`;
+    rowPlayers.forEach((pIdx, i) => {
+      html += seatHTML(state, pIdx, myIdx);
+      if (i < rowPlayers.length - 1) {
+        html += `<div class="loop-arrow">${arrowSym}</div>`;
+      }
+    });
+    html += '</div>';
+  });
   sc.innerHTML = html;
 }
 

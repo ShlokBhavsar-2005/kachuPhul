@@ -306,14 +306,20 @@ body::before {
 .spec-badge { background: rgba(88, 166, 255, .12); border: 1px solid var(--blue); border-radius: 8px; padding: .3rem .7rem; font-size: .8rem; color: var(--blue); font-weight: 700; }
 
 /* ── SEATS ── */
-.seats-container { padding: .5rem .7rem; }
-.seats-row { display: flex; align-items: center; gap: .2rem; }
+.seats-container { padding: .4rem .6rem; max-width: 520px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.seats-row { display: flex; align-items: center; justify-content: center; gap: .3rem; margin: .15rem 0; width: 100%; }
+.seats-row.single-seat-row { justify-content: center; }
 .loop-arrow { color: var(--gold); font-size: .85rem; flex-shrink: 0; min-width: 14px; text-align: center; font-weight: 700; line-height: 1; opacity: .8; }
-.loop-sides { display: flex; justify-content: space-between; padding: .1rem .5rem; }
+.loop-sides { display: flex; justify-content: space-between; padding: 0 22%; }
 .seat {
   background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px;
-  padding: .3rem .5rem; display: flex; align-items: center; gap: .4rem;
-  transition: border-color .2s, box-shadow .2s; flex: 1; min-width: 0;
+  padding: .35rem .5rem; display: flex; align-items: center; gap: .4rem;
+  transition: border-color .2s, box-shadow .2s; flex: 1 1 0; min-width: 0; max-width: 240px;
+}
+.single-seat-row .seat {
+  flex: 0 1 calc(50% - .4rem);
+  max-width: 240px;
+  width: 100%;
 }
 .seat.my-seat { border-color: var(--gold); box-shadow: 0 0 8px rgba(240, 192, 64, .15); }
 .seat.current-turn { border-color: var(--green); box-shadow: 0 0 10px rgba(63, 185, 80, .25); animation: seat-pulse 1.2s ease-in-out infinite; }
@@ -608,4 +614,8 @@ body.banner-visible .my-hand-section { padding-bottom: 8rem; }
   .card.size-lg .card-rank { font-size: 1.2rem; }
   .card.size-lg .card-suit-sym { font-size: 1.3rem; }
   .confirm-banner { flex-wrap: wrap; }
+  .seat { padding: .25rem .4rem; gap: .3rem; }
+  .seat-avatar { width: 24px; height: 24px; font-size: .72rem; }
+  .seat-name { font-size: .74rem; }
+  .seat-meta { font-size: .6rem; }
 }
