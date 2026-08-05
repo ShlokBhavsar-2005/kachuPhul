@@ -14,27 +14,11 @@ const PORT = process.env.PORT || 3000;
 const DEBUG_TIMING = process.env.DEBUG_TIMING === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
 
-// ─── CORS ORIGIN ALLOWLIST ────────────────────────────────────────────────────
-// Set ALLOWED_ORIGINS in .env as a comma-separated list of trusted origins.
-// Example: ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : IS_PROD
-    ? []                        // block everything in prod if not configured
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: (origin, cb) => {
-      // Allow same-origin requests (origin is undefined for direct server calls)
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-      cb(new Error(`CORS: origin '${origin}' is not allowed`));
-    },
-    methods: ['GET', 'POST'],
-  },
-  pingTimeout: 60000,   // 60s — keeps mobile connections alive
+  cors: { origin: '*' },        // open: this server serves its own frontend
+  pingTimeout: 60000,           // 60s — keeps mobile connections alive
   pingInterval: 25000,
   perMessageDeflate: false,
   connectionStateRecovery: {},
