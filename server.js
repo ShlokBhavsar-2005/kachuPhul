@@ -70,7 +70,10 @@ async function connectDB() {
     db = client.db('kachuphul');
     await db.collection('users').createIndex({ googleId: 1 }, { unique: true });
     await db.collection('users').createIndex({ gameName: 1 }, { unique: true });
-    await db.collection('users').createIndex({ gameNameLower: 1 }, { unique: true }, { sparse: true });
+    // sparse:true must be in the SAME options object — passing it as a 3rd arg is silently ignored.
+    // Drop the old broken index first so it is recreated correctly if it already exists.
+    await db.collection('users').dropIndex('gameNameLower_1').catch(() => { /* index may not exist yet — safe to ignore */ });
+    await db.collection('users').createIndex({ gameNameLower: 1 }, { unique: true, sparse: true });
     await db.collection('friendRequests').createIndex({ from: 1, to: 1 }, { unique: true });
 
     // Task 3: Backfill gameNameLower for existing users missing it
