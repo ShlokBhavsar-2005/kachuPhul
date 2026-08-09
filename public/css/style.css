@@ -306,20 +306,22 @@ body::before {
 .spec-badge { background: rgba(88, 166, 255, .12); border: 1px solid var(--blue); border-radius: 8px; padding: .3rem .7rem; font-size: .8rem; color: var(--blue); font-weight: 700; }
 
 /* ── SEATS ── */
-.seats-container { padding: .4rem .6rem; max-width: 520px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-.seats-row { display: flex; align-items: center; justify-content: center; gap: .3rem; margin: .15rem 0; width: 100%; }
-.seats-row.single-seat-row { justify-content: center; }
-.loop-arrow { color: var(--gold); font-size: .85rem; flex-shrink: 0; min-width: 14px; text-align: center; font-weight: 700; line-height: 1; opacity: .8; }
-.loop-sides { display: flex; justify-content: space-between; padding: 0 22%; }
+.seats-container { padding: .4rem .6rem; max-width: 540px; margin: 0 auto; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: .15rem; }
+.seats-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; width: 100%; }
+.seats-row.single-seat-row { display: flex; justify-content: center; width: 100%; }
+.seat-col { display: flex; align-items: center; width: 100%; min-width: 0; }
+.seat-col.left-col { justify-content: center; }
+.seat-col.right-col { justify-content: center; }
+.seat-col.center-col { justify-content: center; min-width: 20px; }
+.single-seat-row .seat-col.center-col { justify-content: center; max-width: 240px; width: 100%; }
+.seats-connector-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .3rem; width: 100%; height: 16px; }
+.connector-col { display: flex; align-items: center; min-width: 0; justify-content: center; }
+.connector-col.center-col { min-width: 20px; }
+.loop-arrow { color: var(--gold); font-size: .9rem; flex-shrink: 0; min-width: 16px; text-align: center; font-weight: 800; line-height: 1; opacity: .85; user-select: none; }
 .seat {
   background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px;
   padding: .35rem .5rem; display: flex; align-items: center; gap: .4rem;
-  transition: border-color .2s, box-shadow .2s; flex: 1 1 0; min-width: 0; max-width: 240px;
-}
-.single-seat-row .seat {
-  flex: 0 1 calc(50% - .4rem);
-  max-width: 240px;
-  width: 100%;
+  transition: border-color .2s, box-shadow .2s; width: 100%; max-width: 240px; box-sizing: border-box;
 }
 .seat.my-seat { border-color: var(--gold); box-shadow: 0 0 8px rgba(240, 192, 64, .15); }
 .seat.current-turn { border-color: var(--green); box-shadow: 0 0 10px rgba(63, 185, 80, .25); animation: seat-pulse 1.2s ease-in-out infinite; }
