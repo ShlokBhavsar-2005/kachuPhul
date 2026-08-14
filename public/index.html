@@ -225,6 +225,10 @@
           <div class="trump-badge"><span id="top-trump-sym" class="trump-symbol">—</span><span id="top-trump-name">—</span><span style="font-size:.72rem;color:var(--text2);margin-left:.2rem;">TRUMP</span></div>
           <div class="round-badge">Round <span id="top-round">—</span>/<span id="top-total-rounds">—</span></div>
           <div class="cards-badge"><span id="top-cards">—</span> cards</div>
+          <!-- KT extra info badges (hidden in KP games) -->
+          <div id="kt-top-bid" class="kt-top-badge hidden">Bid: <span id="kt-top-bid-val">—</span></div>
+          <div id="kt-top-winner" class="kt-top-badge hidden">Winner: <span id="kt-top-winner-val">—</span></div>
+          <div id="kt-top-partners" class="kt-top-badge hidden">Partner: <span id="kt-top-partners-val">—</span></div>
           <div id="spec-badge" class="spec-badge hidden" style="display:inline-flex;align-items:center;gap:.25rem;"><svg width="13" height="13" style="flex-shrink:0;"><use href="#icon-eye"/></svg>Spectating</div>
         </div>
         <button class="btn btn-outline btn-sm" onclick="showScoreboard()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-bar-chart"/></svg>Scores</button>
@@ -369,39 +373,23 @@
     </div>
   </div>
 
-  <!-- KT INFO BAR (persistent during KT game) -->
-  <div class="kt-info-bar hidden" id="kt-info-bar">
-    <div class="kt-info-item">
-      <span class="kt-info-label">TRUMP</span>
-      <span class="kt-info-value" id="kt-trump-display">—</span>
+  <!-- KT BIDDING: arrange-banner style button + full-screen overlay -->
+  <div class="arrange-banner hidden" id="kt-bid-banner">
+    <div class="arrange-banner-left">
+      <div class="arrange-banner-title">Bidding in progress</div>
+      <div class="arrange-banner-sub" id="kt-bid-banner-sub">Opening auction · Min: 150</div>
     </div>
-    <div class="kt-info-item">
-      <span class="kt-info-label">BID</span>
-      <span class="kt-info-value" id="kt-bid-display">—</span>
-    </div>
-    <div class="kt-info-item">
-      <span class="kt-info-label">BID WINNER</span>
-      <span class="kt-info-value" id="kt-bidwinner-display">—</span>
-    </div>
-    <div class="kt-info-item">
-      <span class="kt-info-label">PARTNER CARD 1</span>
-      <span class="kt-info-value" id="kt-partner1-display">—</span>
-    </div>
-    <div class="kt-info-item kt-6p-only hidden" id="kt-partner2-wrap">
-      <span class="kt-info-label">PARTNER CARD 2</span>
-      <span class="kt-info-value" id="kt-partner2-display">—</span>
-    </div>
+    <button class="arrange-ready-btn" onclick="openKTBidPanel()">Place Bid →</button>
   </div>
 
-  <!-- KT BIDDING OVERLAY — bottom sheet, not full-screen modal -->
-  <div class="kt-bid-overlay hidden" id="kt-bid-overlay">
-    <div class="kt-bid-panel">
-      <div class="kt-bid-panel-header">
-        <h2 style="margin:0;">Bidding</h2>
-        <button class="kt-bid-close-btn" onclick="closeKTBidPanel()" title="Minimise">▼</button>
-      </div>
-      <div id="kt-bid-current-info"></div>
-      <div id="kt-bid-controls" class="hidden">
+  <!-- KT BID OVERLAY — full-screen modal (same pattern as KP) -->
+  <div class="bid-overlay hidden" id="kt-bid-overlay">
+    <div class="bid-panel">
+      <button onclick="closeKTBidPanel()"
+        style="position:absolute;top:.8rem;right:.8rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.1rem;width:32px;height:32px;cursor:pointer;">✕</button>
+      <h2>Place Your Bid</h2>
+      <div id="kt-bid-current-info" style="margin-bottom:.6rem;"></div>
+      <div id="kt-bid-controls">
         <div class="kt-bid-amount-row">
           <button class="kt-bid-step-btn" onclick="ktChangeBid(-5)">−5</button>
           <span class="kt-bid-amount-display" id="kt-bid-amount">150</span>
@@ -412,13 +400,7 @@
           <button class="btn btn-outline" onclick="ktPassBid()">Pass</button>
         </div>
       </div>
-      <div id="kt-bid-waiting" class="hidden" style="text-align:center;color:var(--text2);padding:.5rem 0;"></div>
     </div>
-  </div>
-
-  <!-- KT PLACE BID OPEN BUTTON (shown when panel is minimised and not my turn) -->
-  <div class="kt-bid-open-btn hidden" id="kt-bid-open-btn" onclick="openKTBidPanel()">
-    <span id="kt-bid-open-label">🃏 View Bids</span>
   </div>
 
   <!-- KT TRUMP SELECT OVERLAY -->

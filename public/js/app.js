@@ -258,7 +258,7 @@ function connectSocket() {
     chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge();
     selectedGameType = 'kachuPhul'; currentRoomData = null;
     // Hide all KT overlays on new lobby
-    ['kt-bid-overlay','kt-trump-overlay','kt-partner-overlay','kt-game-over-overlay','kt-info-bar'].forEach(id => $(id)?.classList.add('hidden'));
+    ['kt-bid-overlay','kt-trump-overlay','kt-partner-overlay','kt-game-over-overlay','kt-bid-banner'].forEach(id => $(id)?.classList.add('hidden'));
     saveGameSession({ roomId, playerIndex, playerToken, playerName });
     $('display-room-code').textContent = roomId;
     $('game-over-overlay').classList.add('hidden');
@@ -882,7 +882,7 @@ function doEndGame() {
   matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge();
   selectedGameType = 'kachuPhul'; currentRoomData = null;
   $('chat-fab').classList.add('hidden');
-  ['game-over-overlay', 'round-end-overlay', 'score-overlay', 'kt-game-over-overlay', 'kt-info-bar', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay'].forEach(id => $(id)?.classList.add('hidden'));
+  ['game-over-overlay', 'round-end-overlay', 'score-overlay', 'kt-game-over-overlay', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay', 'kt-bid-banner'].forEach(id => $(id)?.classList.add('hidden'));
   showMenuAndLoad();
 }
 function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
@@ -895,7 +895,7 @@ function doLeave() {
   chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');
   selectedGameType = 'kachuPhul'; currentRoomData = null;
   $('leave-overlay')?.classList.add('hidden');
-  ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay', 'kt-game-over-overlay', 'kt-info-bar'].forEach(id => $(id)?.classList.add('hidden'));
+  ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay', 'kt-game-over-overlay', 'kt-bid-banner'].forEach(id => $(id)?.classList.add('hidden'));
   showMenuAndLoad();
 }
 
