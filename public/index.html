@@ -176,6 +176,24 @@
           </div>
           <div id="player-list" class="player-list"></div>
           <div id="spectator-info" class="spectator-info hidden"></div>
+          <!-- GAME TYPE SELECTOR (host only) -->
+          <div id="game-type-selector" class="hidden">
+            <div class="game-type-label">Select Game Mode</div>
+            <div class="game-type-options" id="game-type-options">
+              <button class="game-type-btn active" data-game="kachuPhul" onclick="selectGameType('kachuPhul')">
+                <div class="game-type-icon">♠♦♣♥</div>
+                <div class="game-type-name">Kachu Phul</div>
+                <div class="game-type-desc">Classic bidding · 2–7 players</div>
+              </button>
+              <button class="game-type-btn" data-game="kaaliTeeri" onclick="selectGameType('kaaliTeeri')">
+                <div class="game-type-icon">3♠</div>
+                <div class="game-type-name">Kaali Teeri</div>
+                <div class="game-type-desc">Team bidding · 4 or 6 players</div>
+              </button>
+            </div>
+          </div>
+          <!-- GAME TYPE BADGE (non-host players see this) -->
+          <div id="game-type-badge" class="hidden" style="text-align:center;margin:.4rem 0;font-size:.8rem;color:var(--gold);font-weight:700;"></div>
           <div id="game-info-preview" class="mt-1" style="text-align:center;color:var(--text2);font-size:.85rem;"></div>
           <div id="start-btn-wrap" class="mt-2 hidden">
             <div class="rounds-selector">
@@ -351,6 +369,91 @@
     </div>
   </div>
 
+  <!-- KT INFO BAR (persistent during KT game) -->
+  <div class="kt-info-bar hidden" id="kt-info-bar">
+    <div class="kt-info-item">
+      <span class="kt-info-label">TRUMP</span>
+      <span class="kt-info-value" id="kt-trump-display">—</span>
+    </div>
+    <div class="kt-info-item">
+      <span class="kt-info-label">BID</span>
+      <span class="kt-info-value" id="kt-bid-display">—</span>
+    </div>
+    <div class="kt-info-item">
+      <span class="kt-info-label">BID WINNER</span>
+      <span class="kt-info-value" id="kt-bidwinner-display">—</span>
+    </div>
+    <div class="kt-info-item">
+      <span class="kt-info-label">PARTNER CARD 1</span>
+      <span class="kt-info-value" id="kt-partner1-display">—</span>
+    </div>
+    <div class="kt-info-item kt-6p-only hidden" id="kt-partner2-wrap">
+      <span class="kt-info-label">PARTNER CARD 2</span>
+      <span class="kt-info-value" id="kt-partner2-display">—</span>
+    </div>
+  </div>
+
+  <!-- KT BIDDING OVERLAY -->
+  <div class="kt-bid-overlay hidden" id="kt-bid-overlay">
+    <div class="kt-bid-panel">
+      <h2>Bidding</h2>
+      <div id="kt-bid-current-info"></div>
+      <div id="kt-bid-controls" class="hidden">
+        <div class="kt-bid-amount-row">
+          <button class="kt-bid-step-btn" onclick="ktChangeBid(-5)">−5</button>
+          <span class="kt-bid-amount-display" id="kt-bid-amount">150</span>
+          <button class="kt-bid-step-btn" onclick="ktChangeBid(+5)">+5</button>
+        </div>
+        <div class="kt-bid-actions">
+          <button class="btn btn-gold" onclick="ktSubmitBid()">Bid <span id="kt-bid-submit-amount">150</span></button>
+          <button class="btn btn-outline" onclick="ktPassBid()">Pass</button>
+        </div>
+      </div>
+      <div id="kt-bid-waiting" class="hidden" style="text-align:center;color:var(--text2);padding:.8rem 0;"></div>
+      <div id="kt-bid-log" class="kt-bid-log"></div>
+    </div>
+  </div>
+
+  <!-- KT TRUMP SELECT OVERLAY -->
+  <div class="kt-trump-overlay hidden" id="kt-trump-overlay">
+    <div class="kt-trump-panel">
+      <h2>Select Trump Suit</h2>
+      <p style="color:var(--text2);margin-bottom:1rem;">You won the bid! Choose the trump suit.</p>
+      <div class="kt-trump-options">
+        <button class="kt-trump-btn suit-spades" onclick="ktSelectTrump('spades')">♠<br>Spades</button>
+        <button class="kt-trump-btn suit-diamonds" onclick="ktSelectTrump('diamonds')">♦<br>Diamonds</button>
+        <button class="kt-trump-btn suit-clubs" onclick="ktSelectTrump('clubs')">♣<br>Clubs</button>
+        <button class="kt-trump-btn suit-hearts" onclick="ktSelectTrump('hearts')">♥<br>Hearts</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KT PARTNER SELECT OVERLAY -->
+  <div class="kt-partner-overlay hidden" id="kt-partner-overlay">
+    <div class="kt-partner-panel">
+      <h2>Choose Partner Card<span id="kt-partner-count-label">s</span></h2>
+      <p id="kt-partner-instructions" style="color:var(--text2);margin-bottom:.8rem;">Select the card whose owner will be your partner.</p>
+      <div id="kt-partner-suit-tabs" class="kt-suit-tabs"></div>
+      <div id="kt-partner-card-grid" class="kt-partner-grid"></div>
+      <div id="kt-partner-selected" class="kt-partner-selected-area"></div>
+      <button class="btn btn-gold" id="kt-partner-confirm" onclick="ktConfirmPartners()" disabled style="width:100%;margin-top:.6rem;">Confirm Partner Card(s)</button>
+    </div>
+  </div>
+
+  <!-- KT GAME OVER OVERLAY -->
+  <div class="kt-game-over-overlay hidden" id="kt-game-over-overlay">
+    <div class="kt-game-over-panel">
+      <h1 id="kt-winner-title">Game Over!</h1>
+      <div class="kt-result-summary" id="kt-result-summary"></div>
+      <div class="kt-score-breakdown" id="kt-score-breakdown"></div>
+      <div id="kt-play-again-votes" class="play-again-votes"></div>
+      <div style="display:flex;gap:.6rem;margin-top:.8rem;">
+        <button class="btn btn-gold" style="flex:1;" onclick="ktVotePlayAgain()">Play Again</button>
+        <button class="btn btn-outline" style="flex:1" onclick="doEndGame()">Menu</button>
+      </div>
+    </div>
+  </div>
+
   <!-- LOADING -->
   <div id="loading-screen">
     <div class="loading-spinner"></div>
@@ -358,6 +461,7 @@
   </div>
 
   <script src="/js/app.js"></script>
+  <script src="/js/kaaliTeeri.js"></script>
 </body>
 
 </html>

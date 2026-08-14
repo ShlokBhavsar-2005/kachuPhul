@@ -621,3 +621,129 @@ body.banner-visible .my-hand-section { padding-bottom: 8rem; }
   .seat-name { font-size: .74rem; }
   .seat-meta { font-size: .6rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   KAALI TEERI — SPECIFIC STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── GAME TYPE SELECTOR (lobby) ──────────────────────────────────────────────── */
+#game-type-selector { margin: .6rem 0; }
+.game-type-label {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text2); font-weight: 700; margin-bottom: .4rem; text-align: center;
+}
+.game-type-options { display: flex; gap: .6rem; justify-content: center; }
+.game-type-btn {
+  flex: 1; max-width: 160px; background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: .7rem .6rem; cursor: pointer; color: var(--text);
+  font-family: 'Baloo 2', cursive; text-align: center; transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.game-type-btn:hover { border-color: var(--gold); box-shadow: 0 0 8px rgba(240,192,64,.15); }
+.game-type-btn.active { border-color: var(--gold); background: rgba(240,192,64,.1); box-shadow: 0 0 12px rgba(240,192,64,.2); }
+.game-type-icon { font-size: 1.4rem; margin-bottom: .2rem; }
+.game-type-name { font-weight: 700; font-size: .9rem; }
+.game-type-desc { font-size: .7rem; color: var(--text2); margin-top: .15rem; }
+
+/* ── KT INFO BAR ─────────────────────────────────────────────────────────────── */
+.kt-info-bar {
+  position: fixed; top: 52px; left: 0; right: 0;
+  background: rgba(22,27,34,.96); border-bottom: 1px solid var(--border);
+  display: flex; gap: 0; z-index: 90; padding: .25rem .5rem; overflow-x: auto; flex-wrap: nowrap;
+}
+.kt-info-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: .1rem .7rem; border-right: 1px solid var(--border); min-width: 60px;
+}
+.kt-info-item:last-child { border-right: none; }
+.kt-info-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); }
+.kt-info-value { font-weight: 700; font-size: .85rem; white-space: nowrap; }
+
+/* ── KT SEAT HIGHLIGHTS ──────────────────────────────────────────────────────── */
+.seat.kt-bid-winner { border-color: var(--gold) !important; box-shadow: 0 0 14px rgba(240,192,64,.35) !important; }
+.seat.kt-partner-revealed { border-color: var(--gold) !important; box-shadow: 0 0 14px rgba(240,192,64,.35) !important; }
+.kt-badge { display: inline-block; font-size: .6rem; padding: .08rem .35rem; border-radius: 4px; font-weight: 700; margin-right: .15rem; }
+.kt-badge-bidwinner { background: rgba(240,192,64,.2); color: var(--gold); }
+.kt-badge-partner { background: rgba(63,185,80,.2); color: var(--green); }
+
+/* ── SHARED KT OVERLAY BASE ──────────────────────────────────────────────────── */
+.kt-bid-overlay, .kt-trump-overlay, .kt-partner-overlay, .kt-game-over-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  display: flex; align-items: center; justify-content: center; z-index: 500; padding: 1rem;
+}
+.kt-bid-panel, .kt-trump-panel, .kt-partner-panel, .kt-game-over-panel {
+  background: var(--bg2); border: 1.5px solid var(--border); border-radius: 18px;
+  padding: 1.4rem 1.2rem; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; position: relative;
+}
+.kt-bid-panel h2, .kt-trump-panel h2, .kt-partner-panel h2 { text-align: center; margin-bottom: .8rem; color: var(--gold); }
+.kt-game-over-panel h1 { text-align: center; margin-bottom: .8rem; color: var(--gold); font-size: 1.5rem; }
+
+/* ── KT BIDDING ──────────────────────────────────────────────────────────────── */
+.kt-current-bid { text-align: center; font-size: .95rem; margin-bottom: .4rem; }
+.kt-current-bid strong { color: var(--gold); }
+.kt-passed-list { text-align: center; font-size: .78rem; color: var(--text2); margin-bottom: .4rem; }
+.kt-bid-amount-row { display: flex; align-items: center; gap: 1rem; justify-content: center; margin: .8rem 0; }
+.kt-bid-step-btn {
+  background: var(--bg3); border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 700;
+  width: 44px; height: 44px; cursor: pointer; transition: border-color .2s;
+}
+.kt-bid-step-btn:hover { border-color: var(--gold); }
+.kt-bid-amount-display { font-size: 2rem; font-weight: 800; color: var(--gold); min-width: 70px; text-align: center; }
+.kt-bid-actions { display: flex; gap: .6rem; margin-top: .4rem; }
+.kt-bid-actions .btn { flex: 1; }
+.kt-bid-log { max-height: 120px; overflow-y: auto; margin-top: .6rem; font-size: .78rem; color: var(--text2); }
+
+/* ── KT TRUMP SELECT ─────────────────────────────────────────────────────────── */
+.kt-trump-options { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.kt-trump-btn {
+  background: var(--bg3); border: 2px solid var(--border); border-radius: 12px;
+  padding: 1rem .5rem; cursor: pointer; font-family: 'Baloo 2', cursive;
+  font-size: 1.6rem; font-weight: 700; color: var(--text); transition: border-color .2s, transform .1s; text-align: center; line-height: 1.3;
+}
+.kt-trump-btn:hover { transform: translateY(-2px); border-color: var(--gold); }
+
+/* ── KT PARTNER SELECT ───────────────────────────────────────────────────────── */
+.kt-suit-tabs { display: flex; gap: .3rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.kt-suit-tab {
+  background: var(--bg3); border: 1.5px solid var(--border); border-radius: 8px;
+  padding: .25rem .6rem; cursor: pointer; font-family: 'Baloo 2', cursive;
+  font-size: .82rem; font-weight: 700; color: var(--text2); transition: border-color .15s, color .15s;
+}
+.kt-suit-tab.active { border-color: var(--gold); color: var(--text); background: rgba(240,192,64,.1); }
+.kt-suit-tab.suit-diamonds, .kt-suit-tab.suit-hearts { color: #e06060; }
+.kt-suit-tab.suit-diamonds.active, .kt-suit-tab.suit-hearts.active { color: #ff8080; }
+.kt-partner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: .3rem; margin-bottom: .5rem; max-height: 200px; overflow-y: auto; }
+.kt-partner-card-option { cursor: pointer; border-radius: 8px; border: 2px solid transparent; padding: .15rem; transition: border-color .15s, transform .1s; }
+.kt-partner-card-option:hover { transform: translateY(-2px); border-color: var(--gold); }
+.kt-partner-card-option.selected { border-color: var(--gold); background: rgba(240,192,64,.1); }
+.kt-partner-selected-area { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-bottom: .4rem; min-height: 28px; }
+.kt-partner-sel-label { font-size: .75rem; color: var(--text2); }
+.kt-partner-sel-chip { background: var(--bg3); border: 1.5px solid var(--gold); border-radius: 6px; padding: .15rem .4rem; font-size: .85rem; font-weight: 700; display: inline-flex; align-items: center; gap: .15rem; }
+
+/* ── KT GAME OVER ────────────────────────────────────────────────────────────── */
+.kt-result-summary { margin-bottom: 1rem; }
+.kt-result-row { display: flex; justify-content: space-between; padding: .28rem 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .88rem; }
+.kt-result-row strong { color: var(--gold); }
+.kt-score-breakdown h3 { font-size: .85rem; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
+.kt-player-scores { display: flex; flex-direction: column; gap: .3rem; }
+.kt-player-score-row { display: flex; gap: .5rem; align-items: center; padding: .35rem .6rem; border-radius: 8px; background: var(--bg3); border-left: 3px solid transparent; font-size: .84rem; }
+.kt-team-bidwinner { border-left-color: var(--gold); }
+.kt-team-defender { border-left-color: var(--text2); }
+.kt-ps-name { flex: 1; font-weight: 700; }
+.kt-ps-team { font-size: .7rem; color: var(--text2); }
+.kt-ps-cards { font-size: .75rem; color: var(--text2); }
+.kt-ps-points { font-weight: 700; color: var(--gold); min-width: 44px; text-align: right; }
+
+/* ── KT PARTNER REVEAL BANNER ────────────────────────────────────────────────── */
+.kt-partner-reveal-banner { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2000; pointer-events: none; animation: ktRevealPop .4s ease-out; }
+.kt-partner-reveal-inner { background: linear-gradient(135deg,rgba(22,27,34,.97),rgba(33,38,45,.97)); border: 2px solid var(--gold); border-radius: 16px; padding: 1rem 1.6rem; box-shadow: 0 0 40px rgba(240,192,64,.4); }
+.kt-partner-reveal-text { font-size: 1.1rem; font-weight: 700; color: var(--text); text-align: center; }
+.kt-partner-reveal-text strong { color: var(--gold); }
+@keyframes ktRevealPop { from { transform: translate(-50%,-50%) scale(.5); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+
+@media(max-width:480px) {
+  .kt-partner-grid { grid-template-columns: repeat(auto-fill,minmax(48px,1fr)); }
+  .kt-bid-panel, .kt-trump-panel, .kt-partner-panel, .kt-game-over-panel { padding: 1rem .9rem; }
+  .kt-info-bar { top: 48px; }
+  .kt-bid-amount-display { font-size: 1.6rem; }
+}

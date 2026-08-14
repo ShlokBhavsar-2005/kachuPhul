@@ -13,6 +13,8 @@ let trickWinData = null;
 let matchPlayerCount = 0;
 let chatMessages = [], chatOpen = false, unreadChat = 0;
 let kickVoteState = {};
+let selectedGameType = 'kachuPhul'; // game mode selected in lobby
+let currentRoomData = null; // last received roomUpdate data
 
 const SUIT_COLORS = { spades: 'suit-spades', diamonds: 'suit-diamonds', clubs: 'suit-clubs', hearts: 'suit-hearts' };
 const SUIT_SYM = { spades: '♠', diamonds: '♦', clubs: '♣', hearts: '♥' };
@@ -195,6 +197,18 @@ function connectSocket() {
   socket.on('gameState', state => {
     hideLoading();
     $('chat-fab').classList.remove('hidden');
+
+    // ── Kaali Teeri dispatch ──
+    if (state.gameType === 'kaaliTeeri') {
+      currentGameState = state;
+      if (state.isSpectator) { renderKTSpectatorState(state); return; }
+      syncCustomOrder(state.myHand || []);
+      playedCardIds = new Set((state.currentTrick || []).map(t => t.card.id));
+      renderKTGameState(state);
+      return;
+    }
+
+    // ── Kachu Phul dispatch (existing) ──
     if (state.isSpectator) { renderSpectatorState(state); return; }
     if (matchPlayerCount === 0) matchPlayerCount = state.players.length;
     syncCustomOrder(state.myHand);
@@ -242,15 +256,40 @@ function connectSocket() {
     trickWinData = null; playedCardIds = new Set(); customHandOrder = [];
     selectedBid = null; bidPanelOpen = false; chosenRounds = null;
     chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge();
+    selectedGameType = 'kachuPhul'; currentRoomData = null;
+    // Hide all KT overlays on new lobby
+    ['kt-bid-overlay','kt-trump-overlay','kt-partner-overlay','kt-game-over-overlay','kt-info-bar'].forEach(id => $(id)?.classList.add('hidden'));
     saveGameSession({ roomId, playerIndex, playerToken, playerName });
     $('display-room-code').textContent = roomId;
     $('game-over-overlay').classList.add('hidden');
     showScreen('waiting-screen'); $('chat-fab').classList.remove('hidden');
   });
 
+  socket.on('ktPartnerRevealed', ({ partnerPlayerName, bidWinnerPlayerName, partnerCardId }) => {
+    notify(`${partnerPlayerName} is partner of ${bidWinnerPlayerName}!`, 'win');
+    showKTPartnerReveal(partnerPlayerName, bidWinnerPlayerName);
+  });
+
+  socket.on('ktTrickWon', ({ winnerName, winnerIndex, trick }) => {
+    trickWinData = { winnerIndex, trick };
+    if (currentGameState && currentGameState.gameType === 'kaaliTeeri') renderKTTrick(currentGameState);
+    showTrickWonBanner(winnerName);
+    setTimeout(() => { trickWinData = null; }, 2200);
+  });
+
+  socket.on('ktGameOver', result => {
+    // Handled by gameState update — ktGameOver event is informational
+    setTimeout(() => {
+      if (currentGameState && currentGameState.gameType === 'kaaliTeeri') renderKTGameOver(currentGameState);
+    }, 500);
+  });
+
   socket.on('playAgainUpdate', ({ votes, total }) => {
+    // Update both KP and KT play-again vote displays
     const el = $('play-again-votes');
     if (el) el.innerHTML = `<strong>${votes.length}/${total}</strong> voted: ${votes.join(', ')}`;
+    const ktEl = $('kt-play-again-votes');
+    if (ktEl) ktEl.innerHTML = `<strong>${votes.length}/${total}</strong> voted: ${votes.join(', ')}`;
   });
 
   socket.on('friendRequest', ({ from, picture }) => {
@@ -406,7 +445,22 @@ function joinRoom() {
   isSpectator = false; socket.emit('joinRoom', { roomId: code, playerName: myGameName }); stopFriendsPoll(); startLobbyPoll();
 }
 function copyRoomCode() { navigator.clipboard.writeText(myRoomId).then(() => notify('Code copied!', 'info')); }
-function startGame() { if (!chosenRounds || chosenRounds < 1) { notify('Select rounds first', 'err'); return; } socket.emit('startGame', { totalRounds: chosenRounds }); }
+function startGame() {
+  if (selectedGameType === 'kaaliTeeri') {
+    socket.emit('startGame', { gameType: 'kaaliTeeri' });
+    return;
+  }
+  if (!chosenRounds || chosenRounds < 1) { notify('Select rounds first', 'err'); return; }
+  socket.emit('startGame', { totalRounds: chosenRounds, gameType: 'kachuPhul' });
+}
+
+function selectGameType(type) {
+  selectedGameType = type;
+  socket.emit('selectGameType', { gameType: type });
+  document.querySelectorAll('.game-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-game="${type}"]`)?.classList.add('active');
+  if (currentRoomData) renderWaitingRoom(currentRoomData);
+}
 
 // ── Lobby invite panel ──
 let _lobbyInvitePanelOpen = false;
@@ -435,14 +489,57 @@ async function refreshLobbyInvitePanel() {
 // WAITING ROOM
 // ═══════════════════════════════════════════════
 function renderWaitingRoom(room) {
+  currentRoomData = room;
   $('player-list').innerHTML = room.players.map((p, i) => `<div class="player-item"><div class="player-avatar ${AVATAR_COLS[i % 7]}">${p.name[0].toUpperCase()}</div><div class="player-item-name">${p.name}</div>${p.isHost ? '<span class="badge">HOST</span>' : ''}${!p.connected ? '<span class="badge" style="background:var(--red)">OFFLINE</span>' : ''}${room.isHost && !p.isHost ? `<button onclick="kickPlayer(${i})" style="margin-left:auto;background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;">✕ Kick</button>` : ''}</div>`).join('');
 
   const si = $('spectator-info');
   if (room.spectatorCount > 0) { si.innerHTML = `<span style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="13" height="13"><use href="#icon-eye"/></svg>${room.spectatorCount} spectator${room.spectatorCount > 1 ? 's' : ''} watching</span>`; si.classList.remove('hidden'); } else si.classList.add('hidden');
 
+  // Sync game type from server
+  if (room.gameType && room.gameType !== 'kachuPhul') {
+    selectedGameType = room.gameType;
+    document.querySelectorAll('.game-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-game="${room.gameType}"]`)?.classList.add('active');
+  } else if (room.gameType === 'kachuPhul') {
+    selectedGameType = 'kachuPhul';
+    document.querySelectorAll('.game-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-game="kachuPhul"]')?.classList.add('active');
+  }
+
+  // Show/hide game type selector (host only)
+  if (room.isHost) {
+    $('game-type-selector').classList.remove('hidden');
+    $('game-type-badge').classList.add('hidden');
+  } else {
+    $('game-type-selector').classList.add('hidden');
+    const badge = $('game-type-badge');
+    if (selectedGameType === 'kaaliTeeri') {
+      badge.textContent = '3♠ Kaali Teeri selected';
+      badge.classList.remove('hidden');
+    } else {
+      badge.textContent = '';
+      badge.classList.add('hidden');
+    }
+  }
+
   const n = room.players.length, maxR = room.maxRounds || 0;
   if (!chosenRounds || chosenRounds > maxR) { chosenRounds = maxR; } maxRoundsAvailable = maxR;
-  $('game-info-preview').textContent = n >= 2 ? `${n} players · up to ${maxR} rounds` : 'Need at least 2 players';
+
+  if (selectedGameType === 'kaaliTeeri') {
+    // Kaali Teeri: hide rounds selector, show player count validation
+    document.querySelector('.rounds-selector')?.classList.add('hidden');
+    if (n !== 4 && n !== 6) {
+      $('game-info-preview').textContent = `Kaali Teeri needs exactly 4 or 6 players (currently ${n})`;
+      $('game-info-preview').style.color = 'var(--red)';
+    } else {
+      $('game-info-preview').textContent = `${n} players · Kaali Teeri · ${n === 4 ? '13' : '8'} cards each`;
+      $('game-info-preview').style.color = 'var(--text2)';
+    }
+  } else {
+    document.querySelector('.rounds-selector')?.classList.remove('hidden');
+    $('game-info-preview').textContent = n >= 2 ? `${n} players · up to ${maxR} rounds` : 'Need at least 2 players';
+    $('game-info-preview').style.color = 'var(--text2)';
+  }
 
   if (room.isHost) { $('start-btn-wrap').classList.remove('hidden'); $('wait-msg').classList.add('hidden'); renderRoundsSelector(maxR); }
   else { $('start-btn-wrap').classList.add('hidden'); $('wait-msg').classList.remove('hidden'); }
@@ -783,7 +880,9 @@ function doEndGame() {
   clearGameSession(); if (socket) socket.emit('leaveRoom');
   myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
   matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); chatMessages = []; unreadChat = 0; kickVoteState = {}; updateChatBadge();
-  $('chat-fab').classList.add('hidden'); ['game-over-overlay', 'round-end-overlay', 'score-overlay'].forEach(id => $(id).classList.add('hidden'));
+  selectedGameType = 'kachuPhul'; currentRoomData = null;
+  $('chat-fab').classList.add('hidden');
+  ['game-over-overlay', 'round-end-overlay', 'score-overlay', 'kt-game-over-overlay', 'kt-info-bar', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay'].forEach(id => $(id)?.classList.add('hidden'));
   showMenuAndLoad();
 }
 function confirmLeave() { $('leave-overlay').classList.remove('hidden'); }
@@ -794,8 +893,9 @@ function doLeave() {
   isSpectator = false; myRoomId = null; myPlayerIndex = null; currentGameState = null; lastRoundEndShown = -1;
   matchPlayerCount = 0; trickWinData = null; playedCardIds = new Set(); kickVoteState = {};
   chatMessages = []; unreadChat = 0; updateChatBadge(); $('chat-fab').classList.add('hidden');
+  selectedGameType = 'kachuPhul'; currentRoomData = null;
   $('leave-overlay')?.classList.add('hidden');
-  ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay'].forEach(id => $(id)?.classList.add('hidden'));
+  ['arrange-banner', 'bid-overlay', 'confirm-banner', 'round-end-overlay', 'score-overlay', 'game-over-overlay', 'kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay', 'kt-game-over-overlay', 'kt-info-bar'].forEach(id => $(id)?.classList.add('hidden'));
   showMenuAndLoad();
 }
 

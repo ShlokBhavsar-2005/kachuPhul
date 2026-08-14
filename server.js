@@ -6,6 +6,8 @@ const crypto = require('crypto');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const { OAuth2Client } = require('google-auth-library');
+const kaaliTeeri = require('./games/kaaliTeeri');
+const { GAMES } = require('./games/gameRegistry');
 
 // ─── ENV & TIMING ─────────────────────────────────────────────────────────────
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -570,6 +572,7 @@ io.on('connection', socket => {
     const token = genToken();
     rooms[roomId] = {
       id: roomId, hostSocketId: socket.id,
+      gameType: null,  // set when host selects game mode
       players: [{ socketId: socket.id, name: displayName, gameName: socket.data.gameName || null, googleId: socket.data.googleId || null, connected: true, token }],
       spectators: [],
       state: 'lobby', currentRound: 0, totalRounds: 0,
@@ -655,7 +658,12 @@ io.on('connection', socket => {
     socket.emit('joinedRoom', { roomId, playerIndex, playerToken: player.token, playerName: player.name, isRejoin: true });
     if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     if (room.state === 'lobby') broadcastRoomUpdate(room);
-    else { socket.emit('gameState', buildPlayerState(room, playerIndex)); io.to(roomId).emit('playerRejoined', { playerIndex, name: player.name }); }
+    else {
+      // Dispatch state builder based on game type
+      if (room.gameType === 'kaaliTeeri') socket.emit('gameState', kaaliTeeri.buildPlayerState(room, playerIndex));
+      else socket.emit('gameState', buildPlayerState(room, playerIndex));
+      io.to(roomId).emit('playerRejoined', { playerIndex, name: player.name });
+    }
     debugLog(`${player.name} rejoined ${roomId}`);
   });
 
@@ -673,6 +681,7 @@ io.on('connection', socket => {
     socket.emit('spectating', { roomId: code });
     if (room.chatHistory?.length) socket.emit('chatHistory', { messages: room.chatHistory });
     if (room.state === 'lobby') socket.emit('roomUpdate', sanitizeRoom(room, null));
+    else if (room.gameType === 'kaaliTeeri') socket.emit('gameState', kaaliTeeri.buildSpectatorState(room));
     else socket.emit('gameState', buildSpectatorState(room));
     io.to(code).emit('spectatorJoined', { gameName });
   });
@@ -718,10 +727,39 @@ io.on('connection', socket => {
     }
   });
 
-  // ── START GAME ────────────────────────────────────────────────────────────────
-  socket.on('startGame', ({ totalRounds: chosen }) => {
+  // ── SELECT GAME TYPE (host only, in lobby) ────────────────────────────────────
+  socket.on('selectGameType', ({ gameType }) => {
     const room = rooms[socket.data.roomId];
     if (!room || room.hostSocketId !== socket.id) return;
+    if (room.state !== 'lobby') return;
+    if (!GAMES[gameType]) return socket.emit('error', 'Unknown game type');
+    room.gameType = gameType;
+    broadcastRoomUpdate(room);
+  });
+
+  // ── START GAME ────────────────────────────────────────────────────────────────
+  socket.on('startGame', ({ totalRounds: chosen, gameType: requestedType }) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.hostSocketId !== socket.id) return;
+
+    // Determine effective game type
+    const selectedType = requestedType || room.gameType || 'kachuPhul';
+    room.gameType = selectedType;
+
+    // ── Kaali Teeri branch ──────────────────────────────────────────────────────
+    if (selectedType === 'kaaliTeeri') {
+      room.players = room.players.filter(p => p.connected);
+      const err = kaaliTeeri.validateStart(room);
+      if (err) return socket.emit('error', err);
+      room.players.forEach((p, i) => io.to(p.socketId).emit('yourIndex', i));
+      room.players.forEach(p => { if (p.googleId && onlineUsers[p.googleId]) { onlineUsers[p.googleId].status = 'in-game'; } });
+      broadcastFriendStatuses();
+      kaaliTeeri.initGame(room, io, broadcastGameState);
+      debugLog(`KT game started ${room.id}`);
+      return;
+    }
+
+    // ── Kachu Phul branch (existing logic) ──────────────────────────────────────
     room.players = room.players.filter(p => p.connected);
     if (room.players.length < 2) return socket.emit('error', 'Need at least 2 players');
 
@@ -739,6 +777,74 @@ io.on('connection', socket => {
     broadcastFriendStatuses();
     startRound(room);
     debugLog(`game started ${room.id}: ${totalRounds} rounds`);
+  });
+
+  // ── KAALI TEERI EVENTS ────────────────────────────────────────────────────────
+  socket.on('ktBid', (data) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.gameType !== 'kaaliTeeri') return;
+    const err = kaaliTeeri.handleBid(room, socket.data.playerIndex, data, io, broadcastGameState);
+    if (err) socket.emit('error', err);
+  });
+
+  socket.on('ktSelectTrump', (data) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.gameType !== 'kaaliTeeri') return;
+    const err = kaaliTeeri.handleTrumpSelect(room, socket.data.playerIndex, data, io, broadcastGameState);
+    if (err) socket.emit('error', err);
+  });
+
+  socket.on('ktSelectPartners', (data) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.gameType !== 'kaaliTeeri') return;
+    const err = kaaliTeeri.handlePartnerSelect(room, socket.data.playerIndex, data, io, broadcastGameState);
+    if (err) socket.emit('error', err);
+  });
+
+  socket.on('ktPlayCard', (data) => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.gameType !== 'kaaliTeeri') return;
+    const err = kaaliTeeri.handlePlayCard(room, socket.data.playerIndex, data, io, broadcastGameState);
+    if (err) socket.emit('error', err);
+  });
+
+  // KT play-again (reuse existing playAgain socket event — handled below)
+  socket.on('ktPlayAgain', () => {
+    const room = rooms[socket.data.roomId];
+    if (!room || room.gameType !== 'kaaliTeeri' || room.state !== 'game_over') return;
+    const pIdx = socket.data.playerIndex;
+    if (!room.playAgainVotes) room.playAgainVotes = new Set();
+    room.playAgainVotes.add(pIdx);
+    const votes = [...room.playAgainVotes].map(i => room.players[i]?.name).filter(Boolean);
+    io.to(room.id).emit('playAgainUpdate', { votes, total: room.players.length });
+    if (room.playAgainVotes.size === room.players.length) {
+      const newRoomId = genId();
+      const newRoom = {
+        id: newRoomId, hostSocketId: null, gameType: 'kaaliTeeri',
+        players: [], spectators: [],
+        state: 'lobby', currentRound: 0, totalRounds: 0,
+        playerOrder: [], hands: {}, bids: {}, bidsReady: {},
+        tricks: {}, currentTrick: [], currentLeader: 0,
+        leadSuit: null, trumpSuit: null, scores: {}, roundScores: [],
+      };
+      room.players.forEach((p, i) => {
+        const newToken = genToken();
+        newRoom.players.push({ ...p, token: newToken });
+        if (i === 0) newRoom.hostSocketId = p.socketId;
+        if (p.connected) io.to(p.socketId).emit('newLobby', { roomId: newRoomId, playerIndex: i, playerToken: newToken, playerName: p.name });
+      });
+      const first = newRoom.players.find(p => p.connected);
+      if (first) newRoom.hostSocketId = first.socketId;
+      rooms[newRoomId] = newRoom;
+      newRoom.players.forEach((p, i) => {
+        if (p.connected) {
+          const s = io.sockets.sockets.get(p.socketId);
+          if (s) { s.leave(room.id); s.join(newRoomId); s.data.roomId = newRoomId; s.data.playerIndex = i; s.data.token = p.token; }
+        }
+      });
+      newRoom.players.forEach(p => { if (p.connected) io.to(p.socketId).emit('roomUpdate', sanitizeRoom(newRoom, p.socketId)); });
+      delete rooms[room.id];
+    }
   });
 
   // ── BID ───────────────────────────────────────────────────────────────────────
@@ -926,6 +1032,11 @@ function broadcastRoomUpdate(room) {
   (room.spectators || []).forEach(s => io.to(s.socketId).emit('roomUpdate', sanitizeRoom(room, null)));
 }
 function broadcastGameState(room) {
+  if (room.gameType === 'kaaliTeeri') {
+    room.players.forEach((p, i) => { if (p.connected) io.to(p.socketId).emit('gameState', kaaliTeeri.buildPlayerState(room, i)); });
+    (room.spectators || []).forEach(s => io.to(s.socketId).emit('gameState', kaaliTeeri.buildSpectatorState(room)));
+    return;
+  }
   room.players.forEach((p, i) => { if (p.connected) io.to(p.socketId).emit('gameState', buildPlayerState(room, i)); });
   (room.spectators || []).forEach(s => io.to(s.socketId).emit('gameState', buildSpectatorState(room)));
 }
@@ -1031,7 +1142,7 @@ function buildSpectatorState(room) {
 }
 function sanitizeRoom(room, forSocketId) {
   return {
-    id: room.id, state: room.state,
+    id: room.id, state: room.state, gameType: room.gameType || 'kachuPhul',
     players: room.players.map(p => ({ name: p.name, connected: p.connected, isHost: p.socketId === room.hostSocketId })),
     isHost: room.hostSocketId === forSocketId, maxRounds: room.players.length > 0 ? Math.floor(52 / room.players.length) : 0,
     spectatorCount: (room.spectators || []).length,
