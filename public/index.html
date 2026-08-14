@@ -393,10 +393,13 @@
     </div>
   </div>
 
-  <!-- KT BIDDING OVERLAY -->
+  <!-- KT BIDDING OVERLAY — bottom sheet, not full-screen modal -->
   <div class="kt-bid-overlay hidden" id="kt-bid-overlay">
     <div class="kt-bid-panel">
-      <h2>Bidding</h2>
+      <div class="kt-bid-panel-header">
+        <h2 style="margin:0;">Bidding</h2>
+        <button class="kt-bid-close-btn" onclick="closeKTBidPanel()" title="Minimise">▼</button>
+      </div>
       <div id="kt-bid-current-info"></div>
       <div id="kt-bid-controls" class="hidden">
         <div class="kt-bid-amount-row">
@@ -409,9 +412,13 @@
           <button class="btn btn-outline" onclick="ktPassBid()">Pass</button>
         </div>
       </div>
-      <div id="kt-bid-waiting" class="hidden" style="text-align:center;color:var(--text2);padding:.8rem 0;"></div>
-      <div id="kt-bid-log" class="kt-bid-log"></div>
+      <div id="kt-bid-waiting" class="hidden" style="text-align:center;color:var(--text2);padding:.5rem 0;"></div>
     </div>
+  </div>
+
+  <!-- KT PLACE BID OPEN BUTTON (shown when panel is minimised and not my turn) -->
+  <div class="kt-bid-open-btn hidden" id="kt-bid-open-btn" onclick="openKTBidPanel()">
+    <span id="kt-bid-open-label">🃏 View Bids</span>
   </div>
 
   <!-- KT TRUMP SELECT OVERLAY -->

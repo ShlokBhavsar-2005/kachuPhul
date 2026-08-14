@@ -664,12 +664,91 @@ body.banner-visible .my-hand-section { padding-bottom: 8rem; }
 .kt-badge { display: inline-block; font-size: .6rem; padding: .08rem .35rem; border-radius: 4px; font-weight: 700; margin-right: .15rem; }
 .kt-badge-bidwinner { background: rgba(240,192,64,.2); color: var(--gold); }
 .kt-badge-partner { background: rgba(63,185,80,.2); color: var(--green); }
+.kt-bid-thinking { font-size: .68rem; color: var(--gold); animation: ktThinkPulse 1.2s ease-in-out infinite; }
+@keyframes ktThinkPulse { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 
-/* ── SHARED KT OVERLAY BASE ──────────────────────────────────────────────────── */
-.kt-bid-overlay, .kt-trump-overlay, .kt-partner-overlay, .kt-game-over-overlay {
+/* ── SHARED KT OVERLAY BASE (trump, partner, game-over ONLY) ────────────────── */
+.kt-trump-overlay, .kt-partner-overlay, .kt-game-over-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.75);
   display: flex; align-items: center; justify-content: center; z-index: 500; padding: 1rem;
 }
+
+/* ── KT BID OVERLAY — BOTTOM SHEET (not full-screen) ────────────────────────── */
+.kt-bid-overlay {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 400;
+  pointer-events: none; /* pass-through to hand beneath */
+}
+.kt-bid-overlay .kt-bid-panel {
+  pointer-events: all;
+  border-radius: 18px 18px 0 0;
+  border-bottom: none;
+  box-shadow: 0 -8px 32px rgba(0,0,0,.55);
+  max-height: 55vh;
+  max-width: 100%;
+}
+/* Collapsed state — only shows headline strip */
+.kt-bid-overlay.kt-bid-collapsed .kt-bid-panel {
+  max-height: 42px;
+  overflow: hidden;
+}
+.kt-bid-overlay.kt-bid-collapsed .kt-bid-panel-header {
+  border-bottom: none;
+}
+/* Remove collapsed class as soon as overlay is opened again */
+.kt-bid-overlay:not(.kt-bid-collapsed) .kt-bid-panel { max-height: 55vh; }
+
+/* Bid panel header row */
+.kt-bid-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+.kt-bid-close-btn {
+  background: none; border: none; color: var(--text2);
+  font-size: 1rem; cursor: pointer; padding: .1rem .3rem;
+  transition: color .15s;
+}
+.kt-bid-close-btn:hover { color: var(--text); }
+
+/* Bid headline (always visible in strip) */
+.kt-bid-headline {
+  font-size: .9rem;
+  text-align: center;
+  padding: .1rem 0 .3rem;
+}
+.kt-bid-headline-amount {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--gold);
+}
+.kt-bid-headline strong { color: var(--gold); }
+
+/* Place Bid open button */
+.kt-bid-open-btn {
+  position: fixed;
+  bottom: 90px; /* above hand-section */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(240,192,64,.18);
+  border: 1.5px solid var(--gold);
+  border-radius: 20px;
+  padding: .4rem 1.1rem;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--gold);
+  cursor: pointer;
+  z-index: 300;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  transition: background .2s;
+}
+.kt-bid-open-btn:hover { background: rgba(240,192,64,.28); }
 .kt-bid-panel, .kt-trump-panel, .kt-partner-panel, .kt-game-over-panel {
   background: var(--bg2); border: 1.5px solid var(--border); border-radius: 18px;
   padding: 1.4rem 1.2rem; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; position: relative;

@@ -10,8 +10,9 @@ const KT_MAX_BID = 250;
 
 let ktSelectedBid = 150;
 let ktSelectedPartnerCards = [];
-let ktBidLog = []; // local log of bid actions for display
-let ktActiveSuitTab = 'spades'; // for partner selection UI
+let ktBidLog = [];
+let ktActiveSuitTab = 'spades';
+let ktBidPanelOpen = false; // bottom sheet open state
 
 // ─── MAIN RENDER DISPATCHER ───────────────────────────────────────────────────
 function renderKTGameState(state) {
@@ -205,9 +206,25 @@ function ktSeatHTML(state, pIdx, myIdx) {
   const clickAttr = canKick ? `onclick="voteKickOffline(${pIdx})"` : '';
 
   let meta = '';
-  if (isBidWinner) meta += `<span class="kt-badge kt-badge-bidwinner">★ Bid Winner</span> `;
-  if (isRevealed) meta += `<span class="kt-badge kt-badge-partner">🤝 Partner</span> `;
-  meta += `<span class="m-score">${p.wonCardCount || 0} cards won</span>`;
+  if (state.phase === 'bidding') {
+    const hasPassed = state.bidding?.passed?.[pIdx];
+    const isCurrentBidder = state.bidding?.currentBidder === pIdx;
+    const isHighestBidder = state.bidding?.highestBidder === pIdx;
+    if (hasPassed) {
+      meta += `<span class="kt-badge" style="background:rgba(224,80,80,.18);color:var(--red);">✗ Passed</span> `;
+    } else if (isHighestBidder && state.bidding?.highestBid > 0) {
+      meta += `<span class="kt-badge kt-badge-bidwinner">★ ${state.bidding.highestBid}</span> `;
+      if (isCurrentBidder) meta += `<span class="kt-bid-thinking">bidding…</span>`;
+    } else if (isCurrentBidder) {
+      meta += `<span class="kt-bid-thinking">thinking…</span>`;
+    } else {
+      meta += `<span style="color:var(--text2);font-size:.72rem;">waiting…</span>`;
+    }
+  } else {
+    if (isBidWinner) meta += `<span class="kt-badge kt-badge-bidwinner">★ Bid Winner</span> `;
+    if (isRevealed) meta += `<span class="kt-badge kt-badge-partner">🤝 Partner</span> `;
+    meta += `<span class="m-score">${p.wonCardCount || 0} cards won</span>`;
+  }
 
   let kickBar = '';
   if (isOffline) {
@@ -221,57 +238,93 @@ function ktSeatHTML(state, pIdx, myIdx) {
 
 // ─── BIDDING PHASE ────────────────────────────────────────────────────────────
 function renderKTBidding(state) {
-  // Show bidding overlay, hide others
-  $('kt-bid-overlay').classList.remove('hidden');
+  // Hide full-screen overlays — bidding is a bottom sheet so hand stays visible
   $('kt-trump-overlay').classList.add('hidden');
   $('kt-partner-overlay').classList.add('hidden');
 
-  // Current bid info
-  const info = $('kt-bid-current-info');
-  if (state.bidding.highestBid > 0) {
-    info.innerHTML = `<div class="kt-current-bid">Current Bid: <strong>${state.bidding.highestBid}</strong> by <strong>${state.bidding.highestBidderName}</strong></div>`;
-  } else {
-    info.innerHTML = `<div class="kt-current-bid">Opening bid. Min: <strong>${KT_MIN_BID}</strong></div>`;
-  }
+  // ── Always-visible bid status bar (inside the bid-overlay panel header) ──
+  // Instead of using the full-screen overlay as a blocker, the bid-overlay
+  // is now a bottom sheet (CSS changed). Always show it during bidding.
+  $('kt-bid-overlay').classList.remove('hidden');
 
-  // Show passed players
+  // ── Live bid headline (always updated) ──
+  const info = $('kt-bid-current-info');
   const passedNames = state.players
     .filter((_, i) => state.bidding.passed[i])
     .map(p => p.name);
-  if (passedNames.length > 0) {
-    info.innerHTML += `<div class="kt-passed-list">Passed: ${passedNames.join(', ')}</div>`;
-  }
 
-  if (state.bidding.isMyTurnToBid && !state.bidding.myHasPassed) {
-    // It's my turn
+  let headline;
+  if (state.bidding.highestBid > 0) {
+    headline = `<div class="kt-bid-headline">Highest bid: <span class="kt-bid-headline-amount">${state.bidding.highestBid}</span> by <strong>${state.bidding.highestBidderName}</strong></div>`;
+  } else {
+    headline = `<div class="kt-bid-headline">Opening auction · Min bid: <span class="kt-bid-headline-amount">${KT_MIN_BID}</span></div>`;
+  }
+  const passedLine = passedNames.length > 0
+    ? `<div class="kt-passed-list">Passed: ${passedNames.join(', ')}</div>`
+    : '';
+  info.innerHTML = headline + passedLine;
+
+  // ── Show/hide bid controls vs waiting message ──
+  const isMyTurn = state.bidding.isMyTurnToBid && !state.bidding.myHasPassed;
+  const hasPassed = state.bidding.myHasPassed;
+
+  if (isMyTurn) {
+    // Auto-open the sheet when it becomes my turn
+    if (!ktBidPanelOpen) openKTBidPanel();
     $('kt-bid-controls').classList.remove('hidden');
     $('kt-bid-waiting').classList.add('hidden');
+    $('kt-bid-open-btn')?.classList.add('hidden');
 
     const minAllowed = Math.max(KT_MIN_BID, (state.bidding.highestBid || KT_MIN_BID - 5) + 5);
     if (ktSelectedBid < minAllowed) ktSelectedBid = minAllowed;
-    $('kt-bid-amount').textContent = ktSelectedBid;
-    $('kt-bid-submit-amount').textContent = ktSelectedBid;
+    updateKTBidDisplay();
   } else {
     $('kt-bid-controls').classList.add('hidden');
     $('kt-bid-waiting').classList.remove('hidden');
 
     const currentBidderName = state.players[state.bidding.currentBidder]?.name || '?';
-    $('kt-bid-waiting').innerHTML = state.bidding.myHasPassed
-      ? `You passed. Waiting for <strong>${currentBidderName}</strong>…`
+    $('kt-bid-waiting').innerHTML = hasPassed
+      ? `<span style="color:var(--text2)">You passed.</span> Waiting for <strong>${currentBidderName}</strong>…`
       : `Waiting for <strong>${currentBidderName}</strong> to bid…`;
+
+    // Show "Place Bid" button if it's not my turn and panel is collapsed
+    if (!hasPassed && !ktBidPanelOpen) {
+      $('kt-bid-open-btn')?.classList.remove('hidden');
+    } else {
+      $('kt-bid-open-btn')?.classList.add('hidden');
+    }
   }
 
-  // Trick area
   renderKTTrick(state);
   renderKTTurnIndicator(state);
+}
+
+function openKTBidPanel() {
+  ktBidPanelOpen = true;
+  const el = $('kt-bid-overlay');
+  el.classList.remove('hidden');
+  el.classList.remove('kt-bid-collapsed');
+  $('kt-bid-open-btn')?.classList.add('hidden');
+  document.body.classList.add('kt-bid-open');
+}
+function closeKTBidPanel() {
+  ktBidPanelOpen = false;
+  document.body.classList.remove('kt-bid-open');
+  // Keep the overlay visible (shows live bid headline) but collapse the sheet
+  // by toggling a CSS class instead of hiding the entire element
+  $('kt-bid-overlay').classList.add('kt-bid-collapsed');
+}
+
+function updateKTBidDisplay() {
+  const el = $('kt-bid-amount'); if (el) el.textContent = ktSelectedBid;
+  const el2 = $('kt-bid-submit-amount'); if (el2) el2.textContent = ktSelectedBid;
 }
 
 function ktChangeBid(delta) {
   if (!currentGameState) return;
   const minAllowed = Math.max(KT_MIN_BID, (currentGameState.bidding.highestBid || KT_MIN_BID - 5) + 5);
   ktSelectedBid = Math.max(minAllowed, Math.min(KT_MAX_BID, ktSelectedBid + delta));
-  $('kt-bid-amount').textContent = ktSelectedBid;
-  $('kt-bid-submit-amount').textContent = ktSelectedBid;
+  updateKTBidDisplay();
 }
 
 function ktSubmitBid() {
