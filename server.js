@@ -187,6 +187,45 @@ function removePlayerFromGame(room, removedIdx, reason = 'kicked') {
   const removedName = removedPlayer.name;
   const originalPlayerOrder = [...room.playerOrder];
 
+  if (room.gameType === 'kaaliTeeri') {
+    // End game and return everyone to lobby immediately
+    room.players.splice(removedIdx, 1);
+    
+    room.state = 'lobby';
+    room.kt = null;
+    room.hands = {};
+    room.bids = {};
+    room.bidsReady = {};
+    room.tricks = {};
+    room.scores = {};
+    room.roundScores = [];
+    room.currentRound = 0;
+    room.currentTrick = [];
+    room.leadSuit = null;
+    room.trumpSuit = null;
+    room.playAgainVotes = new Set();
+    
+    // Fix host if host left
+    if (room.hostSocketId === removedPlayer.socketId) {
+      const first = room.players.find(p => p.connected);
+      if (first) room.hostSocketId = first.socketId;
+    }
+    
+    // Update playerIndex for remaining players
+    room.players.forEach((p, i) => {
+      if (p.connected) {
+        const s = io.sockets.sockets.get(p.socketId);
+        if (s) s.data.playerIndex = i;
+        io.to(p.socketId).emit('yourIndex', i);
+      }
+    });
+    
+    // Notify all remaining players
+    io.to(room.id).emit(reason === 'left' ? 'playerLeft' : 'playerRemoved', { name: removedName });
+    broadcastRoomUpdate(room);
+    return;
+  }
+
   // If only 2 players remain, end the game after removal
   if (room.players.length <= 2) {
     room.players.splice(removedIdx, 1);

@@ -424,6 +424,7 @@ function endGame(room, io, broadcastGameState) {
       name: room.players[i].name,
     })),
     partnerCards: kt.partnerCards,
+    partnerOwners: kt.partnerOwners,
     trumpSuit: kt.trumpSuit,
     playerScores: {},
   };

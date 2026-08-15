@@ -190,6 +190,11 @@ function connectSocket() {
 
   socket.on('roomUpdate', room => {
     hideLoading();
+    if (room.state === 'lobby') {
+      currentGameState = null;
+      ['kt-bid-overlay', 'kt-trump-overlay', 'kt-partner-overlay', 'kt-game-over-overlay', 'kt-bid-banner', 'bid-overlay', 'score-overlay', 'game-over-overlay', 'round-end-overlay', 'confirm-banner', 'arrange-banner'].forEach(id => $(id)?.classList.add('hidden'));
+      document.body.classList.remove('banner-visible');
+    }
     if (!currentGameState || room.state === 'lobby') { if (!isSpectator) showScreen('waiting-screen'); renderWaitingRoom(room); }
     $('chat-fab').classList.remove('hidden');
   });

@@ -12,6 +12,7 @@ let ktSelectedBid = 150;
 let ktSelectedPartnerCards = [];
 let ktActiveSuitTab = 'spades';
 let ktBidPanelOpen = false;
+let ktLastMyTurnToBid = false;
 
 // ─── MAIN RENDER DISPATCHER ───────────────────────────────────────────────────
 function renderKTGameState(state) {
@@ -106,8 +107,8 @@ function updateKTTopBar(state) {
     if (partnersBadge && state.partnerCards && state.partnerCards.length > 0) {
       const formattedPartners = state.partnerCards.map(cardId => {
         const [r, s] = parseKTCardId(cardId);
-        return `<span class="${SUIT_COLORS[s]}">${r}${SUIT_SYM[s]}</span>`;
-      }).join(', ');
+        return `<span class="mini-card ${SUIT_COLORS[s]}">${r}${SUIT_SYM[s]}</span>`;
+      }).join(' ');
       $('kt-top-partners-val').innerHTML = formattedPartners;
       partnersBadge.classList.remove('hidden');
     } else if (partnersBadge) {
@@ -309,12 +310,15 @@ function renderKTBidding(state) {
       if (isMyTurn) {
         controls.classList.remove('hidden');
         const minAllowed = Math.max(KT_MIN_BID, (state.bidding.highestBid || KT_MIN_BID - 5) + 5);
-        if (ktSelectedBid < minAllowed) ktSelectedBid = minAllowed;
+        if (!ktLastMyTurnToBid || ktSelectedBid < minAllowed) {
+          ktSelectedBid = minAllowed;
+        }
         updateKTBidDisplay();
       } else {
         controls.classList.add('hidden');
       }
     }
+    ktLastMyTurnToBid = isMyTurn;
   }
 
   renderKTTrick(state);
@@ -622,13 +626,25 @@ function renderKTGameOver(state) {
   }
 
   // Summary
+  const partnerList = result.partners.map(p => {
+    const pCards = (result.partnerCards || []).filter(cid => result.partnerOwners && result.partnerOwners[cid] === p.playerIndex);
+    if (pCards.length > 0) {
+      const cardChips = pCards.map(cid => {
+        const [r, s] = parseKTCardId(cid);
+        return `<span class="mini-card ${SUIT_COLORS[s]}" style="margin-left:0.2rem;vertical-align:middle;">${r}${SUIT_SYM[s]}</span>`;
+      }).join(' ');
+      return `${p.name} ${cardChips}`;
+    }
+    return p.name;
+  }).join(', ') || 'None revealed';
+
   $('kt-result-summary').innerHTML = `
     <div class="kt-result-row"><span>Winning Bid</span><strong>${result.winningBid}</strong></div>
     <div class="kt-result-row"><span>Bid Winner's Team Points</span><strong>${result.bidWinnerTeamPoints}</strong></div>
     <div class="kt-result-row"><span>Defender Team Points</span><strong>${result.defenderTeamPoints}</strong></div>
     <div class="kt-result-row"><span>Bid Winner</span><strong>${result.bidWinner.name}</strong></div>
-    <div class="kt-result-row"><span>Trump</span><strong><span class="${result.trumpSuit ? SUIT_COLORS[result.trumpSuit] : ''}">${result.trumpSuit ? SUIT_SYM[result.trumpSuit] + ' ' + result.trumpSuit : '—'}</span></strong></div>
-    <div class="kt-result-row"><span>Partner(s)</span><strong>${result.partners.map(p => p.name).join(', ') || 'None revealed'}</strong></div>
+    <div class="kt-result-row"><span>Trump</span><strong><span class="mini-card ${result.trumpSuit ? SUIT_COLORS[result.trumpSuit] : ''}">${result.trumpSuit ? SUIT_SYM[result.trumpSuit] + ' ' + result.trumpSuit.charAt(0).toUpperCase() + result.trumpSuit.slice(1) : '—'}</span></strong></div>
+    <div class="kt-result-row"><span>Partner(s)</span><strong>${partnerList}</strong></div>
   `;
 
   // Per-player breakdown

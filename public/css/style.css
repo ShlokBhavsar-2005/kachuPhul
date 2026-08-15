@@ -707,15 +707,43 @@ body.banner-visible .my-hand-section { padding-bottom: 8rem; }
   font-size: .82rem; font-weight: 700; color: var(--text2); transition: border-color .15s, color .15s;
 }
 .kt-suit-tab.active { border-color: var(--gold); color: var(--text); background: rgba(240,192,64,.1); }
+.kt-suit-tab.suit-spades { color: var(--text2); }
+.kt-suit-tab.suit-spades.active { color: var(--text); }
+.kt-suit-tab.suit-clubs { color: #a5d6a7; }
+.kt-suit-tab.suit-clubs.active { color: var(--green); }
 .kt-suit-tab.suit-diamonds, .kt-suit-tab.suit-hearts { color: #e06060; }
-.kt-suit-tab.suit-diamonds.active, .kt-suit-tab.suit-hearts.active { color: #ff8080; }
+.kt-suit-tab.suit-diamonds.active, .kt-suit-tab.suit-hearts.active { color: #ff7b72; }
 .kt-partner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: .3rem; margin-bottom: .5rem; max-height: 200px; overflow-y: auto; }
 .kt-partner-card-option { cursor: pointer; border-radius: 8px; border: 2px solid transparent; padding: .15rem; transition: border-color .15s, transform .1s; }
 .kt-partner-card-option:hover { transform: translateY(-2px); border-color: var(--gold); }
 .kt-partner-card-option.selected { border-color: var(--gold); background: rgba(240,192,64,.1); }
 .kt-partner-selected-area { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-bottom: .4rem; min-height: 28px; }
 .kt-partner-sel-label { font-size: .75rem; color: var(--text2); }
-.kt-partner-sel-chip { background: var(--bg3); border: 1.5px solid var(--gold); border-radius: 6px; padding: .15rem .4rem; font-size: .85rem; font-weight: 700; display: inline-flex; align-items: center; gap: .15rem; }
+.kt-partner-sel-chip, .mini-card {
+  background: var(--card-bg) !important;
+  color: #222 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  font-size: .8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
+  font-family: 'Baloo 2', cursive;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  vertical-align: middle;
+}
+.kt-partner-sel-chip {
+  border: 1.5px solid var(--gold);
+  border-radius: 6px;
+  padding: .15rem .4rem;
+  font-size: .85rem;
+}
+.kt-partner-sel-chip.suit-spades, .mini-card.suit-spades { color: #222 !important; }
+.kt-partner-sel-chip.suit-clubs, .mini-card.suit-clubs { color: #1b5e20 !important; }
+.kt-partner-sel-chip.suit-diamonds, .mini-card.suit-diamonds { color: #d32f2f !important; }
+.kt-partner-sel-chip.suit-hearts, .mini-card.suit-hearts { color: #d32f2f !important; }
 
 /* ── KT GAME OVER ────────────────────────────────────────────────────────────── */
 .kt-result-summary { margin-bottom: 1rem; }
