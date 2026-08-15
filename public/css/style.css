@@ -297,8 +297,9 @@ body::before {
 
 /* ── GAME SCREEN ── */
 #game-screen { min-height: 100vh; display: flex; flex-direction: column; }
-.top-bar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: .5rem 1rem; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
-.top-info { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; flex: 1; }
+.top-bar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: .5rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+.top-info { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; flex: 1; min-width: 0; }
+.top-actions { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
 .trump-badge { display: flex; align-items: center; gap: .4rem; background: rgba(240, 192, 64, .12); border: 1.5px solid var(--gold); border-radius: 8px; padding: .3rem .7rem; font-weight: 700; color: var(--gold); font-size: .9rem; box-shadow: var(--trump-glow); }
 .trump-symbol { font-size: 1.2rem; }
 .round-badge, .cards-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .3rem .7rem; font-size: .85rem; color: var(--text2); }
@@ -404,10 +405,15 @@ body::before {
 .card.size-sm { width: 36px; height: 52px; }
 .card.size-sm .card-rank { font-size: .8rem; }
 .card.size-sm .card-suit-sym { font-size: .85rem; }
-.suit-spades { color: #222; }
-.suit-diamonds { color: #d32f2f; }
-.suit-clubs { color: #1b5e20; }
-.suit-hearts { color: #d32f2f; }
+.card.suit-spades { color: #222; }
+.card.suit-diamonds { color: #d32f2f; }
+.card.suit-clubs { color: #1b5e20; }
+.card.suit-hearts { color: #d32f2f; }
+
+.suit-spades { color: var(--text); }
+.suit-diamonds { color: #ff7b72; }
+.suit-clubs { color: var(--green); }
+.suit-hearts { color: #ff7b72; }
 
 /* ── HAND ── */
 .my-hand-section { background: var(--bg2); border-top: 1px solid var(--border); padding: .8rem; padding-bottom: 5rem; }
@@ -736,4 +742,7 @@ body.banner-visible .my-hand-section { padding-bottom: 8rem; }
   .kt-partner-grid { grid-template-columns: repeat(auto-fill,minmax(48px,1fr)); }
   .kt-bid-panel, .kt-trump-panel, .kt-partner-panel, .kt-game-over-panel { padding: 1rem .9rem; }
   .kt-bid-amount-display { font-size: 1.6rem; }
+  .top-bar { padding: .4rem .6rem; gap: .4rem; }
+  .trump-badge, .round-badge, .cards-badge, .spec-badge, .kt-top-badge { padding: .25rem .5rem; font-size: .75rem; border-radius: 6px; }
+  .trump-symbol { font-size: 1rem; }
 }

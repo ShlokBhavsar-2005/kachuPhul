@@ -231,9 +231,11 @@
           <div id="kt-top-partners" class="kt-top-badge hidden">Partner: <span id="kt-top-partners-val">—</span></div>
           <div id="spec-badge" class="spec-badge hidden" style="display:inline-flex;align-items:center;gap:.25rem;"><svg width="13" height="13" style="flex-shrink:0;"><use href="#icon-eye"/></svg>Spectating</div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="showScoreboard()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-bar-chart"/></svg>Scores</button>
-        <button class="btn btn-sm" onclick="confirmLeave()"
-          style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;display:inline-flex;align-items:center;gap:.28rem;"><svg width="14" height="14" style="flex-shrink:0;"><use href="#icon-exit"/></svg>Leave</button>
+        <div class="top-actions">
+          <button id="scores-btn" class="btn btn-outline btn-sm" onclick="showScoreboard()" style="display:inline-flex;align-items:center;gap:.3rem;"><svg width="15" height="15" style="flex-shrink:0;"><use href="#icon-bar-chart"/></svg>Scores</button>
+          <button class="btn btn-sm" onclick="confirmLeave()"
+            style="background:rgba(224,80,80,.15);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:.3rem .7rem;font-size:.8rem;cursor:pointer;font-family:'Baloo 2',cursive;font-weight:700;display:inline-flex;align-items:center;gap:.28rem;"><svg width="14" height="14" style="flex-shrink:0;"><use href="#icon-exit"/></svg>Leave</button>
+        </div>
       </div>
       <div class="seats-container" id="seats-container"></div>
       <div class="table-area">

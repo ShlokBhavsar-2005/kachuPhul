@@ -198,8 +198,11 @@ function connectSocket() {
     hideLoading();
     $('chat-fab').classList.remove('hidden');
 
+    const scoresBtn = $('scores-btn');
+
     // ── Kaali Teeri dispatch ──
     if (state.gameType === 'kaaliTeeri') {
+      if (scoresBtn) scoresBtn.classList.add('hidden');
       currentGameState = state;
       if (state.isSpectator) { renderKTSpectatorState(state); return; }
       syncCustomOrder(state.myHand || []);
@@ -209,6 +212,7 @@ function connectSocket() {
     }
 
     // ── Kachu Phul dispatch (existing) ──
+    if (scoresBtn) scoresBtn.classList.remove('hidden');
     if (state.isSpectator) { renderSpectatorState(state); return; }
     if (matchPlayerCount === 0) matchPlayerCount = state.players.length;
     syncCustomOrder(state.myHand);
